@@ -46,6 +46,9 @@ func TestAssertion(t *testing.T) {
 	as.Err(1, 2, errors.New("err"))
 	as.Panic(func() { panic(1) })
 
+	as.E()
+	as.E(nil)
+
 	as.Is(1, 2)
 	err := errors.New("err")
 	as.Is(err, err)
@@ -111,6 +114,14 @@ func TestAssertionErr(t *testing.T) {
 	m.check("no args received")
 	as.Err(1)
 	m.check("1 (int) should be error")
+
+	func() {
+		defer func() {
+			_ = recover()
+		}()
+		as.E(1, errors.New("E"))
+	}()
+	m.check("E")
 
 	as.Is(1, 2.2)
 	m.check("1 (int) <not kind of> 2.2 (float64)")

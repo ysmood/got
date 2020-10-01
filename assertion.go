@@ -145,6 +145,19 @@ func (as Assertion) Err(args ...interface{}) {
 	}
 }
 
+// E if args[-1] is error and not nil call FailNow()
+func (as Assertion) E(args ...interface{}) {
+	as.Helper()
+	if len(args) == 0 {
+		return
+	}
+	last := args[len(args)-1]
+	if err, _ := last.(error); err != nil {
+		as.Logf("%v", last)
+		as.FailNow()
+	}
+}
+
 // Panic fn should panic
 func (as Assertion) Panic(fn func()) {
 	as.Helper()
