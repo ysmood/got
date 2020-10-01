@@ -13,6 +13,7 @@ func TestSimple(t *testing.T) {
 
 type Simple struct {
 	got.Assertion
+	*testing.T
 }
 
 func (s Simple) A() {
@@ -20,5 +21,7 @@ func (s Simple) A() {
 }
 
 func (s Simple) B() {
+	s.Skip()
+
 	s.Gt(2, 1)
 }

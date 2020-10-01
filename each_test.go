@@ -10,6 +10,10 @@ func TestEach(t *testing.T) {
 	got.Each(t, StructVal{val: 1})
 }
 
+func TestEachSkip(t *testing.T) {
+	got.Each(t, Container{})
+}
+
 type StructVal struct {
 	got.Assertion
 	val int
@@ -45,14 +49,6 @@ func TestEachErr(t *testing.T) {
 		})
 	})
 	m.check("[got.Each] got_test.Err.A shouldn't have arguments or return values")
-
-	as.Panic(func() {
-		got.Each(m, Container01{})
-	})
-
-	as.Panic(func() {
-		got.Each(m, Container02{})
-	})
 }
 
 type Err struct {
@@ -60,28 +56,16 @@ type Err struct {
 
 func (s Err) A(int) {}
 
-type Container01 struct {
-	Embedded01
+type Container struct {
+	Embedded
 }
 
-func (r Container01) A()    {}
-func (r Container01) B()    {}
-func (r Container01) C(int) {}
+func (c Container) A() { c.Fail() }
+func (c Container) B() {}
 
-type Embedded01 struct {
+type Embedded struct {
+	*testing.T
 }
 
-func (r Embedded01) A() int   { return 0 }
-func (r Embedded01) B(int)    {}
-func (r Embedded01) C(string) {}
-
-type Container02 struct {
-	Embedded02
-}
-
-func (r Container02) A() string { return "" }
-
-type Embedded02 struct {
-}
-
-func (r Embedded02) A() int { return 0 }
+func (c Embedded) A() {}
+func (c Embedded) C() { c.Fail() }

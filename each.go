@@ -11,12 +11,12 @@ const prefixEachErr = "[got.Each]"
 //
 //     iteratee(t Testable) (ctx Ctx)
 //
-// Each Fn will be called as:
+// Each Fn will be called like:
 //
 //      ctx.Fn()
 //
-// If iteratee is Ctx, Each will try to set its Assertion field to New(Testable) on each test.
-// Embedded Fn will be ignored.
+// If iteratee is Ctx, its Assertion and T fields will be set to New(t) and t for each test.
+// Any Fn that has the same name with the embedded one will be ignored.
 func Each(t Testable, iteratee interface{}) (count int) {
 	t.Helper()
 
@@ -85,9 +85,8 @@ func normalizeIteratee(t Testable, iteratee interface{}) reflect.Value {
 
 			c := reflect.New(itType).Elem()
 			c.Set(itVal)
-			try(func() {
-				c.FieldByName("Assertion").Set(as)
-			})
+			try(func() { c.FieldByName("Assertion").Set(as) })
+			try(func() { c.FieldByName("T").Set(args[0]) })
 
 			return []reflect.Value{c}
 		})
@@ -106,52 +105,23 @@ func checkFnType(t Testable, fn reflect.Method) {
 }
 
 func filterMethods(typ reflect.Type) []reflect.Method {
-	fields := []reflect.StructField{}
-
+	skip := map[string]struct{}{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 		if field.Anonymous {
-			fields = append(fields, field)
+			for j := 0; j < field.Type.NumMethod(); j++ {
+				skip[field.Type.Method(j).Name] = struct{}{}
+			}
 		}
 	}
 
 	methods := []reflect.Method{}
-
 	for i := 0; i < typ.NumMethod(); i++ {
 		method := typ.Method(i)
-
-		for _, field := range fields {
-			if m, ok := field.Type.MethodByName(method.Name); ok {
-				if methodEq(m, method) {
-					goto skip
-				}
-			}
+		if _, has := skip[method.Name]; has {
+			continue
 		}
 		methods = append(methods, method)
-	skip:
 	}
-
 	return methods
-}
-
-func methodEq(a, b reflect.Method) bool {
-	if a.Type.NumIn() != b.Type.NumIn() {
-		return false
-	}
-	for i := 1; i < a.Type.NumIn(); i++ {
-		if a.Type.In(i) != b.Type.In(i) {
-			return false
-		}
-	}
-
-	if a.Type.NumOut() != b.Type.NumOut() {
-		return false
-	}
-	for i := 0; i < a.Type.NumOut(); i++ {
-		if a.Type.Out(i) != b.Type.Out(i) {
-			return false
-		}
-	}
-
-	return true
 }
