@@ -10,10 +10,6 @@ func TestEach(t *testing.T) {
 	got.Each(t, StructVal{val: 1})
 }
 
-func TestEachSkip(t *testing.T) {
-	got.Each(t, Container{})
-}
-
 type StructVal struct {
 	got.Assertion
 	val int
@@ -22,6 +18,24 @@ type StructVal struct {
 func (c StructVal) A() {
 	c.Eq(c.val, 1)
 }
+
+func TestEachSkip(t *testing.T) {
+	got.Each(t, Container{})
+}
+
+type Container struct {
+	Embedded
+}
+
+func (c Container) A() { c.Fail() }
+func (c Container) B() {}
+
+type Embedded struct {
+	*testing.T
+}
+
+func (c Embedded) A() {}
+func (c Embedded) C() { c.Fail() }
 
 func TestEachErr(t *testing.T) {
 	as := got.New(t)
@@ -56,16 +70,28 @@ type Err struct {
 
 func (s Err) A(int) {}
 
-type Container struct {
-	Embedded
+func TestParallelErr(t *testing.T) {
+	ok := testing.RunTests(
+		func(pat, str string) (bool, error) { return true, nil },
+		[]testing.InternalTest{{
+			F: func(t *testing.T) {
+				got.Each(t, func(t *testing.T) ParallelErr {
+					t.Parallel()
+					return ParallelErr{t}
+				})
+			},
+		}},
+	)
+	got.New(t).False(ok)
 }
 
-func (c Container) A() { c.Fail() }
-func (c Container) B() {}
-
-type Embedded struct {
+type ParallelErr struct {
 	*testing.T
 }
 
-func (c Embedded) A() {}
-func (c Embedded) C() { c.Fail() }
+func (p ParallelErr) A() {
+	p.Fail()
+}
+
+func (p ParallelErr) B() {
+}

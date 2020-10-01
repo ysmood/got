@@ -26,24 +26,20 @@ func Each(t Testable, iteratee interface{}) (count int) {
 
 	methods := filterMethods(ctxType)
 
-	for _, method := range methods {
-		run := reflect.ValueOf(t).MethodByName("Run")
+	runVal := reflect.ValueOf(t).MethodByName("Run")
+	cbType := runVal.Type().In(1)
 
-		checkFnType(t, method)
+	for _, m := range methods {
+		checkFnType(t, m)
 
-		run.Call([]reflect.Value{
+		// because the callback is in another goroutine, we create closures for each loop
+		method := m
+
+		runVal.Call([]reflect.Value{
 			reflect.ValueOf(method.Name),
-			reflect.MakeFunc(run.Type().In(1), func(args []reflect.Value) []reflect.Value {
-				t := args[0].Interface().(Testable)
-				t.Helper()
-
-				var res []reflect.Value
-				if iteratee != nil {
-					res = itVal.Call(args)
-				}
-
-				method.Func.Call(res)
-				return nil
+			reflect.MakeFunc(cbType, func(args []reflect.Value) []reflect.Value {
+				res := itVal.Call(args)
+				return method.Func.Call(res)
 			}),
 		})
 	}
@@ -60,39 +56,40 @@ func normalizeIteratee(t Testable, iteratee interface{}) reflect.Value {
 
 	itVal := reflect.ValueOf(iteratee)
 	itType := itVal.Type()
-
-	defer func() {
-		if recover() == nil {
-			return
-		}
-		t.Logf(prefixEachErr+" iteratee <%v> should be a struct or <func(got.Testable) Ctx>", itType)
-		t.FailNow()
-	}()
+	fail := true
 
 	switch itType.Kind() {
 	case reflect.Func:
 		if itType.NumIn() != 1 || itType.NumOut() != 1 {
-			panic("")
+			break
 		}
-		_ = reflect.New(itType.In(0).Elem()).Interface().(Testable) // this may panic
-		return itVal
+		try(func() {
+			_ = reflect.New(itType.In(0).Elem()).Interface().(Testable)
+			fail = false
+		})
 
 	case reflect.Struct:
 		fnType := reflect.FuncOf([]reflect.Type{reflect.TypeOf(t)}, []reflect.Type{itType}, false)
-		return reflect.MakeFunc(fnType, func(args []reflect.Value) []reflect.Value {
-			t := args[0].Interface().(Testable)
-			as := reflect.ValueOf(New(t))
+		structVal := itVal
+		itVal = reflect.MakeFunc(fnType, func(args []reflect.Value) []reflect.Value {
+			sub := args[0].Interface().(Testable)
+			as := reflect.ValueOf(New(sub))
 
 			c := reflect.New(itType).Elem()
-			c.Set(itVal)
+			c.Set(structVal)
 			try(func() { c.FieldByName("Assertion").Set(as) })
 			try(func() { c.FieldByName("T").Set(args[0]) })
 
 			return []reflect.Value{c}
 		})
+		fail = false
 	}
 
-	panic("")
+	if fail {
+		t.Logf(prefixEachErr+" iteratee <%v> should be a struct or <func(got.Testable) Ctx>", itType)
+		t.FailNow()
+	}
+	return itVal
 }
 
 func checkFnType(t Testable, fn reflect.Method) {
