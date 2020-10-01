@@ -44,7 +44,6 @@ func TestAssertion(t *testing.T) {
 	as.Len([]int{1, 2}, 2)
 
 	as.Err(1, 2, errors.New("err"))
-	as.NoErr(1, 2, nil)
 	as.Panic(func() { panic(1) })
 
 	as.Is(1, 2)

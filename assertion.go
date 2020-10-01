@@ -145,12 +145,6 @@ func (as Assertion) Err(args ...interface{}) {
 	}
 }
 
-// NoErr is alias of Nil
-func (as Assertion) NoErr(args ...interface{}) {
-	as.Helper()
-	as.Nil(args...)
-}
-
 // Panic fn should panic
 func (as Assertion) Panic(fn func()) {
 	as.Helper()
