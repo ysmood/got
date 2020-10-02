@@ -3,7 +3,6 @@ package got
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"reflect"
 )
 
@@ -20,11 +19,6 @@ func (as Assertion) err(format string, args ...interface{}) Result {
 	as.Logf(format, args...)
 	as.Fail()
 	return Result{as, true}
-}
-
-// pretty print a value
-func pp(v interface{}) string {
-	return fmt.Sprintf("%v (%v)", v, reflect.TypeOf(v))
 }
 
 func castType(a, b interface{}) interface{} {

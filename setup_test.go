@@ -36,7 +36,14 @@ func (m *mock) Run(name string, fn func(*mock)) {
 func (m *mock) check(expected string) {
 	m.t.Helper()
 
-	as := got.New(m.t)
+	as := got.NewWith(m.t, got.Options{
+		Dump: func(i interface{}) string {
+			return fmt.Sprintf("\n%v\n", i)
+		},
+		Keyword: func(s string) string {
+			return s
+		},
+	})
 
 	as.True(m.failed)
 	as.Eq(m.msg, expected)

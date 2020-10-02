@@ -4,8 +4,6 @@ import (
 	"reflect"
 )
 
-const prefixEachErr = "[got.Each]"
-
 // Each runs each exported method Fn on type Ctx as a subtest of t.
 // The iteratee can be a struct Ctx or:
 //
@@ -50,7 +48,7 @@ func normalizeIteratee(t Testable, iteratee interface{}) reflect.Value {
 	t.Helper()
 
 	if iteratee == nil {
-		t.Logf(prefixEachErr + " iteratee shouldn't be nil")
+		t.Logf("iteratee shouldn't be nil")
 		t.FailNow()
 	}
 
@@ -86,7 +84,7 @@ func normalizeIteratee(t Testable, iteratee interface{}) reflect.Value {
 	}
 
 	if fail {
-		t.Logf(prefixEachErr+" iteratee <%v> should be a struct or <func(got.Testable) Ctx>", itType)
+		t.Logf("iteratee <%v> should be a struct or <func(got.Testable) Ctx>", itType)
 		t.FailNow()
 	}
 	return itVal
@@ -96,7 +94,7 @@ func checkFnType(t Testable, fn reflect.Method) {
 	t.Helper()
 
 	if fn.Type.NumIn() != 1 || fn.Type.NumOut() != 0 {
-		t.Logf(prefixEachErr+" %s.%s shouldn't have arguments or return values", fn.Type.In(0).String(), fn.Name)
+		t.Logf("%s.%s shouldn't have arguments or return values", fn.Type.In(0).String(), fn.Name)
 		t.FailNow()
 	}
 }
