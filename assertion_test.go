@@ -46,9 +46,6 @@ func TestAssertion(t *testing.T) {
 	as.Err(1, 2, errors.New("err"))
 	as.Panic(func() { panic(1) })
 
-	as.E()
-	as.E(nil)
-
 	as.Is(1, 2)
 	err := errors.New("err")
 	as.Is(err, err)
@@ -64,8 +61,8 @@ func TestAssertionErr(t *testing.T) {
 		S string
 	}
 
-	as.Eq(1, 2.0)
-	m.check("1 (int) == 2 (float64)")
+	as.Eq(1, 2.0).Msg("not %s", "equal")
+	m.check("not equal")
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check("{1 a} (got_test.data) == {1 b} (got_test.data)")
 
@@ -119,9 +116,9 @@ func TestAssertionErr(t *testing.T) {
 		defer func() {
 			_ = recover()
 		}()
-		as.E(1, errors.New("E"))
+		as.Nil(1, errors.New("E")).Must()
 	}()
-	m.check("E")
+	m.check("E (*errors.errorString) should be nil")
 
 	as.Is(1, 2.2)
 	m.check("1 (int) <not kind of> 2.2 (float64)")

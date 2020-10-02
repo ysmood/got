@@ -30,7 +30,7 @@ type Basic struct {
 }
 
 func (b Basic) A() {
-	b.Eq(1, 1.0)
+	b.Eq(1, 1.0).Msg("b.FailNow() if %v != %v", 1, 1.0).Must()
 }
 
 func (b Basic) B() {

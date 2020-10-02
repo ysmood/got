@@ -15,10 +15,11 @@ type Testable interface {
 	Logf(format string, args ...interface{})
 }
 
-func (as Assertion) err(format string, args ...interface{}) {
+func (as Assertion) err(format string, args ...interface{}) Result {
 	as.Helper()
 	as.Logf(format, args...)
 	as.Fail()
+	return Result{as, true}
 }
 
 // pretty print a value
