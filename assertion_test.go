@@ -117,7 +117,7 @@ func TestAssertionErr(t *testing.T) {
 		defer func() {
 			_ = recover()
 		}()
-		as.Nil(1, errors.New("E")).Must()
+		as.E(1, errors.New("E"))
 	}()
 	m.check("E (*errors.errorString) ⦗should be <nil>⦘")
 

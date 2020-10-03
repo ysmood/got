@@ -211,6 +211,12 @@ func (as Assertion) Err(args ...interface{}) (result Result) {
 	return as.err("%s %s", as.d(last), as.k("should be <error>"))
 }
 
+// E is a shortcut for Nil(args...).Must()
+func (as Assertion) E(args ...interface{}) {
+	as.Helper()
+	as.Nil(args...).Must()
+}
+
 // Panic fn should panic
 func (as Assertion) Panic(fn func()) (result Result) {
 	as.Helper()
