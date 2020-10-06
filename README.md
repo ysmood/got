@@ -1,11 +1,7 @@
 # Overview
 
-A tiny test framework for go projects. The test of this lib is its doc.
+A dependency-free test framework for go projects. Please read the examples below, it's easy and intuitive to use.
 
-All functions in this lib are side-effect free.
+- [simple usage](01_simple_test.go)
 
-## Examples
-
-- [simple](example_simple_test.go)
-
-- [basic](example_basic_test.go)
+- [advanced usage](02_advanced_test.go)

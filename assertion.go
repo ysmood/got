@@ -72,7 +72,7 @@ func (r Result) Must() Result {
 	return r
 }
 
-// Eq a == b
+// Eq a ≂ b
 func (as Assertion) Eq(a, b interface{}) (result Result) {
 	as.Helper()
 	if compare(a, b) == 0 {
@@ -88,6 +88,15 @@ func (as Assertion) Neq(a, b interface{}) (result Result) {
 		return
 	}
 	return as.err("%s %s %s", as.d(a), as.k("≠"), as.d(b))
+}
+
+// Equal a == b
+func (as Assertion) Equal(a, b interface{}) (result Result) {
+	as.Helper()
+	if a == b {
+		return
+	}
+	return as.err("%s %s %s", as.d(a), as.k("=="), as.d(b))
 }
 
 // Gt a > b

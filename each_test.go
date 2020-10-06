@@ -7,7 +7,8 @@ import (
 )
 
 func TestEach(t *testing.T) {
-	got.Each(t, StructVal{val: 1})
+	count := got.Each(t, StructVal{val: 1})
+	got.New(t).Eq(count, 2)
 }
 
 type StructVal struct {
@@ -15,11 +16,16 @@ type StructVal struct {
 	val int
 }
 
-func (c StructVal) A() {
+func (c StructVal) Normal() {
 	c.Eq(c.val, 1)
 }
 
-func TestEachSkip(t *testing.T) {
+func (c StructVal) ExtraInOut(int) int {
+	c.Eq(c.val, 1)
+	return 0
+}
+
+func TestEachEmbedded(t *testing.T) {
 	got.Each(t, Container{})
 }
 
@@ -56,13 +62,6 @@ func TestEachErr(t *testing.T) {
 		got.Each(m, it)
 	})
 	m.check("iteratee <func() got_test.Err> should be a struct or <func(got.Testable) Ctx>")
-
-	as.Panic(func() {
-		got.Each(m, func(t *mock) Err {
-			return Err{}
-		})
-	})
-	m.check("got_test.Err.A shouldn't have arguments or return values")
 }
 
 type Err struct {

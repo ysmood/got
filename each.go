@@ -4,6 +4,16 @@ import (
 	"reflect"
 )
 
+// Skip current test
+type Skip struct{}
+
+var skipType = reflect.TypeOf(Skip{})
+
+// Only run current test
+type Only struct{}
+
+var onlyType = reflect.TypeOf(Only{})
+
 // Each runs each exported method Fn on type Ctx as a subtest of t.
 // The iteratee can be a struct Ctx or:
 //
@@ -28,8 +38,6 @@ func Each(t Testable, iteratee interface{}) (count int) {
 	cbType := runVal.Type().In(1)
 
 	for _, m := range methods {
-		checkFnType(t, m)
-
 		// because the callback is in another goroutine, we create closures for each loop
 		method := m
 
@@ -37,7 +45,7 @@ func Each(t Testable, iteratee interface{}) (count int) {
 			reflect.ValueOf(method.Name),
 			reflect.MakeFunc(cbType, func(args []reflect.Value) []reflect.Value {
 				res := itVal.Call(args)
-				return method.Func.Call(res)
+				return callMethod(method, res[0])
 			}),
 		})
 	}
@@ -90,33 +98,54 @@ func normalizeIteratee(t Testable, iteratee interface{}) reflect.Value {
 	return itVal
 }
 
-func checkFnType(t Testable, fn reflect.Method) {
-	t.Helper()
+func callMethod(method reflect.Method, receiver reflect.Value) []reflect.Value {
+	args := make([]reflect.Value, method.Type.NumIn())
+	args[0] = receiver
 
-	if fn.Type.NumIn() != 1 || fn.Type.NumOut() != 0 {
-		t.Logf("%s.%s shouldn't have arguments or return values", fn.Type.In(0).String(), fn.Name)
-		t.FailNow()
+	for i := 1; i < len(args); i++ {
+		args[i] = reflect.New(method.Type.In(i)).Elem()
 	}
+
+	method.Func.Call(args)
+
+	return []reflect.Value{}
 }
 
 func filterMethods(typ reflect.Type) []reflect.Method {
-	skip := map[string]struct{}{}
+	embedded := map[string]struct{}{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 		if field.Anonymous {
 			for j := 0; j < field.Type.NumMethod(); j++ {
-				skip[field.Type.Method(j).Name] = struct{}{}
+				embedded[field.Type.Method(j).Name] = struct{}{}
 			}
 		}
 	}
 
 	methods := []reflect.Method{}
+	onlyList := []reflect.Method{}
 	for i := 0; i < typ.NumMethod(); i++ {
 		method := typ.Method(i)
-		if _, has := skip[method.Name]; has {
+		if _, has := embedded[method.Name]; has {
 			continue
 		}
+
+		if method.Type.NumIn() > 1 {
+			inType := method.Type.In(1)
+			if inType == skipType {
+				continue
+			}
+			if inType == onlyType {
+				onlyList = append(onlyList, method)
+			}
+		}
+
 		methods = append(methods, method)
 	}
+
+	if len(onlyList) > 0 {
+		return onlyList
+	}
+
 	return methods
 }

@@ -21,14 +21,18 @@ func TestAssertion(t *testing.T) {
 	as.Neq(1.1, 1)
 	as.Neq([]int{1, 2}, []int{2, 1})
 
+	as.Equal(1, 1)
+
 	as.Lt(time.Millisecond, time.Second)
 	as.Lte(1, 1)
 
 	as.Gt(2, 1.5)
 	as.Gte(2, 2.0)
 
-	a := time.Now()
-	as.Lt(a, a.Add(time.Second))
+	now := time.Now()
+	as.Eq(now, now)
+	as.Lt(now, now.Add(time.Second))
+	as.Gt(now.Add(time.Second), now)
 
 	as.True(true)
 	as.False(false)
@@ -50,6 +54,8 @@ func TestAssertion(t *testing.T) {
 	err := errors.New("err")
 	as.Is(err, err)
 	as.Is(fmt.Errorf("%w", err), err)
+
+	as.Eq(1, 1).Must()
 }
 
 func TestAssertionErr(t *testing.T) {
@@ -66,6 +72,9 @@ func TestAssertionErr(t *testing.T) {
 
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check("{1 a} (got_test.data) ⦗≂⦘ {1 b} (got_test.data)")
+
+	as.Equal(1, 1.0)
+	m.check("1 (int) ⦗==⦘ 1 (float64)")
 
 	as.Neq(1, 1)
 	m.check("1 (int) ⦗≠⦘ 1 (int)")
