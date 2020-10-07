@@ -9,7 +9,7 @@ type Skip struct{}
 
 var skipType = reflect.TypeOf(Skip{})
 
-// Only run current test
+// Only run tests with it
 type Only struct{}
 
 var onlyType = reflect.TypeOf(Only{})
