@@ -12,7 +12,7 @@ func TestEach(t *testing.T) {
 }
 
 type StructVal struct {
-	got.Assertion
+	got.G
 	val int
 }
 

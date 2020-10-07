@@ -14,7 +14,7 @@ func TestSimple(t *testing.T) { // entry point is just a normal Go test function
 }
 
 type Simple struct { // all exported methods on it will be executed as the subtests of TestSimple
-	got.Assertion
+	got.G
 	*testing.T
 }
 

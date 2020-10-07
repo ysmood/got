@@ -15,7 +15,8 @@ type mock struct {
 	msg    string
 }
 
-func (m *mock) Helper() {}
+func (m *mock) Helper()        {}
+func (m *mock) Cleanup(func()) {}
 
 func (m *mock) Fail() {
 	m.failed = true

@@ -23,7 +23,7 @@ var onlyType = reflect.TypeOf(Only{})
 //
 //      ctx.Fn()
 //
-// If iteratee is Ctx, its Assertion and T fields will be set to New(t) and t for each test.
+// If iteratee is Ctx, its G and T fields will be set to New(t) and t for each test.
 // Any Fn that has the same name with the embedded one will be ignored.
 func Each(t Testable, iteratee interface{}) (count int) {
 	t.Helper()
@@ -83,7 +83,7 @@ func normalizeIteratee(t Testable, iteratee interface{}) reflect.Value {
 
 			c := reflect.New(itType).Elem()
 			c.Set(structVal)
-			try(func() { c.FieldByName("Assertion").Set(as) })
+			try(func() { c.FieldByName("G").Set(as) })
 			try(func() { c.FieldByName("T").Set(args[0]) })
 
 			return []reflect.Value{c}

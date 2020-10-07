@@ -6,19 +6,11 @@ import (
 	"reflect"
 )
 
-// Testable interface
-type Testable interface {
-	Helper()
-	Fail()
-	FailNow()
-	Logf(format string, args ...interface{})
-}
-
-func (as Assertion) err(format string, args ...interface{}) Result {
-	as.Helper()
-	as.Logf(format, args...)
-	as.Fail()
-	return Result{as, true}
+func (u G) err(format string, args ...interface{}) Result {
+	u.Helper()
+	u.Logf(format, args...)
+	u.Fail()
+	return Result{u, true}
 }
 
 func castType(a, b interface{}) interface{} {

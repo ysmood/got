@@ -1,7 +1,7 @@
 package got_test
 
 import (
-	"math/rand"
+	"net/http"
 	"testing"
 
 	"github.com/ysmood/got"
@@ -20,31 +20,31 @@ func setup(t *testing.T) Advanced {
 
 	t.Parallel() // concurrently run each test
 
-	v := rand.Int() // generate a random value for each test
-
-	return Advanced{got.New(t), v}
+	return Advanced{got.New(t)}
 }
 
 type Advanced struct { // usually, we use a shorter name like A or T to reduce distraction
-	got.Assertion // use whatever assertion lib you like
-
-	rand int // add any custom fields you like
+	got.G // use any assertion lib you like
 }
 
 func (t Advanced) A() {
 	t.Eq(1, 1.0).Msg("b.FailNow() if %v != %v", 1, 1.0).Must()
 }
 
-func (t Advanced) B(got.Only) { // use got.Only to run specific tests
+func (t Advanced) B(got.Skip) { // use got.Skip to skip a test
 	t.Eq([]int{1, 2}, []int{1, 2})
 }
 
-func (t Advanced) C(got.Skip) { // use got.Skip to skip a test
-	t.check()
-}
+func (t Advanced) C(got.Only) { // use got.Only to run specific tests
+	s := t.Serve()
+	s.Route("/get", ".json", 10)
 
-func (t Advanced) check() { // non-exported methods won't be treated as tests
-	t.Helper()
+	val := t.Req("", s.URL("/get")).JSON()
+	t.Eq(val, 10)
 
-	t.Neq(t.rand, 1)
+	data := map[int]string{1: "ok"}
+	s.Mux.HandleFunc("/post", func(rw http.ResponseWriter, r *http.Request) {
+		t.Eq(t.ReadJSON(r.Body), data)
+	})
+	t.Req("POST", s.URL("/post"), ".json", data)
 }
