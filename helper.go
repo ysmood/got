@@ -2,6 +2,7 @@ package got
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -14,7 +15,28 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+// Context helper
+type Context struct {
+	context.Context
+	Cancel func()
+}
+
+// Context that will be canceled after the test
+func (hp G) Context() Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	hp.Cleanup(cancel)
+	return Context{ctx, cancel}
+}
+
+// Timeout context that will be canceled after the test
+func (hp G) Timeout(d time.Duration) Context {
+	ctx, cancel := context.WithTimeout(context.Background(), d)
+	hp.Cleanup(cancel)
+	return Context{ctx, cancel}
+}
 
 // Srand generates a random string with the specified length
 func (hp G) Srand(l int) string {

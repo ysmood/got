@@ -12,6 +12,11 @@ import (
 func TestHelper(t *testing.T) {
 	hp := got.New(t)
 
+	ctx := hp.Context()
+	ctx.Cancel()
+	<-ctx.Done()
+	<-hp.Timeout(0).Done()
+
 	hp.Len(hp.Srand(10), 10)
 
 	f := hp.Open(true, "tmp/test.txt")
