@@ -64,8 +64,9 @@ func (hp G) ReadJSON(r io.Reader) (v interface{}) {
 	return
 }
 
-// Write obj to the w
-func (hp G) Write(obj interface{}) func(io.Writer) {
+// Write obj to the writer. Encode obj to []byte and cache it for writer.
+// If obj is not []byte, string, or io.Reader, it will be encoded as JSON.
+func (hp G) Write(obj interface{}) (writer func(io.Writer)) {
 	var cache io.ReadWriter
 	return func(w io.Writer) {
 		hp.Helper()
@@ -93,7 +94,8 @@ func (hp G) Write(obj interface{}) func(io.Writer) {
 	}
 }
 
-// HandleHTTP handles a request
+// HandleHTTP handles a request. If file exists serve the file content. The file will be used to set the Content-Type header.
+// If the file doesn't exist, the value will be encoded by G.Write(value) and used as the response body.
 func (hp G) HandleHTTP(file string, value ...interface{}) func(http.ResponseWriter, *http.Request) {
 	var obj interface{}
 	if len(value) > 1 {
@@ -153,7 +155,8 @@ func (rt *Router) URL(path ...string) string {
 	return rt.HostURL.String() + strings.Join(path, "")
 }
 
-// Route on the pattern.
+// Route on the pattern. Check the doc of http.ServeMux for the syntax of pattern.
+// It will use G.HandleHTTP to handle each request.
 func (rt *Router) Route(pattern, file string, value ...interface{}) *Router {
 	h := rt.hp.HandleHTTP(file, value...)
 
@@ -164,7 +167,9 @@ func (rt *Router) Route(pattern, file string, value ...interface{}) *Router {
 	return rt
 }
 
-// Req to the url
+// Req the url. The method is the http method. The body will be encoded by G.Write(body) .
+// When the len(body) is greater than 2, the first item should be a file extension string for the Content-Type header,
+// such as ".json", ".jpg".
 func (hp G) Req(method, url string, body ...interface{}) *ResHelper {
 	hp.Helper()
 
