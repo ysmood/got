@@ -15,7 +15,7 @@ func TestHelper(t *testing.T) {
 
 	f := hp.Open(true, "tmp/test.txt")
 	hp.Nil(os.Stat("tmp/test.txt"))
-	hp.Write("ok", f)
+	hp.Write("ok")(f)
 	hp.Nil(f.Close())
 	f = hp.Open(false, "tmp/test.txt")
 	hp.Eq(hp.ReadJSON(f), "ok")
@@ -41,6 +41,7 @@ func TestHelper(t *testing.T) {
 
 		hp.Eq(hp.Req("", s.URL()).String(), "")
 		hp.Has(hp.Req("", s.URL("/file")).String(), "ysmood/got")
+		hp.Eq(hp.Req("", s.URL("/a")).String(), "ok")
 		hp.Eq(hp.Req("", s.URL("/a")).String(), "ok")
 		res := hp.Req("", s.URL("/b"))
 		hp.Eq(res.JSON(), []interface{}{"ok", 1})

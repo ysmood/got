@@ -1,6 +1,7 @@
 package got
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -64,18 +65,57 @@ func (hp G) ReadJSON(r io.Reader) (v interface{}) {
 }
 
 // Write obj to the w
-func (hp G) Write(obj interface{}, w io.Writer) {
-	hp.Helper()
-	var err error
-	switch v := obj.(type) {
-	case []byte:
-		_, err = w.Write(v)
-	case io.Reader:
-		_, err = io.Copy(w, v)
-	default:
-		err = json.NewEncoder(w).Encode(v)
+func (hp G) Write(obj interface{}) func(io.Writer) {
+	var cache io.ReadWriter
+	return func(w io.Writer) {
+		hp.Helper()
+
+		if cache != nil {
+			hp.E(io.Copy(w, cache))
+			return
+		}
+
+		cache = bytes.NewBuffer(nil)
+		w = io.MultiWriter(cache, w)
+
+		var err error
+		switch v := obj.(type) {
+		case []byte:
+			_, err = w.Write(v)
+		case io.Reader:
+			_, err = io.Copy(w, v)
+		default:
+			err = json.NewEncoder(w).Encode(v)
+		}
+		hp.E(err)
 	}
-	hp.E(err)
+}
+
+// HandleHTTP handles a request
+func (hp G) HandleHTTP(file string, value ...interface{}) func(http.ResponseWriter, *http.Request) {
+	var obj interface{}
+	if len(value) > 1 {
+		obj = value
+	} else if len(value) == 1 {
+		obj = value[0]
+	}
+
+	write := hp.Write(obj)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if _, err := os.Stat(file); err == nil {
+			http.ServeFile(w, r, file)
+			return
+		}
+
+		if obj == nil {
+			return
+		}
+
+		w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(file)))
+
+		write(w)
+	}
 }
 
 // Serve http on a random port. The server will be auto-closed after the test.
@@ -113,24 +153,10 @@ func (rt *Router) URL(path ...string) string {
 
 // Route on the pattern.
 func (rt *Router) Route(pattern, file string, value ...interface{}) *Router {
+	h := rt.hp.HandleHTTP(file, value...)
+
 	rt.Mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		if _, err := os.Stat(file); err == nil {
-			http.ServeFile(w, r, file)
-			return
-		}
-
-		w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(file)))
-
-		var obj interface{}
-		if len(value) > 1 {
-			obj = value
-		} else if len(value) == 1 {
-			obj = value[0]
-		} else {
-			return
-		}
-
-		rt.hp.Write(obj, w)
+		h(w, r)
 	})
 
 	return rt
@@ -160,7 +186,7 @@ func (hp G) Req(method, url string, body ...interface{}) *ResHelper {
 		var w io.WriteCloser
 		r, w = io.Pipe()
 		go func() {
-			hp.Write(obj, w)
+			hp.Write(obj)(w)
 			hp.E(w.Close())
 		}()
 	}
