@@ -82,6 +82,8 @@ func (hp G) Write(obj interface{}) func(io.Writer) {
 		switch v := obj.(type) {
 		case []byte:
 			_, err = w.Write(v)
+		case string:
+			_, err = w.Write([]byte(v))
 		case io.Reader:
 			_, err = io.Copy(w, v)
 		default:
@@ -148,7 +150,7 @@ type Router struct {
 
 // URL will prefix the path with the server's host
 func (rt *Router) URL(path ...string) string {
-	return rt.HostURL.String() + "/" + strings.TrimLeft(strings.Join(path, "/"), "/")
+	return rt.HostURL.String() + strings.Join(path, "")
 }
 
 // Route on the pattern.

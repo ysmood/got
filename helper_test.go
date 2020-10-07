@@ -1,6 +1,7 @@
 package got_test
 
 import (
+	"bytes"
 	"net/http"
 	"os"
 	"testing"
@@ -15,16 +16,20 @@ func TestHelper(t *testing.T) {
 
 	f := hp.Open(true, "tmp/test.txt")
 	hp.Nil(os.Stat("tmp/test.txt"))
-	hp.Write("ok")(f)
+	hp.Write(1)(f)
 	hp.Nil(f.Close())
 	f = hp.Open(false, "tmp/test.txt")
-	hp.Eq(hp.ReadJSON(f), "ok")
+	hp.Eq(hp.ReadJSON(f), 1)
+
+	buf := bytes.NewBuffer(nil)
+	hp.Write([]byte("ok"))(buf)
+	hp.Eq(buf.String(), "ok")
 
 	{
 		s := hp.Serve()
 		s.Route("/", ".txt")
 		s.Route("/file", "go.mod")
-		s.Route("/a", ".html", []byte("ok"))
+		s.Route("/a", ".html", "ok")
 		s.Route("/b", ".json", "ok", 1)
 		f, err := os.Open("go.mod")
 		hp.E(err)
