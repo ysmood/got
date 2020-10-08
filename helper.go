@@ -27,11 +27,13 @@ type Context struct {
 
 // Log is the same as testing.common.Log
 func (hp G) Log(args ...interface{}) {
+	hp.Helper()
 	hp.Logf("%s", fmt.Sprintln(args...))
 }
 
 // Skip is the same as testing.common.Skip
 func (hp G) Skip(args ...interface{}) {
+	hp.Helper()
 	hp.Log(args...)
 	hp.SkipNow()
 }
