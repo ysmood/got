@@ -71,23 +71,26 @@ func TestAssertionErr(t *testing.T) {
 	m.check("not equal")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
-	m.check("{1 a} (got_test.data) ⦗≂⦘ {1 b} (got_test.data)")
+	m.check("{1 a} <got_test.data> ⦗not ≂⦘ {1 b} <got_test.data>")
+
+	as.Eq(true, "a")
+	m.check(`true ⦗not ≂⦘ "a"`)
 
 	as.Equal(1, 1.0)
-	m.check("1 (int) ⦗==⦘ 1 (float64)")
+	m.check("1 ⦗not ==⦘ 1 <float64>")
 
 	as.Neq(1, 1)
-	m.check("1 (int) ⦗≠⦘ 1 (int)")
+	m.check("1 ⦗not ≠⦘ 1")
 
 	as.Lt(1, 1)
-	m.check("1 (int) ⦗<⦘ 1 (int)")
+	m.check("1 ⦗not <⦘ 1")
 	as.Lte(2, 1)
 
-	m.check("2 (int) ⦗≤⦘ 1 (int)")
+	m.check("2 ⦗not ≤⦘ 1")
 	as.Gt(1, 1)
-	m.check("1 (int) ⦗>⦘ 1 (int)")
+	m.check("1 ⦗not >⦘ 1")
 	as.Gte(1, 2)
-	m.check("1 (int) ⦗≥⦘ 2 (int)")
+	m.check("1 ⦗not ≥⦘ 2")
 
 	as.True(false)
 	m.check("⦗should be <true>⦘")
@@ -95,13 +98,13 @@ func TestAssertionErr(t *testing.T) {
 	m.check("⦗should be <false>⦘")
 
 	as.Nil(1)
-	m.check("1 (int) ⦗should be <nil>⦘")
+	m.check("⦗last value⦘ 1 ⦗should be <nil>⦘")
 	as.Nil()
 	m.check("⦗no args received⦘")
 	as.NotNil(nil)
-	m.check("<nil> (<nil>) ⦗shouldn't be <nil>⦘")
+	m.check("⦗last value shouldn't be <nil>⦘")
 	as.NotNil((*int)(nil))
-	m.check("<nil> (*int) ⦗shouldn't be <nil>⦘")
+	m.check("<*int> ⦗shouldn't be <nil>⦘")
 	as.NotNil()
 	m.check("⦗no args received⦘")
 
@@ -114,13 +117,13 @@ func TestAssertionErr(t *testing.T) {
 	m.check("⦗expect len⦘ 2 ⦗to be⦘ 3")
 
 	as.Err(nil)
-	m.check("<nil> (<nil>) ⦗should be <error>⦘")
+	m.check("⦗last value⦘ nil ⦗should be <error>⦘")
 	as.Panic(func() {})
 	m.check("⦗should panic⦘")
 	as.Err()
 	m.check("⦗no args received⦘")
 	as.Err(1)
-	m.check("1 (int) ⦗should be <error>⦘")
+	m.check("⦗last value⦘ 1 ⦗should be <error>⦘")
 
 	func() {
 		defer func() {
@@ -128,10 +131,10 @@ func TestAssertionErr(t *testing.T) {
 		}()
 		as.E(1, errors.New("E"))
 	}()
-	m.check("E (*errors.errorString) ⦗should be <nil>⦘")
+	m.check("⦗last value⦘ E <*errors.errorString> ⦗should be <nil>⦘")
 
 	as.Is(1, 2.2)
-	m.check("1 (int) ⦗should kind of⦘ 2.2 (float64)")
+	m.check("1 ⦗should kind of⦘ 2.2 <float64>")
 	as.Is(errors.New("a"), errors.New("b"))
-	m.check("a (*errors.errorString) ⦗should in chain of⦘ b (*errors.errorString)")
+	m.check("a <*errors.errorString> ⦗should in chain of⦘ b <*errors.errorString>")
 }

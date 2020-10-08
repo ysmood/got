@@ -37,7 +37,7 @@ func (as G) Eq(a, b interface{}) (result Result) {
 	if compare(a, b) == 0 {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("≂"), as.d(b))
+	return as.err("%s %s %s", as.d(a), as.k("not ≂"), as.d(b))
 }
 
 // Neq a != b
@@ -46,7 +46,7 @@ func (as G) Neq(a, b interface{}) (result Result) {
 	if compare(a, b) != 0 {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("≠"), as.d(b))
+	return as.err("%s %s %s", as.d(a), as.k("not ≠"), as.d(b))
 }
 
 // Equal a == b
@@ -55,7 +55,7 @@ func (as G) Equal(a, b interface{}) (result Result) {
 	if a == b {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("=="), as.d(b))
+	return as.err("%s %s %s", as.d(a), as.k("not =="), as.d(b))
 }
 
 // Gt a > b
@@ -64,7 +64,7 @@ func (as G) Gt(a, b interface{}) (result Result) {
 	if compare(a, b) > 0 {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k(">"), as.d(b))
+	return as.err("%s %s %s", as.d(a), as.k("not >"), as.d(b))
 }
 
 // Gte a >= b
@@ -73,7 +73,7 @@ func (as G) Gte(a, b interface{}) (result Result) {
 	if compare(a, b) >= 0 {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("≥"), as.d(b))
+	return as.err("%s %s %s", as.d(a), as.k("not ≥"), as.d(b))
 }
 
 // Lt a < b
@@ -82,7 +82,7 @@ func (as G) Lt(a, b interface{}) (result Result) {
 	if compare(a, b) < 0 {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("<"), as.d(b))
+	return as.err("%s %s %s", as.d(a), as.k("not <"), as.d(b))
 }
 
 // Lte a <= b
@@ -91,7 +91,7 @@ func (as G) Lte(a, b interface{}) (result Result) {
 	if compare(a, b) <= 0 {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("≤"), as.d(b))
+	return as.err("%s %s %s", as.d(a), as.k("not ≤"), as.d(b))
 }
 
 // True a == true
@@ -122,7 +122,7 @@ func (as G) Nil(args ...interface{}) (result Result) {
 	if isNil(last) {
 		return
 	}
-	return as.err("%s %s", as.d(last), as.k("should be <nil>"))
+	return as.err("%s %s %s", as.k("last value"), as.d(last), as.k("should be <nil>"))
 }
 
 // NotNil args[-1] != nil
@@ -135,7 +135,10 @@ func (as G) NotNil(args ...interface{}) (result Result) {
 	if !isNil(last) {
 		return
 	}
-	return as.err("%s %s", as.d(last), as.k("shouldn't be <nil>"))
+	if last == nil {
+		return as.err("%s", as.k("last value shouldn't be <nil>"))
+	}
+	return as.err("<%s> %s", reflect.TypeOf(last), as.k("shouldn't be <nil>"))
 }
 
 // Regex matches str
@@ -176,7 +179,7 @@ func (as G) Err(args ...interface{}) (result Result) {
 	if err, _ := last.(error); err != nil {
 		return
 	}
-	return as.err("%s %s", as.d(last), as.k("should be <error>"))
+	return as.err("%s %s %s", as.k("last value"), as.d(last), as.k("should be <error>"))
 }
 
 // E is a shortcut for Nil(args...).Must()

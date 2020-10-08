@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -22,6 +23,11 @@ import (
 type Context struct {
 	context.Context
 	Cancel func()
+}
+
+// Log is the same as testing.T.Log
+func (hp G) Log(args ...interface{}) {
+	hp.Logf("%s", fmt.Sprintln(args...))
 }
 
 // Context that will be canceled after the test

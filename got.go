@@ -1,6 +1,8 @@
 package got
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"reflect"
 )
@@ -36,7 +38,35 @@ type Options struct {
 func Defaults() Options {
 	return Options{
 		func(v interface{}) string {
-			return fmt.Sprintf("%v (%v)", v, reflect.TypeOf(v))
+			if v == nil {
+				return "nil"
+			}
+
+			s := fmt.Sprintf("%v", v)
+
+			json := func() {
+				buf := bytes.NewBuffer(nil)
+				enc := json.NewEncoder(buf)
+				enc.SetEscapeHTML(false)
+				if enc.Encode(v) == nil {
+					b, _ := json.Marshal(v)
+					s = string(b)
+				}
+			}
+
+			t := ""
+			switch v.(type) {
+			case string:
+				json()
+			case int:
+				json()
+			case bool:
+				json()
+			default:
+				t = fmt.Sprintf(" <%v>", reflect.TypeOf(v))
+			}
+
+			return s + t
 		},
 		func(s string) string {
 			return "⦗" + s + "⦘"

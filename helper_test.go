@@ -61,4 +61,8 @@ func TestHelper(t *testing.T) {
 		hp.Req(http.MethodPost, s.URL("/e"), "", 1, 2)
 		hp.Req(http.MethodPost, s.URL("/f"), ".json", 1)
 	}
+
+	m := &mock{}
+	got.New(m).Log("a", 1)
+	hp.Eq(m.msg, "a 1\n")
 }

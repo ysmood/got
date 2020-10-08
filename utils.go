@@ -40,13 +40,13 @@ func compare(a, b interface{}) float64 {
 	return float64(bytes.Compare(ja, jb))
 }
 
-func isNil(a interface{}) bool {
+func isNil(a interface{}) (yes bool) {
 	if a == nil {
 		return true
 	}
 
-	defer func() { _ = recover() }()
-	return reflect.ValueOf(a).IsNil()
+	try(func() { yes = reflect.ValueOf(a).IsNil() })
+	return
 }
 
 func try(fn func()) {
