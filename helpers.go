@@ -26,80 +26,80 @@ type Context struct {
 	Cancel func()
 }
 
-// Helper for commonly used methods
-type Helper struct {
+// Helpers for commonly used methods
+type Helpers struct {
 	Testable
 }
 
 // Fatal is the same as testing.common.Fatal
-func (hp Helper) Fatal(args ...interface{}) {
+func (hp Helpers) Fatal(args ...interface{}) {
 	hp.Helper()
 	hp.Log(args...)
 	hp.FailNow()
 }
 
 // Fatalf is the same as testing.common.Fatalf
-func (hp Helper) Fatalf(format string, args ...interface{}) {
+func (hp Helpers) Fatalf(format string, args ...interface{}) {
 	hp.Helper()
 	hp.Logf(format, args...)
 	hp.FailNow()
 }
 
 // Log is the same as testing.common.Log
-func (hp Helper) Log(args ...interface{}) {
+func (hp Helpers) Log(args ...interface{}) {
 	hp.Helper()
 	hp.Logf("%s", fmt.Sprintln(args...))
 }
 
 // Error is the same as testing.common.Error
-func (hp Helper) Error(args ...interface{}) {
+func (hp Helpers) Error(args ...interface{}) {
 	hp.Helper()
 	hp.Log(args...)
 	hp.Fail()
 }
 
 // Errorf is the same as testing.common.Errorf
-func (hp Helper) Errorf(format string, args ...interface{}) {
+func (hp Helpers) Errorf(format string, args ...interface{}) {
 	hp.Helper()
 	hp.Logf(format, args...)
 	hp.Fail()
 }
 
 // Skipf is the same as testing.common.Skipf
-func (hp Helper) Skipf(format string, args ...interface{}) {
+func (hp Helpers) Skipf(format string, args ...interface{}) {
 	hp.Helper()
 	hp.Logf(format, args...)
 	hp.SkipNow()
 }
 
 // Skip is the same as testing.common.Skip
-func (hp Helper) Skip(args ...interface{}) {
+func (hp Helpers) Skip(args ...interface{}) {
 	hp.Helper()
 	hp.Log(args...)
 	hp.SkipNow()
 }
 
 // Parallel is the same as testing.T.Parallel
-func (hp Helper) Parallel() {
+func (hp Helpers) Parallel() {
 	reflect.ValueOf(hp.Testable).MethodByName("Parallel").Call(nil)
 }
 
 // Context that will be canceled after the test
-func (hp Helper) Context() Context {
+func (hp Helpers) Context() Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	hp.Cleanup(cancel)
 	return Context{ctx, cancel}
 }
 
 // Timeout context that will be canceled after the test
-func (hp Helper) Timeout(d time.Duration) Context {
+func (hp Helpers) Timeout(d time.Duration) Context {
 	ctx, cancel := context.WithTimeout(context.Background(), d)
 	hp.Cleanup(cancel)
 	return Context{ctx, cancel}
 }
 
 // Srand generates a random string with the specified length
-func (hp Helper) Srand(l int) string {
+func (hp Helpers) Srand(l int) string {
 	hp.Helper()
 	b := make([]byte, (l+1)/2)
 	_, err := rand.Read(b)
@@ -109,7 +109,7 @@ func (hp Helper) Srand(l int) string {
 
 // Open a file. Override it if create is true. Directories will be auto-created.
 // path will be joined with filepath.Join so that it's cross-platform
-func (hp Helper) Open(create bool, path ...string) (f *os.File) {
+func (hp Helpers) Open(create bool, path ...string) (f *os.File) {
 	p := filepath.Join(path...)
 
 	dir := filepath.Dir(p)
@@ -126,7 +126,7 @@ func (hp Helper) Open(create bool, path ...string) (f *os.File) {
 }
 
 // Read all from r
-func (hp Helper) Read(r io.Reader) []byte {
+func (hp Helpers) Read(r io.Reader) []byte {
 	hp.Helper()
 	b, err := ioutil.ReadAll(r)
 	hp.err(err)
@@ -134,13 +134,13 @@ func (hp Helper) Read(r io.Reader) []byte {
 }
 
 // ReadString from r
-func (hp Helper) ReadString(r io.Reader) string {
+func (hp Helpers) ReadString(r io.Reader) string {
 	hp.Helper()
 	return string(hp.Read(r))
 }
 
 // ReadJSON from r
-func (hp Helper) ReadJSON(r io.Reader) (v interface{}) {
+func (hp Helpers) ReadJSON(r io.Reader) (v interface{}) {
 	hp.Helper()
 	hp.err(json.Unmarshal(hp.Read(r), &v))
 	return
@@ -148,7 +148,7 @@ func (hp Helper) ReadJSON(r io.Reader) (v interface{}) {
 
 // Write obj to the writer. Encode obj to []byte and cache it for writer.
 // If obj is not []byte, string, or io.Reader, it will be encoded as JSON.
-func (hp Helper) Write(obj interface{}) (writer func(io.Writer)) {
+func (hp Helpers) Write(obj interface{}) (writer func(io.Writer)) {
 	var cache io.ReadWriter
 	return func(w io.Writer) {
 		hp.Helper()
@@ -179,7 +179,7 @@ func (hp Helper) Write(obj interface{}) (writer func(io.Writer)) {
 
 // HandleHTTP handles a request. If file exists serve the file content. The file will be used to set the Content-Type header.
 // If the file doesn't exist, the value will be encoded by G.Write(value) and used as the response body.
-func (hp Helper) HandleHTTP(file string, value ...interface{}) func(http.ResponseWriter, *http.Request) {
+func (hp Helpers) HandleHTTP(file string, value ...interface{}) func(http.ResponseWriter, *http.Request) {
 	var obj interface{}
 	if len(value) > 1 {
 		obj = value
@@ -206,7 +206,7 @@ func (hp Helper) HandleHTTP(file string, value ...interface{}) func(http.Respons
 }
 
 // Serve http on a random port. The server will be auto-closed after the test.
-func (hp Helper) Serve() *Router {
+func (hp Helpers) Serve() *Router {
 	hp.Helper()
 
 	mux := http.NewServeMux()
@@ -227,7 +227,7 @@ func (hp Helper) Serve() *Router {
 
 // Router of a http server
 type Router struct {
-	hp      Helper
+	hp      Helpers
 	HostURL *url.URL
 	Server  *http.Server
 	Mux     *http.ServeMux
@@ -253,7 +253,7 @@ func (rt *Router) Route(pattern, file string, value ...interface{}) *Router {
 // Req the url. The method is the http method. The body will be encoded by G.Write(body) .
 // When the len(body) is greater than 2, the first item should be a file extension string for the Content-Type header,
 // such as ".json", ".jpg".
-func (hp Helper) Req(method, url string, body ...interface{}) *ResHelper {
+func (hp Helpers) Req(method, url string, body ...interface{}) *ResHelper {
 	hp.Helper()
 
 	var r io.Reader
@@ -294,7 +294,7 @@ func (hp Helper) Req(method, url string, body ...interface{}) *ResHelper {
 
 // ResHelper of the request
 type ResHelper struct {
-	hp Helper
+	hp Helpers
 	*http.Response
 }
 

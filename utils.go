@@ -6,14 +6,14 @@ import (
 	"reflect"
 )
 
-func (u Assertion) err(format string, args ...interface{}) Result {
+func (u Assertions) err(format string, args ...interface{}) Result {
 	u.Helper()
 	u.Logf(format, args...)
 	u.Fail()
 	return Result{u, true}
 }
 
-func (hp Helper) err(err error) {
+func (hp Helpers) err(err error) {
 	if err != nil {
 		hp.Fatal(err)
 	}
