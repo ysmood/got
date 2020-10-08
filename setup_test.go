@@ -22,9 +22,8 @@ func (m *mock) Failed() bool   { return m.failed }
 func (m *mock) Helper()        {}
 func (m *mock) Cleanup(func()) {}
 func (m *mock) SkipNow()       {}
-func (m *mock) Fail() {
-	m.failed = true
-}
+func (m *mock) Fail()          { m.failed = true }
+
 func (m *mock) FailNow() {
 	m.failed = true
 	panic("fail now")

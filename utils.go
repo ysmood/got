@@ -6,11 +6,17 @@ import (
 	"reflect"
 )
 
-func (u G) err(format string, args ...interface{}) Result {
+func (u Assertion) err(format string, args ...interface{}) Result {
 	u.Helper()
 	u.Logf(format, args...)
 	u.Fail()
 	return Result{u, true}
+}
+
+func (hp Helper) err(err error) {
+	if err != nil {
+		hp.Fatal(err)
+	}
 }
 
 func castType(a, b interface{}) interface{} {

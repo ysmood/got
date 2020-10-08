@@ -64,8 +64,15 @@ func TestHelper(t *testing.T) {
 
 	m := &mock{}
 	mhp := got.New(m)
+
 	mhp.Log("a", 1)
 	hp.Eq(m.msg, "a 1\n")
+
+	hp.Panic(func() {
+		buf := bytes.NewBufferString("a")
+		mhp.ReadJSON(buf)
+	})
+	hp.Eq(m.msg, "invalid character 'a' looking for beginning of value\n")
 
 	hp.Panic(func() {
 		mhp.Fatal("test skip")

@@ -20,7 +20,11 @@ func setup(t *testing.T) Advanced {
 
 	t.Parallel() // concurrently run each test
 
-	return Advanced{got.New(t)}
+	g := got.NewWith(t, got.Options{Keyword: func(s string) string {
+		return s
+	}})
+
+	return Advanced{g}
 }
 
 type Advanced struct { // usually, we use a shorter name like A or T to reduce distraction
@@ -32,11 +36,11 @@ func (t Advanced) A() {
 }
 
 func (t Advanced) B(got.Skip) { // use got.Skip to skip a test
-	t.Eq([]int{1, 2}, []int{1, 2})
+	t.Eq([]int{1, 2}, []int{1, 2}) // run "go doc got.Assertion" to list available assertion helpers
 }
 
 func (t Advanced) C(got.Only) { // use got.Only to run specific tests
-	s := t.Serve()
+	s := t.Serve() // run "go doc got.Helper" to list available helpers
 	s.Route("/get", ".json", 10)
 
 	val := t.Req("", s.URL("/get")).JSON()

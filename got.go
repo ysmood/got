@@ -23,9 +23,8 @@ type Testable interface {
 // G is the helper context, it hold some useful helpers to write tests
 type G struct {
 	Testable
-
-	d func(v interface{}) string // Options.Dump
-	k func(string) string        // Options.Keyword
+	Assertion
+	Helper
 }
 
 // Options for Assertion
@@ -78,12 +77,12 @@ func Defaults() Options {
 	}
 }
 
-// New assertion helper
+// New G
 func New(t Testable) G {
 	return NewWith(t, Defaults())
 }
 
-// NewWith assertion helper with options
+// NewWith G with options
 func NewWith(t Testable, opts Options) G {
-	return G{t, opts.Dump, opts.Keyword}
+	return G{t, Assertion{t, opts.Dump, opts.Keyword}, Helper{t}}
 }

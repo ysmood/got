@@ -9,8 +9,16 @@ import (
 
 // Result helper
 type Result struct {
-	as     G
+	as     Assertion
 	failed bool
+}
+
+// Assertion helpers
+type Assertion struct {
+	Testable
+
+	d func(v interface{}) string // Options.Dump
+	k func(string) string        // Options.Keyword
 }
 
 // Msg if fails
@@ -32,7 +40,7 @@ func (r Result) Must() Result {
 }
 
 // Eq a ≂ b
-func (as G) Eq(a, b interface{}) (result Result) {
+func (as Assertion) Eq(a, b interface{}) (result Result) {
 	as.Helper()
 	if compare(a, b) == 0 {
 		return
@@ -41,7 +49,7 @@ func (as G) Eq(a, b interface{}) (result Result) {
 }
 
 // Neq a != b
-func (as G) Neq(a, b interface{}) (result Result) {
+func (as Assertion) Neq(a, b interface{}) (result Result) {
 	as.Helper()
 	if compare(a, b) != 0 {
 		return
@@ -50,7 +58,7 @@ func (as G) Neq(a, b interface{}) (result Result) {
 }
 
 // Equal a == b
-func (as G) Equal(a, b interface{}) (result Result) {
+func (as Assertion) Equal(a, b interface{}) (result Result) {
 	as.Helper()
 	if a == b {
 		return
@@ -59,7 +67,7 @@ func (as G) Equal(a, b interface{}) (result Result) {
 }
 
 // Gt a > b
-func (as G) Gt(a, b interface{}) (result Result) {
+func (as Assertion) Gt(a, b interface{}) (result Result) {
 	as.Helper()
 	if compare(a, b) > 0 {
 		return
@@ -68,7 +76,7 @@ func (as G) Gt(a, b interface{}) (result Result) {
 }
 
 // Gte a >= b
-func (as G) Gte(a, b interface{}) (result Result) {
+func (as Assertion) Gte(a, b interface{}) (result Result) {
 	as.Helper()
 	if compare(a, b) >= 0 {
 		return
@@ -77,7 +85,7 @@ func (as G) Gte(a, b interface{}) (result Result) {
 }
 
 // Lt a < b
-func (as G) Lt(a, b interface{}) (result Result) {
+func (as Assertion) Lt(a, b interface{}) (result Result) {
 	as.Helper()
 	if compare(a, b) < 0 {
 		return
@@ -86,7 +94,7 @@ func (as G) Lt(a, b interface{}) (result Result) {
 }
 
 // Lte a <= b
-func (as G) Lte(a, b interface{}) (result Result) {
+func (as Assertion) Lte(a, b interface{}) (result Result) {
 	as.Helper()
 	if compare(a, b) <= 0 {
 		return
@@ -95,7 +103,7 @@ func (as G) Lte(a, b interface{}) (result Result) {
 }
 
 // True a == true
-func (as G) True(a bool) (result Result) {
+func (as Assertion) True(a bool) (result Result) {
 	as.Helper()
 	if a {
 		return
@@ -104,7 +112,7 @@ func (as G) True(a bool) (result Result) {
 }
 
 // False a == false
-func (as G) False(a bool) (result Result) {
+func (as Assertion) False(a bool) (result Result) {
 	as.Helper()
 	if !a {
 		return
@@ -113,7 +121,7 @@ func (as G) False(a bool) (result Result) {
 }
 
 // Nil fails if last arg is not nil
-func (as G) Nil(args ...interface{}) (result Result) {
+func (as Assertion) Nil(args ...interface{}) (result Result) {
 	as.Helper()
 	if len(args) == 0 {
 		return as.err("%s", as.k("no args received"))
@@ -126,7 +134,7 @@ func (as G) Nil(args ...interface{}) (result Result) {
 }
 
 // NotNil fails if last arg is nil
-func (as G) NotNil(args ...interface{}) (result Result) {
+func (as Assertion) NotNil(args ...interface{}) (result Result) {
 	as.Helper()
 	if len(args) == 0 {
 		return as.err("%s", as.k("no args received"))
@@ -142,7 +150,7 @@ func (as G) NotNil(args ...interface{}) (result Result) {
 }
 
 // Regex matches str
-func (as G) Regex(pattern, str string) (result Result) {
+func (as Assertion) Regex(pattern, str string) (result Result) {
 	as.Helper()
 	if regexp.MustCompile(pattern).MatchString(str) {
 		return
@@ -151,7 +159,7 @@ func (as G) Regex(pattern, str string) (result Result) {
 }
 
 // Has str in container
-func (as G) Has(container, str string) (result Result) {
+func (as Assertion) Has(container, str string) (result Result) {
 	as.Helper()
 	if strings.Contains(container, str) {
 		return
@@ -160,7 +168,7 @@ func (as G) Has(container, str string) (result Result) {
 }
 
 // Len len(list) == l
-func (as G) Len(list interface{}, l int) (result Result) {
+func (as Assertion) Len(list interface{}, l int) (result Result) {
 	as.Helper()
 	actual := reflect.ValueOf(list).Len()
 	if actual == l {
@@ -170,7 +178,7 @@ func (as G) Len(list interface{}, l int) (result Result) {
 }
 
 // Err fails if last arg is not error
-func (as G) Err(args ...interface{}) (result Result) {
+func (as Assertion) Err(args ...interface{}) (result Result) {
 	as.Helper()
 	if len(args) == 0 {
 		return as.err("%s", as.k("no args received"))
@@ -183,13 +191,13 @@ func (as G) Err(args ...interface{}) (result Result) {
 }
 
 // E is a shortcut for Nil(args...).Must()
-func (as G) E(args ...interface{}) {
+func (as Assertion) E(args ...interface{}) {
 	as.Helper()
 	as.Nil(args...).Must()
 }
 
 // Panic fails if fn doesn't panic
-func (as G) Panic(fn func()) (result Result) {
+func (as Assertion) Panic(fn func()) (result Result) {
 	as.Helper()
 
 	defer func() {
@@ -207,7 +215,7 @@ func (as G) Panic(fn func()) (result Result) {
 }
 
 // Is fails if a is not kind of b
-func (as G) Is(a, b interface{}) (result Result) {
+func (as Assertion) Is(a, b interface{}) (result Result) {
 	as.Helper()
 
 	if ae, ok := a.(error); ok {
