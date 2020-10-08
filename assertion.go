@@ -112,7 +112,7 @@ func (as G) False(a bool) (result Result) {
 	return as.err("%s", as.k("should be <false>"))
 }
 
-// Nil args[-1] == nil
+// Nil fails if last arg is not nil
 func (as G) Nil(args ...interface{}) (result Result) {
 	as.Helper()
 	if len(args) == 0 {
@@ -125,7 +125,7 @@ func (as G) Nil(args ...interface{}) (result Result) {
 	return as.err("%s %s %s", as.k("last value"), as.d(last), as.k("should be <nil>"))
 }
 
-// NotNil args[-1] != nil
+// NotNil fails if last arg is nil
 func (as G) NotNil(args ...interface{}) (result Result) {
 	as.Helper()
 	if len(args) == 0 {
@@ -169,7 +169,7 @@ func (as G) Len(list interface{}, l int) (result Result) {
 	return as.err("%s %d %s %d", as.k("expect len"), actual, as.k("to be"), l)
 }
 
-// Err args[-1] is error and not nil
+// Err fails if last arg is not error
 func (as G) Err(args ...interface{}) (result Result) {
 	as.Helper()
 	if len(args) == 0 {
@@ -188,7 +188,7 @@ func (as G) E(args ...interface{}) {
 	as.Nil(args...).Must()
 }
 
-// Panic fn should panic
+// Panic fails if fn doesn't panic
 func (as G) Panic(fn func()) (result Result) {
 	as.Helper()
 
@@ -206,7 +206,7 @@ func (as G) Panic(fn func()) (result Result) {
 	return
 }
 
-// Is a a kind of b
+// Is fails if a is not kind of b
 func (as G) Is(a, b interface{}) (result Result) {
 	as.Helper()
 
