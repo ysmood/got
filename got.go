@@ -7,16 +7,16 @@ import (
 	"reflect"
 )
 
-// Testable interface
+// Testable interface. Usually, you use *testing.T as it.
 type Testable interface {
-	Helper()
-	Fail()
-	FailNow()
-	Cleanup(func())
-	Logf(format string, args ...interface{})
+	Helper()                                 // same as testing.common.Helper
+	Fail()                                   // same as testing.common.Fail
+	FailNow()                                // same as testing.common.FailNow
+	Cleanup(func())                          // same as testing.common.Cleanup
+	Logf(format string, args ...interface{}) // same as testing.common.Logf
 }
 
-// G is the helper context
+// G is the helper context, it hold some useful helpers to write tests
 type G struct {
 	Testable
 

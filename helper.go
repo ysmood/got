@@ -25,7 +25,7 @@ type Context struct {
 	Cancel func()
 }
 
-// Log is the same as testing.T.Log
+// Log is the same as testing.common.Log
 func (hp G) Log(args ...interface{}) {
 	hp.Logf("%s", fmt.Sprintln(args...))
 }
