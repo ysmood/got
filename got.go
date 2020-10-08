@@ -12,6 +12,7 @@ type Testable interface {
 	Helper()                                 // same as testing.common.Helper
 	Fail()                                   // same as testing.common.Fail
 	FailNow()                                // same as testing.common.FailNow
+	SkipNow()                                // same as testing.common.Skip
 	Cleanup(func())                          // same as testing.common.Cleanup
 	Logf(format string, args ...interface{}) // same as testing.common.Logf
 }

@@ -25,6 +25,9 @@ func (c StructVal) ExtraInOut(int) int {
 	return 0
 }
 
+func (c StructVal) TestSkip(got.Skip) {
+}
+
 func TestEachEmbedded(t *testing.T) {
 	got.Each(t, Container{})
 }

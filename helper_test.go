@@ -63,6 +63,10 @@ func TestHelper(t *testing.T) {
 	}
 
 	m := &mock{}
-	got.New(m).Log("a", 1)
+	mhp := got.New(m)
+	mhp.Log("a", 1)
 	hp.Eq(m.msg, "a 1\n")
+
+	mhp.Skip("test skip")
+	hp.Eq(m.msg, "test skip\n")
 }

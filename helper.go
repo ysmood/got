@@ -30,6 +30,12 @@ func (hp G) Log(args ...interface{}) {
 	hp.Logf("%s", fmt.Sprintln(args...))
 }
 
+// Skip is the same as testing.common.Skip
+func (hp G) Skip(args ...interface{}) {
+	hp.Log(args...)
+	hp.SkipNow()
+}
+
 // Context that will be canceled after the test
 func (hp G) Context() Context {
 	ctx, cancel := context.WithCancel(context.Background())

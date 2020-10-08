@@ -44,12 +44,14 @@ func Each(t Testable, iteratee interface{}) (count int) {
 		runVal.Call([]reflect.Value{
 			reflect.ValueOf(method.Name),
 			reflect.MakeFunc(cbType, func(args []reflect.Value) []reflect.Value {
+				doSkip(args[0], method)
+				count++
 				res := itVal.Call(args)
 				return callMethod(method, res[0])
 			}),
 		})
 	}
-	return len(methods)
+	return
 }
 
 func normalizeIteratee(t Testable, iteratee interface{}) reflect.Value {
@@ -130,14 +132,8 @@ func filterMethods(typ reflect.Type) []reflect.Method {
 			continue
 		}
 
-		if method.Type.NumIn() > 1 {
-			inType := method.Type.In(1)
-			if inType == skipType {
-				continue
-			}
-			if inType == onlyType {
-				onlyList = append(onlyList, method)
-			}
+		if method.Type.NumIn() > 1 && method.Type.In(1) == onlyType {
+			onlyList = append(onlyList, method)
 		}
 
 		methods = append(methods, method)
@@ -148,4 +144,10 @@ func filterMethods(typ reflect.Type) []reflect.Method {
 	}
 
 	return methods
+}
+
+func doSkip(t reflect.Value, method reflect.Method) {
+	if method.Type.NumIn() > 1 && method.Type.In(1) == skipType {
+		t.Interface().(Testable).SkipNow()
+	}
 }

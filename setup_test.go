@@ -17,7 +17,7 @@ type mock struct {
 
 func (m *mock) Helper()        {}
 func (m *mock) Cleanup(func()) {}
-
+func (m *mock) SkipNow()       {}
 func (m *mock) Fail() {
 	m.failed = true
 }
