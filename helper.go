@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -25,10 +26,45 @@ type Context struct {
 	Cancel func()
 }
 
+// Fatal is the same as testing.common.Fatal
+func (hp G) Fatal(args ...interface{}) {
+	hp.Helper()
+	hp.Log(args...)
+	hp.FailNow()
+}
+
+// Fatalf is the same as testing.common.Fatalf
+func (hp G) Fatalf(format string, args ...interface{}) {
+	hp.Helper()
+	hp.Logf(format, args...)
+	hp.FailNow()
+}
+
 // Log is the same as testing.common.Log
 func (hp G) Log(args ...interface{}) {
 	hp.Helper()
 	hp.Logf("%s", fmt.Sprintln(args...))
+}
+
+// Error is the same as testing.common.Error
+func (hp G) Error(args ...interface{}) {
+	hp.Helper()
+	hp.Log(args...)
+	hp.Fail()
+}
+
+// Errorf is the same as testing.common.Errorf
+func (hp G) Errorf(format string, args ...interface{}) {
+	hp.Helper()
+	hp.Logf(format, args...)
+	hp.Fail()
+}
+
+// Skipf is the same as testing.common.Skipf
+func (hp G) Skipf(format string, args ...interface{}) {
+	hp.Helper()
+	hp.Logf(format, args...)
+	hp.SkipNow()
 }
 
 // Skip is the same as testing.common.Skip
@@ -36,6 +72,11 @@ func (hp G) Skip(args ...interface{}) {
 	hp.Helper()
 	hp.Log(args...)
 	hp.SkipNow()
+}
+
+// Parallel is the same as testing.T.Parallel
+func (hp G) Parallel() {
+	reflect.ValueOf(hp.Testable).MethodByName("Parallel").Call(nil)
 }
 
 // Context that will be canceled after the test

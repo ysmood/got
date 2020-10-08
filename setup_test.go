@@ -10,11 +10,15 @@ import (
 var _ got.Testable = &mock{}
 
 type mock struct {
-	t      *testing.T
-	failed bool
-	msg    string
+	t       *testing.T
+	failed  bool
+	skipped bool
+	msg     string
 }
 
+func (m *mock) Name() string   { return m.t.Name() }
+func (m *mock) Skipped() bool  { return m.skipped }
+func (m *mock) Failed() bool   { return m.failed }
 func (m *mock) Helper()        {}
 func (m *mock) Cleanup(func()) {}
 func (m *mock) SkipNow()       {}

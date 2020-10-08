@@ -67,6 +67,25 @@ func TestHelper(t *testing.T) {
 	mhp.Log("a", 1)
 	hp.Eq(m.msg, "a 1\n")
 
+	hp.Panic(func() {
+		mhp.Fatal("test skip")
+	})
+	hp.Eq(m.msg, "test skip\n")
+
+	hp.Panic(func() {
+		mhp.Fatalf("test skip")
+	})
+	hp.Eq(m.msg, "test skip")
+
+	mhp.Error("test skip")
+	hp.Eq(m.msg, "test skip\n")
+
+	mhp.Errorf("test skip")
+	hp.Eq(m.msg, "test skip")
+
 	mhp.Skip("test skip")
 	hp.Eq(m.msg, "test skip\n")
+
+	mhp.Skipf("test skip")
+	hp.Eq(m.msg, "test skip")
 }

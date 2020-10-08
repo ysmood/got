@@ -9,12 +9,15 @@ import (
 
 // Testable interface. Usually, you use *testing.T as it.
 type Testable interface {
-	Helper()                                 // same as testing.common.Helper
-	Fail()                                   // same as testing.common.Fail
-	FailNow()                                // same as testing.common.FailNow
-	SkipNow()                                // same as testing.common.Skip
+	Name() string                            // same as testing.common.Name
+	Skipped() bool                           // same as testing.common.Skipped
+	Failed() bool                            // same as testing.common.Failed
 	Cleanup(func())                          // same as testing.common.Cleanup
+	FailNow()                                // same as testing.common.FailNow
+	Fail()                                   // same as testing.common.Fail
+	Helper()                                 // same as testing.common.Helper
 	Logf(format string, args ...interface{}) // same as testing.common.Logf
+	SkipNow()                                // same as testing.common.Skip
 }
 
 // G is the helper context, it hold some useful helpers to write tests
