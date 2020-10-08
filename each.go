@@ -150,3 +150,10 @@ func doSkip(t reflect.Value, method reflect.Method) {
 		t.Interface().(Testable).SkipNow()
 	}
 }
+
+func try(fn func()) {
+	defer func() {
+		_ = recover()
+	}()
+	fn()
+}

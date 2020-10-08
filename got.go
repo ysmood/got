@@ -24,7 +24,7 @@ type Testable interface {
 type G struct {
 	Testable
 	Assertions
-	Helpers
+	Utils
 }
 
 // Options for Assertion
@@ -35,17 +35,20 @@ type Options struct {
 	// Format keywords in the assertion message.
 	// Such as color it for CLI output.
 	Keyword func(string) string
+
+	// Diff function for Assertions.Eq
+	Diff func(a, b interface{}) string
 }
+
+var floatType = reflect.TypeOf(0.0)
 
 // Defaults for Options
 func Defaults() Options {
 	return Options{
-		func(v interface{}) string {
+		func(v interface{}) (s string) {
 			if v == nil {
 				return "nil"
 			}
-
-			s := fmt.Sprintf("%v", v)
 
 			json := func() {
 				buf := bytes.NewBuffer(nil)
@@ -57,7 +60,6 @@ func Defaults() Options {
 				}
 			}
 
-			t := ""
 			switch v.(type) {
 			case string:
 				json()
@@ -66,14 +68,20 @@ func Defaults() Options {
 			case bool:
 				json()
 			default:
-				t = fmt.Sprintf(" <%v>", reflect.TypeOf(v))
+				t := reflect.TypeOf(v)
+				if t.ConvertibleTo(floatType) {
+					s = fmt.Sprintf("%s(%v)", t, v)
+				} else {
+					s = fmt.Sprintf("%#v", v)
+				}
 			}
 
-			return s + t
+			return s
 		},
 		func(s string) string {
 			return "⦗" + s + "⦘"
 		},
+		nil,
 	}
 }
 
@@ -84,5 +92,5 @@ func New(t Testable) G {
 
 // NewWith G with options
 func NewWith(t Testable, opts Options) G {
-	return G{t, Assertions{t, opts.Dump, opts.Keyword}, Helpers{t}}
+	return G{t, Assertions{t, opts.Dump, opts.Keyword, opts.Diff}, Utils{t}}
 }

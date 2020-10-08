@@ -24,7 +24,10 @@ func TestHelper(t *testing.T) {
 	hp.Write(1)(f)
 	hp.Nil(f.Close())
 	f = hp.Open(false, "tmp/test.txt")
-	hp.Eq(hp.ReadJSON(f), 1)
+	hp.Eq(hp.JSON(f), 1)
+
+	hp.Eq(hp.JSON([]byte("1")), 1)
+	hp.Eq(hp.JSON("true"), true)
 
 	buf := bytes.NewBuffer(nil)
 	hp.Write([]byte("ok"))(buf)
@@ -70,7 +73,7 @@ func TestHelper(t *testing.T) {
 
 	hp.Panic(func() {
 		buf := bytes.NewBufferString("a")
-		mhp.ReadJSON(buf)
+		mhp.JSON(buf)
 	})
 	hp.Eq(m.msg, "invalid character 'a' looking for beginning of value\n")
 

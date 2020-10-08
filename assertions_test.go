@@ -20,6 +20,8 @@ func TestAssertion(t *testing.T) {
 
 	as.Neq(1.1, 1)
 	as.Neq([]int{1, 2}, []int{2, 1})
+	as.Neq("true", true)
+	as.Neq(errors.New("a"), errors.New("b"))
 
 	as.Equal(1, 1)
 
@@ -71,13 +73,13 @@ func TestAssertionErr(t *testing.T) {
 	m.check("not equal")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
-	m.check("{1 a} <got_test.data> ⦗not ≂⦘ {1 b} <got_test.data>")
+	m.check(`got_test.data{A:1, S:"a"} ⦗not ≂⦘ got_test.data{A:1, S:"b"}`)
 
 	as.Eq(true, "a")
 	m.check(`true ⦗not ≂⦘ "a"`)
 
 	as.Equal(1, 1.0)
-	m.check("1 ⦗not ==⦘ 1 <float64>")
+	m.check("1 ⦗not ==⦘ float64(1)")
 
 	as.Neq(1, 1)
 	m.check("1 ⦗not ≠⦘ 1")
@@ -131,10 +133,18 @@ func TestAssertionErr(t *testing.T) {
 		}()
 		as.E(1, errors.New("E"))
 	}()
-	m.check("⦗last value⦘ E <*errors.errorString> ⦗should be <nil>⦘")
+	m.check(`⦗last value⦘ &errors.errorString{s:"E"} ⦗should be <nil>⦘`)
 
 	as.Is(1, 2.2)
-	m.check("1 ⦗should kind of⦘ 2.2 <float64>")
+	m.check("1 ⦗should be kind of⦘ float64(2.2)")
 	as.Is(errors.New("a"), errors.New("b"))
-	m.check("a <*errors.errorString> ⦗should in chain of⦘ b <*errors.errorString>")
+	m.check(`&errors.errorString{s:"a"} ⦗should in chain of⦘ &errors.errorString{s:"b"}`)
+
+	opts := got.Defaults()
+	opts.Diff = func(a, b interface{}) string {
+		return " diff"
+	}
+	asDiff := got.NewWith(m, opts)
+	asDiff.Eq("a", "b")
+	m.check(`"a" ⦗not ≂⦘ "b" diff`)
 }

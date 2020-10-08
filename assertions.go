@@ -2,6 +2,7 @@ package got
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -17,8 +18,9 @@ type Result struct {
 type Assertions struct {
 	Testable
 
-	d func(v interface{}) string // Options.Dump
-	k func(string) string        // Options.Keyword
+	d  func(v interface{}) string    // Options.Dump
+	k  func(string) string           // Options.Keyword
+	df func(a, b interface{}) string // Options.Diff
 }
 
 // Msg if fails
@@ -45,7 +47,7 @@ func (as Assertions) Eq(a, b interface{}) (result Result) {
 	if compare(a, b) == 0 {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("not ≂"), as.d(b))
+	return as.err("%s %s %s%s", as.d(a), as.k("not ≂"), as.d(b), as.diff(a, b))
 }
 
 // Neq a != b
@@ -63,7 +65,7 @@ func (as Assertions) Equal(a, b interface{}) (result Result) {
 	if a == b {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("not =="), as.d(b))
+	return as.err("%s %s %s%s", as.d(a), as.k("not =="), as.d(b), as.diff(a, b))
 }
 
 // Gt a > b
@@ -236,5 +238,55 @@ func (as Assertions) Is(a, b interface{}) (result Result) {
 	if at.Kind() == bt.Kind() {
 		return
 	}
-	return as.err("%s %s %s", as.d(a), as.k("should kind of"), as.d(b))
+	return as.err("%s %s %s", as.d(a), as.k("should be kind of"), as.d(b))
+}
+
+func (as Assertions) err(format string, args ...interface{}) Result {
+	as.Helper()
+	as.Logf(format, args...)
+	as.Fail()
+	return Result{as, true}
+}
+
+func castType(a, b interface{}) interface{} {
+	ta := reflect.ValueOf(a)
+	tb := reflect.ValueOf(b)
+
+	if ta.Type().ConvertibleTo(tb.Type()) {
+		return ta.Convert(tb.Type()).Interface()
+	}
+	return a
+}
+
+func compare(a, b interface{}) float64 {
+	if reflect.DeepEqual(a, b) {
+		return 0
+	}
+
+	if na, ok := castType(a, 0.0).(float64); ok {
+		if nb, ok := castType(b, 0.0).(float64); ok {
+			return na - nb
+		}
+	}
+
+	sa := fmt.Sprintf("%#v", a)
+	sb := fmt.Sprintf("%#v", b)
+
+	return float64(strings.Compare(sa, sb))
+}
+
+func isNil(a interface{}) (yes bool) {
+	if a == nil {
+		return true
+	}
+
+	try(func() { yes = reflect.ValueOf(a).IsNil() })
+	return
+}
+
+func (as Assertions) diff(a, b interface{}) string {
+	if as.df != nil {
+		return as.df(a, b)
+	}
+	return ""
 }

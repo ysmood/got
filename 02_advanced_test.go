@@ -20,11 +20,12 @@ func setup(t *testing.T) Advanced {
 
 	t.Parallel() // concurrently run each test
 
-	g := got.NewWith(t, got.Options{Keyword: func(s string) string {
-		return s
-	}})
+	opts := got.Defaults()
+	opts.Keyword = func(s string) string {
+		return "\x1b[31m" + s + "\x1b[0m" // print all keywords in red
+	}
 
-	return Advanced{g}
+	return Advanced{got.NewWith(t, opts)}
 }
 
 type Advanced struct { // usually, we use a shorter name like A or T to reduce distraction
@@ -40,15 +41,15 @@ func (t Advanced) B(got.Skip) { // use got.Skip to skip a test
 }
 
 func (t Advanced) C(got.Only) { // use got.Only to run specific tests
-	s := t.Serve() // run "go doc got.Helper" to list available helpers
+	s := t.Serve() // run "go doc got.Utils" to list available helpers
 	s.Route("/get", ".json", 10)
 
 	val := t.Req("", s.URL("/get")).JSON()
 	t.Eq(val, 10)
 
-	data := map[int]string{1: "ok"}
+	data := map[string]interface{}{"a": 1}
 	s.Mux.HandleFunc("/post", func(rw http.ResponseWriter, r *http.Request) {
-		t.Eq(t.ReadJSON(r.Body), data)
+		t.Eq(t.JSON(r.Body), data)
 	})
 	t.Req("POST", s.URL("/post"), ".json", data)
 }
