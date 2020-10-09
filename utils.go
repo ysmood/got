@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -161,8 +162,12 @@ func (ut Utils) JSON(src interface{}) (v interface{}) {
 // Write obj to the writer. Encode obj to []byte and cache it for writer.
 // If obj is not []byte, string, or io.Reader, it will be encoded as JSON.
 func (ut Utils) Write(obj interface{}) (writer func(io.Writer)) {
+	lock := sync.Mutex{}
 	var cache io.ReadWriter
 	return func(w io.Writer) {
+		lock.Lock()
+		defer lock.Unlock()
+
 		ut.Helper()
 
 		if cache != nil {
