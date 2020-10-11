@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/ysmood/got"
 )
@@ -98,4 +99,11 @@ func TestHelper(t *testing.T) {
 
 	mut.Skipf("test skip")
 	ut.Eq(m.msg, "test skip")
+
+	mut.HeartBeat(time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
+	m.cleanup()
+	m.Lock()
+	ut.Eq(m.msg, "[got.Utils.HeartBeat] continuing...")
+	m.Unlock()
 }

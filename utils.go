@@ -86,6 +86,23 @@ func (ut Utils) Parallel() Utils {
 	return ut
 }
 
+// HeartBeat for every d duration if test is still running.
+// Useful to detect hanging test for concurrent tests.
+func (ut Utils) HeartBeat(d time.Duration) {
+	ctx := ut.Context()
+	go func() {
+		tmr := time.NewTicker(d)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-tmr.C:
+			}
+			ut.Logf("[got.Utils.HeartBeat] continuing...")
+		}
+	}()
+}
+
 // Context that will be canceled after the test
 func (ut Utils) Context() Context {
 	ctx, cancel := context.WithCancel(context.Background())
