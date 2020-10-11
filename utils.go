@@ -86,14 +86,15 @@ func (ut Utils) Parallel() Utils {
 	return ut
 }
 
-// FatalAfter d duration
+// FatalAfter d duration if the test is still running
 func (ut Utils) FatalAfter(d time.Duration) Utils {
-	ut.Helper()
+	ctx := ut.Context()
 	go func() {
+		ut.Helper()
 		tmr := time.NewTimer(d)
 		defer tmr.Stop()
 		select {
-		case <-ut.Context().Done():
+		case <-ctx.Done():
 		case <-tmr.C:
 			ut.Fatal("fail after time limit", d)
 		}
