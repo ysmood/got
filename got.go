@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 )
 
@@ -92,5 +93,5 @@ func New(t Testable) G {
 
 // NewWith G with options
 func NewWith(t Testable, opts Options) G {
-	return G{t, Assertions{t, opts.Dump, opts.Keyword, opts.Diff}, Utils{t}}
+	return G{t, Assertions{t, opts.Dump, opts.Keyword, opts.Diff}, Utils{t, os.Exit}}
 }

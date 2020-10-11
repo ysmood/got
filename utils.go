@@ -30,6 +30,8 @@ type Context struct {
 // Utils for commonly used methods
 type Utils struct {
 	Testable
+
+	Exit func(int)
 }
 
 // Fatal is the same as testing.common.Fatal
@@ -96,7 +98,8 @@ func (ut Utils) FatalAfter(d time.Duration) Utils {
 		select {
 		case <-ctx.Done():
 		case <-tmr.C:
-			ut.Fatal("fail after time limit", d)
+			ut.Log("fail after time limit", d)
+			ut.Exit(1) // there no way to stop a blocking test from outside
 		}
 	}()
 	return ut
