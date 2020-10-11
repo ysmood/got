@@ -10,23 +10,29 @@ import (
 var _ got.Testable = &mock{}
 
 type mock struct {
-	t       *testing.T
-	failed  bool
-	skipped bool
-	msg     string
+	t           *testing.T
+	name        string
+	failed      bool
+	skipped     bool
+	msg         string
+	cleanupList []func()
+	recover     bool
 }
 
-func (m *mock) Name() string   { return m.t.Name() }
-func (m *mock) Skipped() bool  { return m.skipped }
-func (m *mock) Failed() bool   { return m.failed }
-func (m *mock) Helper()        {}
-func (m *mock) Cleanup(func()) {}
-func (m *mock) SkipNow()       {}
-func (m *mock) Fail()          { m.failed = true }
+func (m *mock) Name() string     { return m.name }
+func (m *mock) Skipped() bool    { return m.skipped }
+func (m *mock) Failed() bool     { return m.failed }
+func (m *mock) Helper()          {}
+func (m *mock) Cleanup(f func()) { m.cleanupList = append([]func(){f}, m.cleanupList...) }
+func (m *mock) SkipNow()         {}
+func (m *mock) Fail()            { m.failed = true }
 
 func (m *mock) FailNow() {
 	m.failed = true
-	panic("fail now")
+	if !m.recover {
+		panic("fail now")
+	}
+	m.recover = false
 }
 
 func (m *mock) Logf(format string, args ...interface{}) {
@@ -35,6 +41,12 @@ func (m *mock) Logf(format string, args ...interface{}) {
 
 func (m *mock) Run(name string, fn func(*mock)) {
 	fn(m)
+}
+
+func (m *mock) cleanup() {
+	for _, f := range m.cleanupList {
+		f()
+	}
 }
 
 func (m *mock) check(expected string) {

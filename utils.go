@@ -81,8 +81,23 @@ func (ut Utils) Skip(args ...interface{}) {
 }
 
 // Parallel is the same as testing.T.Parallel
-func (ut Utils) Parallel() {
+func (ut Utils) Parallel() Utils {
 	reflect.ValueOf(ut.Testable).MethodByName("Parallel").Call(nil)
+	return ut
+}
+
+// FatalAfter d duration
+func (ut Utils) FatalAfter(d time.Duration) Utils {
+	ut.Helper()
+	go func() {
+		tmr := time.NewTimer(d)
+		select {
+		case <-ut.Context().Done():
+		case <-tmr.C:
+			ut.Fatal("fail after time limit", d)
+		}
+	}()
+	return ut
 }
 
 // Context that will be canceled after the test

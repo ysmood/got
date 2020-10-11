@@ -3,6 +3,7 @@ package got_test
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/ysmood/got"
 )
@@ -14,18 +15,21 @@ func TestAdvanced(t *testing.T) {
 }
 
 func setup(t *testing.T) Advanced {
-	t.Cleanup(func() {
-		// cleanup for each test
-	})
-
-	t.Parallel() // concurrently run each test
-
 	opts := got.Defaults()
 	opts.Keyword = func(s string) string {
 		return "\x1b[31m" + s + "\x1b[0m" // print all keywords in red
 	}
+	g := got.NewWith(t, opts)
 
-	return Advanced{got.NewWith(t, opts)}
+	g.Cleanup(func() {
+		// cleanup for each test
+	})
+
+	g.Parallel() // concurrently run each test
+
+	g.FatalAfter(time.Second) // time limit for each test
+
+	return Advanced{g}
 }
 
 type Advanced struct { // usually, we use a shorter name like A or T to reduce distraction

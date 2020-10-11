@@ -5,97 +5,104 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/ysmood/got"
 )
 
 func TestHelper(t *testing.T) {
-	hp := got.New(t)
+	ut := got.New(t)
 
-	ctx := hp.Context()
+	ctx := ut.Context()
 	ctx.Cancel()
 	<-ctx.Done()
-	<-hp.Timeout(0).Done()
+	<-ut.Timeout(0).Done()
 
-	hp.Len(hp.Srand(10), 10)
+	ut.Len(ut.Srand(10), 10)
 
-	f := hp.Open(true, "tmp/test.txt")
-	hp.Nil(os.Stat("tmp/test.txt"))
-	hp.Write(1)(f)
-	hp.Nil(f.Close())
-	f = hp.Open(false, "tmp/test.txt")
-	hp.Eq(hp.JSON(f), 1)
+	f := ut.Open(true, "tmp/test.txt")
+	ut.Nil(os.Stat("tmp/test.txt"))
+	ut.Write(1)(f)
+	ut.Nil(f.Close())
+	f = ut.Open(false, "tmp/test.txt")
+	ut.Eq(ut.JSON(f), 1)
 
-	hp.Eq(hp.JSON([]byte("1")), 1)
-	hp.Eq(hp.JSON("true"), true)
+	ut.Eq(ut.JSON([]byte("1")), 1)
+	ut.Eq(ut.JSON("true"), true)
 
 	buf := bytes.NewBuffer(nil)
-	hp.Write([]byte("ok"))(buf)
-	hp.Eq(buf.String(), "ok")
+	ut.Write([]byte("ok"))(buf)
+	ut.Eq(buf.String(), "ok")
 
 	{
-		s := hp.Serve()
+		s := ut.Serve()
 		s.Route("/", ".txt")
 		s.Route("/file", "go.mod")
 		s.Route("/a", ".html", "ok")
 		s.Route("/b", ".json", "ok", 1)
 		f, err := os.Open("go.mod")
-		hp.E(err)
+		ut.E(err)
 		s.Route("/c", ".html", f)
 		s.Mux.HandleFunc("/d", func(rw http.ResponseWriter, r *http.Request) {
-			hp.Eq(hp.ReadString(r.Body), "1\n")
+			ut.Eq(ut.ReadString(r.Body), "1\n")
 		})
 		s.Mux.HandleFunc("/e", func(rw http.ResponseWriter, r *http.Request) {
-			hp.Eq(hp.ReadString(r.Body), "[1,2]\n")
+			ut.Eq(ut.ReadString(r.Body), "[1,2]\n")
 		})
 		s.Mux.HandleFunc("/f", func(rw http.ResponseWriter, r *http.Request) {
-			hp.Has(r.Header.Get("Content-Type"), "application/json")
+			ut.Has(r.Header.Get("Content-Type"), "application/json")
 		})
 
-		hp.Eq(hp.Req("", s.URL()).String(), "")
-		hp.Has(hp.Req("", s.URL("/file")).String(), "ysmood/got")
-		hp.Eq(hp.Req("", s.URL("/a")).String(), "ok")
-		hp.Eq(hp.Req("", s.URL("/a")).String(), "ok")
-		res := hp.Req("", s.URL("/b"))
-		hp.Eq(res.JSON(), []interface{}{"ok", 1})
-		hp.Has(res.Header.Get("Content-Type"), "application/json")
-		hp.Has(hp.Req("", s.URL("/c")).String(), "ysmood/got")
-		hp.Req(http.MethodPost, s.URL("/d"), 1)
-		hp.Req(http.MethodPost, s.URL("/e"), "", 1, 2)
-		hp.Req(http.MethodPost, s.URL("/f"), ".json", 1)
+		ut.Eq(ut.Req("", s.URL()).String(), "")
+		ut.Has(ut.Req("", s.URL("/file")).String(), "ysmood/got")
+		ut.Eq(ut.Req("", s.URL("/a")).String(), "ok")
+		ut.Eq(ut.Req("", s.URL("/a")).String(), "ok")
+		res := ut.Req("", s.URL("/b"))
+		ut.Eq(res.JSON(), []interface{}{"ok", 1})
+		ut.Has(res.Header.Get("Content-Type"), "application/json")
+		ut.Has(ut.Req("", s.URL("/c")).String(), "ysmood/got")
+		ut.Req(http.MethodPost, s.URL("/d"), 1)
+		ut.Req(http.MethodPost, s.URL("/e"), "", 1, 2)
+		ut.Req(http.MethodPost, s.URL("/f"), ".json", 1)
 	}
 
-	m := &mock{}
-	mhp := got.New(m)
+	m := &mock{t: t}
+	mut := got.New(m)
 
-	mhp.Log("a", 1)
-	hp.Eq(m.msg, "a 1\n")
+	mut.Log("a", 1)
+	ut.Eq(m.msg, "a 1\n")
 
-	hp.Panic(func() {
+	ut.Panic(func() {
 		buf := bytes.NewBufferString("a")
-		mhp.JSON(buf)
+		mut.JSON(buf)
 	})
-	hp.Eq(m.msg, "invalid character 'a' looking for beginning of value\n")
+	ut.Eq(m.msg, "invalid character 'a' looking for beginning of value\n")
 
-	hp.Panic(func() {
-		mhp.Fatal("test skip")
+	ut.Panic(func() {
+		mut.Fatal("test skip")
 	})
-	hp.Eq(m.msg, "test skip\n")
+	ut.Eq(m.msg, "test skip\n")
 
-	hp.Panic(func() {
-		mhp.Fatalf("test skip")
+	ut.Panic(func() {
+		mut.Fatalf("test skip")
 	})
-	hp.Eq(m.msg, "test skip")
+	ut.Eq(m.msg, "test skip")
 
-	mhp.Error("test skip")
-	hp.Eq(m.msg, "test skip\n")
+	mut.Error("test skip")
+	ut.Eq(m.msg, "test skip\n")
 
-	mhp.Errorf("test skip")
-	hp.Eq(m.msg, "test skip")
+	mut.Errorf("test skip")
+	ut.Eq(m.msg, "test skip")
 
-	mhp.Skip("test skip")
-	hp.Eq(m.msg, "test skip\n")
+	mut.Skip("test skip")
+	ut.Eq(m.msg, "test skip\n")
 
-	mhp.Skipf("test skip")
-	hp.Eq(m.msg, "test skip")
+	mut.Skipf("test skip")
+	ut.Eq(m.msg, "test skip")
+
+	mut.FatalAfter(time.Millisecond)
+	m.recover = true
+	time.Sleep(10 * time.Millisecond)
+	m.check("fail after time limit 1ms\n")
+	m.cleanup()
 }
