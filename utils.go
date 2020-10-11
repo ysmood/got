@@ -91,6 +91,7 @@ func (ut Utils) FatalAfter(d time.Duration) Utils {
 	ut.Helper()
 	go func() {
 		tmr := time.NewTimer(d)
+		defer tmr.Stop()
 		select {
 		case <-ut.Context().Done():
 		case <-tmr.C:
