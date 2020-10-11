@@ -100,8 +100,8 @@ func TestHelper(t *testing.T) {
 	mut.Skipf("test skip")
 	ut.Eq(m.msg, "test skip")
 
-	mut.FatalAfter(time.Millisecond)
 	m.recover = true
+	mut.FatalAfter(time.Millisecond)
 	time.Sleep(10 * time.Millisecond)
 	m.check("fail after time limit 1ms\n")
 	m.cleanup()

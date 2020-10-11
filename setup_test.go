@@ -2,6 +2,7 @@ package got_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/ysmood/got"
@@ -10,6 +11,7 @@ import (
 var _ got.Testable = &mock{}
 
 type mock struct {
+	sync.Mutex
 	t           *testing.T
 	name        string
 	failed      bool
@@ -28,6 +30,9 @@ func (m *mock) SkipNow()         {}
 func (m *mock) Fail()            { m.failed = true }
 
 func (m *mock) FailNow() {
+	m.Lock()
+	defer m.Unlock()
+
 	m.failed = true
 	if !m.recover {
 		panic("fail now")
@@ -36,6 +41,9 @@ func (m *mock) FailNow() {
 }
 
 func (m *mock) Logf(format string, args ...interface{}) {
+	m.Lock()
+	defer m.Unlock()
+
 	m.msg = fmt.Sprintf(format, args...)
 }
 
@@ -44,12 +52,18 @@ func (m *mock) Run(name string, fn func(*mock)) {
 }
 
 func (m *mock) cleanup() {
+	m.Lock()
+	defer m.Unlock()
+
 	for _, f := range m.cleanupList {
 		f()
 	}
 }
 
 func (m *mock) check(expected string) {
+	m.Lock()
+	defer m.Unlock()
+
 	m.t.Helper()
 
 	as := got.NewWith(m.t, got.Options{

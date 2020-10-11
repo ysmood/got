@@ -17,4 +17,4 @@ jobs:
     - name: setup
       run: (cd && GO111MODULE=on go get github.com/ysmood/kit/cmd/godev)
 
-    - run: godev -m 100
+    - run: godev -l -r -m 100
