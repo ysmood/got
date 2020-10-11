@@ -100,7 +100,7 @@ func TestHelper(t *testing.T) {
 	mut.Skipf("test skip")
 	ut.Eq(m.msg, "test skip")
 
-	mut.HeartBeat(time.Millisecond)
+	mut.Heartbeat(time.Millisecond)
 	time.Sleep(10 * time.Millisecond)
 	m.cleanup()
 	m.Lock()
