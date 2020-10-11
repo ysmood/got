@@ -98,7 +98,7 @@ func (ut Utils) FatalAfter(d time.Duration) Utils {
 		select {
 		case <-ctx.Done():
 		case <-tmr.C:
-			ut.Log("fail after time limit", d)
+			ut.Log("[got.Utils.FatalAfter] fail after time limit", d)
 			ut.Exit(1) // there no way to stop a blocking test from outside
 		}
 	}()
