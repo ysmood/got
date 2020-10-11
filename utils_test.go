@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/ysmood/got"
 )
@@ -99,15 +98,4 @@ func TestHelper(t *testing.T) {
 
 	mut.Skipf("test skip")
 	ut.Eq(m.msg, "test skip")
-
-	wait := make(chan struct{})
-	mut.Exit = func(i int) {
-		ut.Eq(i, 1)
-		close(wait)
-	}
-	mut.FatalAfter(time.Millisecond)
-	time.Sleep(10 * time.Millisecond)
-	m.check("fail after time limit 1ms\n")
-	m.cleanup()
-	<-wait
 }
