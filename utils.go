@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -86,21 +87,20 @@ func (ut Utils) Parallel() Utils {
 	return ut
 }
 
-// Heartbeat for every d duration if test is still running.
-// Useful to detect hanging test for concurrent tests.
-func (ut Utils) Heartbeat(d time.Duration) {
+// PanicAfter d duration if the test is still running
+func (ut Utils) PanicAfter(d time.Duration) Utils {
 	ctx := ut.Context()
 	go func() {
-		tmr := time.NewTicker(d)
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-tmr.C:
-			}
-			ut.Logf("[got.Utils.HeartBeat] continuing...")
+		ut.Helper()
+		tmr := time.NewTimer(d)
+		defer tmr.Stop()
+		select {
+		case <-ctx.Done():
+		case <-tmr.C:
+			panicWithTrace(fmt.Sprintf("%s timeout after %v", ut.Name(), d))
 		}
 	}()
+	return ut
 }
 
 // Context that will be canceled after the test
@@ -356,4 +356,10 @@ func (ut Utils) err(err error) {
 	if err != nil {
 		ut.Fatal(err)
 	}
+}
+
+// there no way to stop a blocking test from outside
+var panicWithTrace = func(v interface{}) {
+	debug.SetTraceback("all")
+	panic(v)
 }

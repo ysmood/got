@@ -3,6 +3,7 @@ package got_test
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/ysmood/got"
 )
@@ -29,6 +30,8 @@ func setup(t *testing.T) Advanced {
 	})
 
 	g.Parallel() // concurrently run each test
+
+	g.PanicAfter(time.Second) // timeout for each test
 
 	return Advanced{g}
 }
