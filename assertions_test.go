@@ -75,8 +75,8 @@ func TestAssertionErr(t *testing.T) {
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check(`got_test.data{A:1, S:"a"} ⦗not ≂⦘ got_test.data{A:1, S:"b"}`)
 
-	as.Eq(true, "a")
-	m.check(`true ⦗not ≂⦘ "a"`)
+	as.Eq(true, "a&")
+	m.check(`true ⦗not ≂⦘ "a&"`)
 
 	as.Equal(1, 1.0)
 	m.check("1 ⦗not ==⦘ float64(1)")
@@ -95,20 +95,20 @@ func TestAssertionErr(t *testing.T) {
 	m.check("1 ⦗not ≥⦘ 2")
 
 	as.True(false)
-	m.check("⦗should be <true>⦘")
+	m.check(" ⦗should be <true>⦘ ")
 	as.False(true)
-	m.check("⦗should be <false>⦘")
+	m.check(" ⦗should be <false>⦘ ")
 
 	as.Nil(1)
-	m.check("⦗last value⦘ 1 ⦗should be <nil>⦘")
+	m.check(" ⦗last value⦘ 1 ⦗should be <nil>⦘ ")
 	as.Nil()
-	m.check("⦗no args received⦘")
+	m.check(" ⦗no args received⦘ ")
 	as.NotNil(nil)
-	m.check("⦗last value shouldn't be <nil>⦘")
+	m.check(" ⦗last value shouldn't be <nil>⦘ ")
 	as.NotNil((*int)(nil))
-	m.check("<*int> ⦗shouldn't be <nil>⦘")
+	m.check("<*int> ⦗shouldn't be <nil>⦘ ")
 	as.NotNil()
-	m.check("⦗no args received⦘")
+	m.check(" ⦗no args received⦘ ")
 
 	as.Regex(`\d\d`, "aaa")
 	m.check(`\d\d ⦗should match⦘ aaa`)
@@ -116,16 +116,16 @@ func TestAssertionErr(t *testing.T) {
 	m.check("test ⦗should has⦘ x")
 
 	as.Len([]int{1, 2}, 3)
-	m.check("⦗expect len⦘ 2 ⦗to be⦘ 3")
+	m.check(" ⦗expect len⦘ 2 ⦗to be⦘ 3")
 
 	as.Err(nil)
-	m.check("⦗last value⦘ nil ⦗should be <error>⦘")
+	m.check(" ⦗last value⦘ nil ⦗should be <error>⦘ ")
 	as.Panic(func() {})
-	m.check("⦗should panic⦘")
+	m.check(" ⦗should panic⦘ ")
 	as.Err()
-	m.check("⦗no args received⦘")
+	m.check(" ⦗no args received⦘ ")
 	as.Err(1)
-	m.check("⦗last value⦘ 1 ⦗should be <error>⦘")
+	m.check(" ⦗last value⦘ 1 ⦗should be <error>⦘ ")
 
 	func() {
 		defer func() {
@@ -133,7 +133,7 @@ func TestAssertionErr(t *testing.T) {
 		}()
 		as.E(1, errors.New("E"))
 	}()
-	m.check(`⦗last value⦘ &errors.errorString{s:"E"} ⦗should be <nil>⦘`)
+	m.check(` ⦗last value⦘ &errors.errorString{s:"E"} ⦗should be <nil>⦘ `)
 
 	as.Is(1, 2.2)
 	m.check("1 ⦗should be kind of⦘ float64(2.2)")

@@ -16,7 +16,7 @@ func TestAdvanced(t *testing.T) {
 func setup(t *testing.T) Advanced {
 	opts := got.Defaults()
 	opts.Keyword = func(s string) string {
-		return "\x1b[31m" + s + "\x1b[0m" // print all keywords in red
+		return " \x1b[31m" + s + "\x1b[0m " // print all keywords in red
 	}
 	g := got.NewWith(t, opts)
 

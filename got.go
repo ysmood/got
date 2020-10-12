@@ -55,8 +55,7 @@ func Defaults() Options {
 				enc := json.NewEncoder(buf)
 				enc.SetEscapeHTML(false)
 				if enc.Encode(v) == nil {
-					b, _ := json.Marshal(v)
-					s = string(b)
+					s = buf.String()[:buf.Len()-1]
 				}
 			}
 
@@ -79,7 +78,7 @@ func Defaults() Options {
 			return s
 		},
 		func(s string) string {
-			return "⦗" + s + "⦘"
+			return " ⦗" + s + "⦘ "
 		},
 		nil,
 	}
