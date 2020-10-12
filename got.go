@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
+	"regexp"
+	"strings"
 )
 
 // Testable interface. Usually, you use *testing.T as it.
@@ -92,4 +95,34 @@ func New(t Testable) G {
 // NewWith G with options
 func NewWith(t Testable, opts Options) G {
 	return G{t, Assertions{t, opts.Dump, opts.Keyword, opts.Diff}, Utils{t}}
+}
+
+// DefaultFlags will set the "go test" flag if not yet presented.
+// It must be executed in the init() function.
+// Such as the timeout:
+//     DefaultFlags("timeout=10s")
+func DefaultFlags(flags ...string) {
+	// remove default timeout from "go test"
+	filtered := []string{}
+	for _, arg := range os.Args {
+		if arg != "-test.timeout=10m0s" {
+			filtered = append(filtered, arg)
+		}
+	}
+	os.Args = filtered
+
+	list := map[string]struct{}{}
+	reg := regexp.MustCompile(`^-test\.(\w+)`)
+	for _, arg := range os.Args {
+		ms := reg.FindStringSubmatch(arg)
+		if ms != nil {
+			list[ms[1]] = struct{}{}
+		}
+	}
+
+	for _, flag := range flags {
+		if _, has := list[strings.Split(flag, "=")[0]]; !has {
+			os.Args = append(os.Args, "-test."+flag)
+		}
+	}
 }

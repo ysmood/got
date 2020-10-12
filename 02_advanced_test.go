@@ -9,6 +9,10 @@ import (
 
 // The advanced way to use got.Each
 
+func init() {
+	got.DefaultFlags("timeout=10s") // set default timeout for "go test"
+}
+
 func TestAdvanced(t *testing.T) {
 	got.Each(t, setup)
 }
