@@ -88,7 +88,7 @@ func (ut Utils) Parallel() Utils {
 }
 
 // PanicAfter d duration if the test is still running
-func (ut Utils) PanicAfter(d time.Duration) Utils {
+func (ut Utils) PanicAfter(d time.Duration) (cancel func()) {
 	ctx := ut.Context()
 	go func() {
 		ut.Helper()
@@ -100,7 +100,7 @@ func (ut Utils) PanicAfter(d time.Duration) Utils {
 			panicWithTrace(fmt.Sprintf("%s timeout after %v", ut.Name(), d))
 		}
 	}()
-	return ut
+	return ctx.Cancel
 }
 
 // Context that will be canceled after the test
