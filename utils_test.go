@@ -9,6 +9,10 @@ import (
 	"github.com/ysmood/got"
 )
 
+func init() {
+	got.DefaultFlags("parallel=3")
+}
+
 func TestHelper(t *testing.T) {
 	ut := got.New(t)
 
@@ -32,6 +36,8 @@ func TestHelper(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	ut.Write([]byte("ok"))(buf)
 	ut.Eq(buf.String(), "ok")
+
+	ut.Eq(got.Parallel(), 3)
 
 	{
 		s := ut.Serve()

@@ -3,6 +3,7 @@ package got
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"reflect"
@@ -129,4 +130,15 @@ func DefaultFlags(flags ...string) {
 			os.Args = append(os.Args, "-test."+flag)
 		}
 	}
+}
+
+// Parallel config of "go test -parallel"
+func Parallel() (n int) {
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "test.parallel" {
+			v := reflect.ValueOf(f.Value).Elem().Convert(reflect.TypeOf(n))
+			n = v.Interface().(int)
+		}
+	})
+	return
 }
