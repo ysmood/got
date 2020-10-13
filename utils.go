@@ -87,8 +87,8 @@ func (ut Utils) Parallel() Utils {
 	return ut
 }
 
-// PanicAfter d duration if the test is still running
-func (ut Utils) PanicAfter(d time.Duration) (cancel func()) {
+// DoAfter d duration if the test is still running
+func (ut Utils) DoAfter(d time.Duration, do func()) (cancel func()) {
 	ctx := ut.Context()
 	go func() {
 		ut.Helper()
@@ -97,10 +97,18 @@ func (ut Utils) PanicAfter(d time.Duration) (cancel func()) {
 		select {
 		case <-ctx.Done():
 		case <-tmr.C:
-			panicWithTrace(fmt.Sprintf("%s timeout after %v", ut.Name(), d))
+			do()
 		}
 	}()
 	return ctx.Cancel
+}
+
+// PanicAfter d duration if the test is still running
+func (ut Utils) PanicAfter(d time.Duration) (cancel func()) {
+	return ut.DoAfter(d, func() {
+		ut.Helper()
+		panicWithTrace(fmt.Sprintf("%s timeout after %v", ut.Name(), d))
+	})
 }
 
 // Context that will be canceled after the test
