@@ -220,6 +220,10 @@ func (as Assertions) Panic(fn func()) (result Result) {
 func (as Assertions) Is(a, b interface{}) (result Result) {
 	as.Helper()
 
+	if a == nil && b == nil {
+		return
+	}
+
 	if ae, ok := a.(error); ok {
 		if be, ok := b.(error); ok {
 			if ae == be {
@@ -235,7 +239,7 @@ func (as Assertions) Is(a, b interface{}) (result Result) {
 
 	at := reflect.TypeOf(a)
 	bt := reflect.TypeOf(b)
-	if at.Kind() == bt.Kind() {
+	if a != nil && b != nil && at.Kind() == bt.Kind() {
 		return
 	}
 	return as.err("%s%s%s", as.d(a), as.k("should be kind of"), as.d(b))

@@ -56,6 +56,7 @@ func TestAssertion(t *testing.T) {
 	err := errors.New("err")
 	as.Is(err, err)
 	as.Is(fmt.Errorf("%w", err), err)
+	as.Is(nil, nil)
 
 	as.Eq(1, 1).Must()
 }
@@ -139,6 +140,10 @@ func TestAssertionErr(t *testing.T) {
 	m.check("1 ⦗should be kind of⦘ float64(2.2)")
 	as.Is(errors.New("a"), errors.New("b"))
 	m.check(`&errors.errorString{s:"a"} ⦗should in chain of⦘ &errors.errorString{s:"b"}`)
+	as.Is(nil, errors.New("a"))
+	m.check(`nil ⦗should be kind of⦘ &errors.errorString{s:"a"}`)
+	as.Is(errors.New("a"), nil)
+	m.check(`&errors.errorString{s:"a"} ⦗should be kind of⦘ nil`)
 
 	opts := got.Defaults()
 	opts.Diff = func(a, b interface{}) string {
