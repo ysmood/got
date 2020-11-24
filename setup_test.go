@@ -13,7 +13,6 @@ var _ got.Testable = &mock{}
 type mock struct {
 	sync.Mutex
 	t           *testing.T
-	name        string
 	failed      bool
 	skipped     bool
 	msg         string
@@ -52,9 +51,6 @@ func (m *mock) Run(name string, fn func(*mock)) {
 }
 
 func (m *mock) cleanup() {
-	m.Lock()
-	defer m.Unlock()
-
 	for _, f := range m.cleanupList {
 		f()
 	}
@@ -77,6 +73,28 @@ func (m *mock) check(expected string) {
 
 	as.True(m.failed)
 	as.Eq(m.msg, expected)
+
+	m.failed = false
+	m.msg = ""
+}
+
+func (m *mock) checkMatch(regexp string) {
+	m.Lock()
+	defer m.Unlock()
+
+	m.t.Helper()
+
+	as := got.NewWith(m.t, got.Options{
+		Dump: func(i interface{}) string {
+			return fmt.Sprintf("\n%v\n", i)
+		},
+		Keyword: func(s string) string {
+			return s
+		},
+	})
+
+	as.True(m.failed)
+	as.Regex(regexp, m.msg)
 
 	m.failed = false
 	m.msg = ""

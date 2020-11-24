@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -243,6 +244,23 @@ func (as Assertions) Is(a, b interface{}) (result Result) {
 		return
 	}
 	return as.err("%s%s%s", as.d(a), as.k("should be kind of"), as.d(b))
+}
+
+// Count returns a function that must be called with the specified times
+func (as Assertions) Count(times int) func() {
+	_, file, no, _ := runtime.Caller(1)
+	count := 0
+
+	as.Cleanup(func() {
+		if count != times {
+			as.Logf("Should count %d times, but got %d (%s:%d)", times, count, file, no)
+			as.Fail()
+		}
+	})
+
+	return func() {
+		count++
+	}
 }
 
 func (as Assertions) err(format string, args ...interface{}) Result {

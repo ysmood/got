@@ -59,6 +59,10 @@ func TestAssertion(t *testing.T) {
 	as.Is(nil, nil)
 
 	as.Eq(1, 1).Must()
+
+	count := as.Count(2)
+	count()
+	count()
 }
 
 func TestAssertionErr(t *testing.T) {
@@ -152,4 +156,9 @@ func TestAssertionErr(t *testing.T) {
 	asDiff := got.NewWith(m, opts)
 	asDiff.Eq("a", "b")
 	m.check(`"a" ⦗not ≂⦘ "b" diff`)
+
+	count := as.Count(2)
+	count()
+	m.cleanup()
+	m.checkMatch(`^Should count 2 times, but got 1 \(.+assertions_test.go.+\)`)
 }
