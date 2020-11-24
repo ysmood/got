@@ -160,5 +160,5 @@ func TestAssertionErr(t *testing.T) {
 	count := as.Count(2)
 	count()
 	m.cleanup()
-	m.checkMatch(`^Should count 2 times, but got 1 \(.+assertions_test.go.+\)`)
+	m.check(`Should count 2 times, but got 1`)
 }

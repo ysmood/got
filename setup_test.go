@@ -77,25 +77,3 @@ func (m *mock) check(expected string) {
 	m.failed = false
 	m.msg = ""
 }
-
-func (m *mock) checkMatch(regexp string) {
-	m.Lock()
-	defer m.Unlock()
-
-	m.t.Helper()
-
-	as := got.NewWith(m.t, got.Options{
-		Dump: func(i interface{}) string {
-			return fmt.Sprintf("\n%v\n", i)
-		},
-		Keyword: func(s string) string {
-			return s
-		},
-	})
-
-	as.True(m.failed)
-	as.Regex(regexp, m.msg)
-
-	m.failed = false
-	m.msg = ""
-}

@@ -258,7 +258,10 @@ func (ut Utils) Serve() *Router {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	ut.err(err)
 
-	ut.Cleanup(func() { ut.err(srv.Close()) })
+	ut.Cleanup(func() {
+		ut.Helper()
+		ut.err(srv.Close())
+	})
 
 	go func() { _ = srv.Serve(l) }()
 
