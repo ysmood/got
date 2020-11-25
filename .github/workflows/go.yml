@@ -14,7 +14,13 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - name: setup
-      run: (cd && GO111MODULE=on go get github.com/ysmood/kit/cmd/godev)
+    - name: install golangci-lint
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0
+        golangci-lint run
 
-    - run: godev -l -r -m 100
+    - name: test
+      run: |
+        go test -race -cover -coverprofile=coverage.txt
+        go run ./lib/utils/check-cov
+
