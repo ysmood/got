@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"sync/atomic"
 )
 
 // Result helper
@@ -248,10 +249,10 @@ func (as Assertions) Is(a, b interface{}) (result Result) {
 // Count returns a function that must be called with the specified times
 func (as Assertions) Count(times int) func() {
 	as.Helper()
-	count := 0
+	var count int64
 
 	as.Cleanup(func() {
-		if count != times {
+		if int(atomic.LoadInt64(&count)) != times {
 			as.Helper()
 			as.Logf("Should count %d times, but got %d", times, count)
 			as.Fail()
@@ -259,7 +260,7 @@ func (as Assertions) Count(times int) func() {
 	})
 
 	return func() {
-		count++
+		atomic.AddInt64(&count, 1)
 	}
 }
 

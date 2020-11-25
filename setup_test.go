@@ -54,6 +54,7 @@ func (m *mock) cleanup() {
 	for _, f := range m.cleanupList {
 		f()
 	}
+	m.cleanupList = nil
 }
 
 func (m *mock) check(expected string) {

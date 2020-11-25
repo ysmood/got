@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -157,8 +158,25 @@ func TestAssertionErr(t *testing.T) {
 	asDiff.Eq("a", "b")
 	m.check(`"a" ⦗not ≂⦘ "b" diff`)
 
-	count := as.Count(2)
-	count()
-	m.cleanup()
-	m.check(`Should count 2 times, but got 1`)
+	{
+		count := as.Count(2)
+		count()
+		m.cleanup()
+		m.check(`Should count 2 times, but got 1`)
+
+		count = as.Count(1)
+		wg := sync.WaitGroup{}
+		wg.Add(2)
+		go func() {
+			count()
+			wg.Done()
+		}()
+		go func() {
+			count()
+			wg.Done()
+		}()
+		wg.Wait()
+		m.cleanup()
+		m.check(`Should count 1 times, but got 2`)
+	}
 }
