@@ -1,0 +1,2 @@
+mode: atomic
+github.com/ysmood/got/fixtures/coverage/foo.go:4.16,6.2 1 1

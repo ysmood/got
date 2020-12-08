@@ -22,5 +22,5 @@ jobs:
     - name: test
       run: |
         go test -race -cover -coverprofile=coverage.txt
-        go run ./lib/utils/check-cov
+        go run ./cmd/check-cov
 
