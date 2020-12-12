@@ -29,12 +29,12 @@ func EnsureCoverage(path string, min float64) error {
 	total = total / float64(len(list))
 
 	if compareFloat(total, min) < 0 {
-		return fmt.Errorf("[lint] Test coverage %.1f%% must >= %.1f%%", total, min)
+		return fmt.Errorf("[lint] Test coverage %f%% must >= %f%%\n%s", total, min, out)
 	}
 
 	return nil
 }
 
 func compareFloat(a, b float64) int {
-	return int(a*10000 - b*10000) // to avoid machine epsilon
+	return int(a*10000) - int(b*10000) // to avoid machine epsilon
 }
