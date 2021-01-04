@@ -21,17 +21,21 @@ func EnsureCoverage(path string, min float64) error {
 	list := strings.Split(strings.TrimSpace(string(out)), "\n")
 	rejected := []string{}
 	for _, l := range list {
+		if strings.HasPrefix(l, "total:") {
+			continue
+		}
+
 		covStr := regexp.MustCompile(`(\d+.\d+)%\z`).FindStringSubmatch(l)[1]
 
 		cov, _ := strconv.ParseFloat(string(covStr), 64)
 		if compareFloat(cov, min) < 0 {
-			rejected = append(rejected, covStr)
+			rejected = append(rejected, l)
 		}
 	}
 
 	if len(rejected) > 0 {
 		return fmt.Errorf(
-			"[lint] Test coverage for these functions should be greater than %f%%:\n%s",
+			"[lint] Test coverage for these functions should be greater than %.2f%%:\n%s",
 			min,
 			strings.Join(rejected, "\n"),
 		)
