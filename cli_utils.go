@@ -11,7 +11,7 @@ import (
 
 // EnsureCoverage via report file generated from, for example:
 //     go test -coverprofile=coverage.txt
-// Return error if coverage is less than min, min is a percentage value.
+// Return error if any functions's coverage is less than min, min is a percentage value.
 func EnsureCoverage(path string, min float64) error {
 	out, err := exec.Command("go", "tool", "cover", "-func="+path).CombinedOutput()
 	if err != nil {
@@ -19,19 +19,23 @@ func EnsureCoverage(path string, min float64) error {
 	}
 
 	list := strings.Split(strings.TrimSpace(string(out)), "\n")
-	total := 0.0
+	rejected := []string{}
 	for _, l := range list {
 		covStr := regexp.MustCompile(`(\d+.\d+)%\z`).FindStringSubmatch(l)[1]
 
 		cov, _ := strconv.ParseFloat(string(covStr), 64)
-		total += cov
-	}
-	total = total / float64(len(list))
-
-	if compareFloat(total, min) < 0 {
-		return fmt.Errorf("[lint] Test coverage %f%% must >= %f%%\n%s", total, min, out)
+		if compareFloat(cov, min) < 0 {
+			rejected = append(rejected, covStr)
+		}
 	}
 
+	if len(rejected) > 0 {
+		return fmt.Errorf(
+			"[lint] Test coverage for these functions should be greater than %f%%:\n%s",
+			min,
+			strings.Join(rejected, "\n"),
+		)
+	}
 	return nil
 }
 
