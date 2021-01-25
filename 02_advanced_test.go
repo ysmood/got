@@ -48,7 +48,7 @@ func (t Advanced) B(got.Skip) { // use got.Skip to skip a test
 	t.Eq([]int{1, 2}, []int{1, 2}) // run "go doc got.Assertion" to list available assertion helpers
 }
 
-func (t Advanced) C(got.Only) { // use got.Only to run specific tests
+func (t Advanced) C(got.Only) { // use got.Only to run specific tests, same as "go test -run TestAdvanced/^C$"
 	s := t.Serve() // run "go doc got.Utils" to list available helpers
 	s.Route("/get", ".json", 10)
 
