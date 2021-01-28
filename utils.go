@@ -16,7 +16,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -371,6 +370,5 @@ func (ut Utils) err(err error) {
 
 // there no way to stop a blocking test from outside
 var panicWithTrace = func(v interface{}) {
-	debug.SetTraceback("all")
 	panic(v)
 }
