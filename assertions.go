@@ -275,6 +275,10 @@ func castType(a, b interface{}) interface{} {
 	ta := reflect.ValueOf(a)
 	tb := reflect.ValueOf(b)
 
+	if (a == nil || b == nil) && (a != b) {
+		return a
+	}
+
 	if ta.Type().ConvertibleTo(tb.Type()) {
 		return ta.Convert(tb.Type()).Interface()
 	}

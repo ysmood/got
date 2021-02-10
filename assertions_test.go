@@ -18,6 +18,7 @@ func TestAssertion(t *testing.T) {
 	as.Eq(1.0, 1)
 	as.Eq([]int{1, 3}, []int{1, 3})
 	as.Eq(map[int]int{1: 2, 3: 4}, map[int]int{3: 4, 1: 2})
+	as.Eq(nil, nil)
 
 	as.Neq(1.1, 1)
 	as.Neq([]int{1, 2}, []int{2, 1})
@@ -83,6 +84,12 @@ func TestAssertionErr(t *testing.T) {
 
 	as.Eq(true, "a&")
 	m.check(`true ⦗not ≂⦘ "a&"`)
+
+	as.Eq(nil, "ok")
+	m.check(`nil ⦗not ≂⦘ "ok"`)
+
+	as.Eq(1, nil)
+	m.check(`1 ⦗not ≂⦘ nil`)
 
 	as.Equal(1, 1.0)
 	m.check("1 ⦗not ==⦘ float64(1)")
