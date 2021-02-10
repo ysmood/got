@@ -184,6 +184,20 @@ func (ut Utils) JSON(src interface{}) (v interface{}) {
 	return
 }
 
+// ToJSON convert obj to JSON bytes
+func (ut Utils) ToJSON(obj interface{}) *bytes.Buffer {
+	ut.Helper()
+	b, err := json.MarshalIndent(obj, "", "  ")
+	ut.err(err)
+	return bytes.NewBuffer(b)
+}
+
+// ToJSONString convert obj to JSON string
+func (ut Utils) ToJSONString(obj interface{}) string {
+	ut.Helper()
+	return ut.ToJSON(obj).String()
+}
+
 // Write obj to the writer. Encode obj to []byte and cache it for writer.
 // If obj is not []byte, string, or io.Reader, it will be encoded as JSON.
 func (ut Utils) Write(obj interface{}) (writer func(io.Writer)) {
@@ -352,14 +366,13 @@ func (res *ResHelper) Bytes() []byte {
 // String body
 func (res *ResHelper) String() string {
 	res.ut.Helper()
-	return string(res.Bytes())
+	return res.ut.ReadString(res.Body)
 }
 
 // JSON body
 func (res *ResHelper) JSON() (v interface{}) {
 	res.ut.Helper()
-	res.ut.err(json.Unmarshal(res.Bytes(), &v))
-	return
+	return res.ut.JSON(res.Body)
 }
 
 func (ut Utils) err(err error) {

@@ -33,6 +33,8 @@ func TestHelper(t *testing.T) {
 	ut.Eq(ut.JSON([]byte("1")), 1)
 	ut.Eq(ut.JSON("true"), true)
 
+	ut.Eq(ut.ToJSONString(10), "10")
+
 	buf := bytes.NewBuffer(nil)
 	ut.Write([]byte("ok"))(buf)
 	ut.Eq(buf.String(), "ok")
