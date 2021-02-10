@@ -152,17 +152,12 @@ func (ut Utils) Open(create bool, path ...string) (f *os.File) {
 }
 
 // Read all from r
-func (ut Utils) Read(r io.Reader) []byte {
+func (ut Utils) Read(r io.Reader) *bytes.Buffer {
 	ut.Helper()
-	b, err := ioutil.ReadAll(r)
+	b := bytes.NewBuffer(nil)
+	_, err := io.Copy(b, r)
 	ut.err(err)
 	return b
-}
-
-// ReadString from r
-func (ut Utils) ReadString(r io.Reader) string {
-	ut.Helper()
-	return string(ut.Read(r))
 }
 
 // JSON from string, []byte, or io.Reader
@@ -358,7 +353,7 @@ type ResHelper struct {
 }
 
 // Bytes body
-func (res *ResHelper) Bytes() []byte {
+func (res *ResHelper) Bytes() *bytes.Buffer {
 	res.ut.Helper()
 	return res.ut.Read(res.Body)
 }
@@ -366,7 +361,7 @@ func (res *ResHelper) Bytes() []byte {
 // String body
 func (res *ResHelper) String() string {
 	res.ut.Helper()
-	return res.ut.ReadString(res.Body)
+	return res.Bytes().String()
 }
 
 // JSON body

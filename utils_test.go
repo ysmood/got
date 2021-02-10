@@ -51,10 +51,10 @@ func TestHelper(t *testing.T) {
 		ut.E(err)
 		s.Route("/c", ".html", f)
 		s.Mux.HandleFunc("/d", func(rw http.ResponseWriter, r *http.Request) {
-			ut.Eq(ut.ReadString(r.Body), "1\n")
+			ut.Eq(ut.Read(r.Body).String(), "1\n")
 		})
 		s.Mux.HandleFunc("/e", func(rw http.ResponseWriter, r *http.Request) {
-			ut.Eq(ut.ReadString(r.Body), "[1,2]\n")
+			ut.Eq(ut.Read(r.Body).String(), "[1,2]\n")
 		})
 		s.Mux.HandleFunc("/f", func(rw http.ResponseWriter, r *http.Request) {
 			ut.Has(r.Header.Get("Content-Type"), "application/json")
