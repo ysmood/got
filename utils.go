@@ -371,6 +371,8 @@ func (res *ResHelper) JSON() (v interface{}) {
 }
 
 func (ut Utils) err(err error) {
+	ut.Helper()
+
 	if err != nil {
 		ut.Fatal(err)
 	}
