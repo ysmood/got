@@ -20,5 +20,5 @@ jobs:
     - name: test
       run: |
         go test -race -coverprofile=coverage.txt
-        go run github.com/ysmood/got/cmd/check-cov
+        go run ./cmd/check-cov
 

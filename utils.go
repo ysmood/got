@@ -304,41 +304,41 @@ func (rt *Router) Route(pattern, file string, value ...interface{}) *Router {
 	return rt
 }
 
-// Req the url. The method is the http method. The body will be encoded by G.Write(body) .
-// When the len(body) is greater than 2, the first item should be a file extension string for the Content-Type header,
-// such as ".json", ".jpg".
-func (ut Utils) Req(method, url string, body ...interface{}) *ResHelper {
+// ReqMIME option type, it should be like ".json", "test.json", "a/b/c.jpg", etc
+type ReqMIME string
+
+// Req the url. The method is the http method, default value is "GET".
+// If an option is http.Header, it will be used as the request header.
+// If an option is Utils.ReqMIME, it will be used to set the Content-Type header.
+// Other option type will be treat as request body, it will be encoded by Utils.Write .
+func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	ut.Helper()
 
-	var r io.Reader
+	header := http.Header{}
+	var contentType string
+	var body io.Reader
 
-	var obj interface{}
-	file := ""
-	switch len(body) {
-	case 0:
-	case 1:
-		obj = body[0]
-	case 2:
-		file = body[0].(string)
-		obj = body[1]
-	default:
-		file = body[0].(string)
-		obj = body[1:]
+	for _, item := range options {
+		switch val := item.(type) {
+		case http.Header:
+			header = val
+		case ReqMIME:
+			contentType = mime.TypeByExtension(filepath.Ext(string(val)))
+		default:
+			buf := bytes.NewBuffer(nil)
+			ut.Write(val)(buf)
+			body = buf
+		}
 	}
 
-	if obj != nil {
-		var w io.WriteCloser
-		r, w = io.Pipe()
-		go func() {
-			ut.Write(obj)(w)
-			ut.err(w.Close())
-		}()
-	}
-
-	req, err := http.NewRequest(method, url, r)
+	req, err := http.NewRequest(method, url, body)
 	ut.err(err)
 
-	req.Header.Add("Content-Type", mime.TypeByExtension(filepath.Ext(file)))
+	if header != nil {
+		req.Header = header
+	}
+
+	req.Header.Set("Content-Type", contentType)
 
 	res, err := http.DefaultClient.Do(req)
 	ut.err(err)

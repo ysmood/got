@@ -53,11 +53,9 @@ func TestHelper(t *testing.T) {
 		s.Mux.HandleFunc("/d", func(rw http.ResponseWriter, r *http.Request) {
 			ut.Eq(ut.Read(r.Body).String(), "1\n")
 		})
-		s.Mux.HandleFunc("/e", func(rw http.ResponseWriter, r *http.Request) {
-			ut.Eq(ut.Read(r.Body).String(), "[1,2]\n")
-		})
 		s.Mux.HandleFunc("/f", func(rw http.ResponseWriter, r *http.Request) {
 			ut.Has(r.Header.Get("Content-Type"), "application/json")
+			ut.Eq(r.Header.Get("Test-Header"), "ok")
 		})
 
 		ut.Eq(ut.Req("", s.URL()).String(), "")
@@ -69,8 +67,7 @@ func TestHelper(t *testing.T) {
 		ut.Has(res.Header.Get("Content-Type"), "application/json")
 		ut.Has(ut.Req("", s.URL("/c")).String(), "ysmood/got")
 		ut.Req(http.MethodPost, s.URL("/d"), 1)
-		ut.Req(http.MethodPost, s.URL("/e"), "", 1, 2)
-		ut.Req(http.MethodPost, s.URL("/f"), ".json", 1)
+		ut.Req(http.MethodPost, s.URL("/f"), http.Header{"Test-Header": {"ok"}}, got.ReqMIME(".json"), 1)
 	}
 
 	m := &mock{t: t}
