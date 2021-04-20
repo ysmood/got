@@ -60,7 +60,7 @@ func TestAssertion(t *testing.T) {
 	as.Is(fmt.Errorf("%w", err), err)
 	as.Is(nil, nil)
 
-	as.Eq(1, 1).Must()
+	as.Must().Eq(1, 1)
 
 	count := as.Count(2)
 	count()
@@ -76,8 +76,8 @@ func TestAssertionErr(t *testing.T) {
 		S string
 	}
 
-	as.Eq(1, 2.0).Msg("not %s", "equal")
-	m.check("not equal")
+	as.Desc("not %s", "equal").Eq(1, 2.0)
+	m.check("not equal\n1 ⦗not ≂⦘ float64(2)")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check(`got_test.data{A:1, S:"a"} ⦗not ≂⦘ got_test.data{A:1, S:"b"}`)

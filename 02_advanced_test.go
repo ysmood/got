@@ -41,7 +41,8 @@ type Advanced struct { // usually, we use a shorter name like A or T to reduce d
 }
 
 func (t Advanced) A() {
-	t.Eq(1, 1.0).Msg("b.FailNow() if %v != %v", 1, 1.0).Must()
+	t.Desc("call t.FailNow() if 1 != 1.0").Must().Eq(1, 1.0)
+	t.Eq(1, 2) // this line won't be executed
 }
 
 func (t Advanced) B(got.Skip) { // use got.Skip to skip a test
@@ -60,4 +61,23 @@ func (t Advanced) C(got.Only) { // use got.Only to run specific tests, same as "
 		t.Eq(t.JSON(r.Body), data)
 	})
 	t.Req("POST", s.URL("/post"), ".json", data)
+}
+
+func (t Advanced) D() { // table driven tests
+	testCases := []struct {
+		desc           string
+		a, b, expected int
+	}{{
+		"1 + 2 = 3",
+		1, 2, 3,
+	}, {
+		"2 + 3 = 5",
+		2, 3, 5,
+	}}
+
+	add := func(a, b int) int { return a + b }
+
+	for _, c := range testCases {
+		t.Desc(c.desc).Eq(add(c.a, c.b), c.expected)
+	}
 }

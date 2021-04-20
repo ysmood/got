@@ -43,7 +43,11 @@ func (m *mock) Logf(format string, args ...interface{}) {
 	m.Lock()
 	defer m.Unlock()
 
-	m.msg = fmt.Sprintf(format, args...)
+	if m.msg != "" {
+		m.msg += "\n"
+	}
+
+	m.msg += fmt.Sprintf(format, args...)
 }
 
 func (m *mock) Run(name string, fn func(*mock)) {

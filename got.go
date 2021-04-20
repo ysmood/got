@@ -97,7 +97,7 @@ func New(t Testable) G {
 func NewWith(t Testable, opts Options) G {
 	return G{
 		t,
-		Assertions{t, opts.Dump, opts.Keyword, opts.Diff},
+		Assertions{t, false, "", opts.Dump, opts.Keyword, opts.Diff},
 		Utils{t},
 	}
 }

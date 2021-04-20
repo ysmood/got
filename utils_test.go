@@ -73,34 +73,42 @@ func TestHelper(t *testing.T) {
 	m := &mock{t: t}
 	mut := got.New(m)
 
+	m.msg = ""
 	mut.Log("a", 1)
 	ut.Eq(m.msg, "a 1\n")
 
+	m.msg = ""
 	ut.Panic(func() {
 		buf := bytes.NewBufferString("a")
 		mut.JSON(buf)
 	})
 	ut.Eq(m.msg, "invalid character 'a' looking for beginning of value\n")
 
+	m.msg = ""
 	ut.Panic(func() {
 		mut.Fatal("test skip")
 	})
 	ut.Eq(m.msg, "test skip\n")
 
+	m.msg = ""
 	ut.Panic(func() {
 		mut.Fatalf("test skip")
 	})
 	ut.Eq(m.msg, "test skip")
 
+	m.msg = ""
 	mut.Error("test skip")
 	ut.Eq(m.msg, "test skip\n")
 
+	m.msg = ""
 	mut.Errorf("test skip")
 	ut.Eq(m.msg, "test skip")
 
+	m.msg = ""
 	mut.Skip("test skip")
 	ut.Eq(m.msg, "test skip\n")
 
+	m.msg = ""
 	mut.Skipf("test skip")
 	ut.Eq(m.msg, "test skip")
 }
