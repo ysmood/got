@@ -81,3 +81,9 @@ func (t Advanced) D() { // table driven tests
 		t.Desc(c.desc).Eq(add(c.a, c.b), c.expected)
 	}
 }
+
+func (t Advanced) E() { // subtests
+	t.Run("subtest", func(t got.G) {
+		t.Eq(1, 1)
+	})
+}

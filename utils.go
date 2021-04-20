@@ -80,6 +80,18 @@ func (ut Utils) Skip(args ...interface{}) {
 	ut.SkipNow()
 }
 
+// Run f as a subtest
+func (ut Utils) Run(name string, f func(t G)) bool {
+	runVal := reflect.ValueOf(ut.Testable).MethodByName("Run")
+	return runVal.Call([]reflect.Value{
+		reflect.ValueOf(name),
+		reflect.MakeFunc(runVal.Type().In(1), func(args []reflect.Value) []reflect.Value {
+			f(New(args[0].Interface().(Testable)))
+			return nil
+		}),
+	})[0].Interface().(bool)
+}
+
 // Parallel is the same as testing.T.Parallel
 func (ut Utils) Parallel() Utils {
 	reflect.ValueOf(ut.Testable).MethodByName("Parallel").Call(nil)
