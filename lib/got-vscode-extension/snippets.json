@@ -1,0 +1,17 @@
+{
+	"got test function": {
+		"prefix": "gt",
+		"body": [
+			"func (t ${1:T}) ${2:Basic}() {\n\t${0:t.Eq(1, 1)}\n}"
+		],
+        "description": "got test function"
+	},
+
+	"got test setup": {
+		"prefix": "gtest",
+		"body": [
+			"package ${1:main}_test\n\nimport (\n\t\"testing\"\n\n\t\"github.com/ysmood/got\"\n)\n\ntype ${0:T} struct {\n\tgot.G\n}\n\nfunc Test(t *testing.T) {\n\tgot.Each(t, ${0:T}{})\n}\n\nfunc (t ${0:T}) Basic() {\n\tt.Eq(1, 1)\n}"
+		],
+        "description": "init got test file"
+	}
+}
