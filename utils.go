@@ -275,7 +275,7 @@ func (ut Utils) Serve() *Router {
 	mux := http.NewServeMux()
 	srv := &http.Server{Handler: mux}
 
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	l, err := net.Listen("tcp4", "127.0.0.1:0")
 	ut.err(err)
 
 	ut.Cleanup(func() {
