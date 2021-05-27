@@ -1,14 +1,14 @@
 package got
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/ysmood/got/lib/diff"
+	"github.com/ysmood/got/lib/gop"
 )
 
 // Testable interface. Usually, you use *testing.T as it.
@@ -24,7 +24,7 @@ type Testable interface {
 	SkipNow()                                // same as testing.common.Skip
 }
 
-// G is the helper context, it hold some useful helpers to write tests
+// G is the helper context, it provides some handy helpers for testing
 type G struct {
 	Testable
 	Assertions
@@ -44,52 +44,50 @@ type Options struct {
 	Diff func(a, b interface{}) string
 }
 
-var floatType = reflect.TypeOf(0.0)
-
 // Defaults for Options
 func Defaults() Options {
 	return Options{
-		func(v interface{}) (s string) {
-			if v == nil {
-				return "nil"
-			}
+		func(v interface{}) string {
+			return gop.F(v)
+		},
+		func(s string) string {
+			return gop.ColorStr(gop.Red, " ⦗"+s+"⦘ ")
+		},
+		func(a, b interface{}) string {
+			df := diff.Diff(gop.Plain(a), gop.Plain(b))
+			return "\n\n" + df + "\n"
+		},
+	}
+}
 
-			json := func() {
-				buf := bytes.NewBuffer(nil)
-				enc := json.NewEncoder(buf)
-				enc.SetEscapeHTML(false)
-				if enc.Encode(v) == nil {
-					s = buf.String()[:buf.Len()-1]
-				}
-			}
-
-			switch v.(type) {
-			case string:
-				json()
-			case int:
-				json()
-			case bool:
-				json()
-			default:
-				t := reflect.TypeOf(v)
-				if t.ConvertibleTo(floatType) {
-					s = fmt.Sprintf("%s(%v)", t, v)
-				} else {
-					s = fmt.Sprintf("%#v", v)
-				}
-			}
-
-			return s
+// NoColor defaults for Options
+func NoColor() Options {
+	return Options{
+		func(v interface{}) string {
+			return gop.Plain(v)
 		},
 		func(s string) string {
 			return " ⦗" + s + "⦘ "
 		},
-		nil,
+		func(a, b interface{}) string {
+			df := diff.Diff(gop.Plain(a), gop.Plain(b))
+			return "\n\n" + df + "\n"
+		},
 	}
 }
 
-// New G
+// NoDiff returns a clone with diff output disabled.
+func (opts Options) NoDiff() Options {
+	opts.Diff = nil
+	return opts
+}
+
+// New G instance.
+// It will respect https://no-color.org/
 func New(t Testable) G {
+	if _, has := os.LookupEnv("NO_COLOR"); has {
+		return NewWith(t, NoColor())
+	}
 	return NewWith(t, Defaults())
 }
 

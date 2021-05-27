@@ -6,15 +6,11 @@ import (
 	"strings"
 )
 
-// Skip current test
-type Skip struct{}
-
-var skipType = reflect.TypeOf(Skip{})
-
 // Only run tests with it
 type Only struct{}
 
-var onlyType = reflect.TypeOf(Only{})
+// Skip the current test
+type Skip struct{}
 
 // Each runs each exported method Fn on type Ctx as a subtest of t.
 // The iteratee can be a struct Ctx or:
@@ -142,7 +138,7 @@ func filterMethods(typ reflect.Type) []reflect.Method {
 			continue
 		}
 
-		if method.Type.NumIn() > 1 && method.Type.In(1) == onlyType {
+		if method.Type.NumIn() > 1 && method.Type.In(1) == reflect.TypeOf(Only{}) {
 			onlyList = append(onlyList, method)
 		}
 
@@ -157,7 +153,7 @@ func filterMethods(typ reflect.Type) []reflect.Method {
 }
 
 func doSkip(t Testable, method reflect.Method) {
-	if method.Type.NumIn() > 1 && method.Type.In(1) == skipType {
+	if method.Type.NumIn() > 1 && method.Type.In(1) == reflect.TypeOf(Skip{}) {
 		t.SkipNow()
 	}
 }

@@ -2,11 +2,17 @@ package got_test
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 
 	"github.com/ysmood/got"
 )
+
+func init() {
+	got.New(nil)
+	_ = os.Setenv("NO_COLOR", "")
+}
 
 var _ got.Testable = &mock{}
 

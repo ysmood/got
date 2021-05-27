@@ -6,11 +6,13 @@ import (
 	"github.com/ysmood/got"
 )
 
-// it can even run without the Go test framework
+// It can even run without the Go test framework
 func Example_standlone() {
 	tester := &T{}
 
-	got.Each(tester, t{})
+	got.Each(tester, func(tt *T) t {
+		return t{got.NewWith(tt, got.NoColor().NoDiff())}
+	})
 
 	// Output:
 	// 1 ⦗not ≂⦘ 2

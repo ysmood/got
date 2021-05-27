@@ -69,7 +69,7 @@ func TestAssertion(t *testing.T) {
 
 func TestAssertionErr(t *testing.T) {
 	m := &mock{t: t}
-	as := got.New(m)
+	as := got.NewWith(m, got.NoColor().NoDiff())
 
 	type data struct {
 		A int
@@ -80,7 +80,13 @@ func TestAssertionErr(t *testing.T) {
 	m.check("not equal\n1 ⦗not ≂⦘ float64(2)")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
-	m.check(`got_test.data{A:1, S:"a"} ⦗not ≂⦘ got_test.data{A:1, S:"b"}`)
+	m.check(`got_test.data{
+    A: 1,
+    S: "a",
+} ⦗not ≂⦘ got_test.data{
+    A: 1,
+    S: "b",
+}`)
 
 	as.Eq(true, "a&")
 	m.check(`true ⦗not ≂⦘ "a&"`)
@@ -146,18 +152,28 @@ func TestAssertionErr(t *testing.T) {
 		}()
 		as.E(1, errors.New("E"))
 	}()
-	m.check(` ⦗last value⦘ &errors.errorString{s:"E"} ⦗should be <nil>⦘ `)
+	m.check(` ⦗last value⦘ &errors.errorString{
+    s: "E",
+} ⦗should be <nil>⦘ `)
 
 	as.Is(1, 2.2)
 	m.check("1 ⦗should be kind of⦘ float64(2.2)")
 	as.Is(errors.New("a"), errors.New("b"))
-	m.check(`&errors.errorString{s:"a"} ⦗should in chain of⦘ &errors.errorString{s:"b"}`)
+	m.check(`&errors.errorString{
+    s: "a",
+} ⦗should in chain of⦘ &errors.errorString{
+    s: "b",
+}`)
 	as.Is(nil, errors.New("a"))
-	m.check(`nil ⦗should be kind of⦘ &errors.errorString{s:"a"}`)
+	m.check(`nil ⦗should be kind of⦘ &errors.errorString{
+    s: "a",
+}`)
 	as.Is(errors.New("a"), nil)
-	m.check(`&errors.errorString{s:"a"} ⦗should be kind of⦘ nil`)
+	m.check(`&errors.errorString{
+    s: "a",
+} ⦗should be kind of⦘ nil`)
 
-	opts := got.Defaults()
+	opts := got.NoColor()
 	opts.Diff = func(a, b interface{}) string {
 		return " diff"
 	}

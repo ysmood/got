@@ -10,7 +10,7 @@ import (
 )
 
 // EnsureCoverage via report file generated from, for example:
-//     go test -coverprofile=coverage.txt
+//     go test -coverprofile=coverage.out
 // Return error if any functions's coverage is less than min, min is a percentage value.
 func EnsureCoverage(path string, min float64) error {
 	out, err := exec.Command("go", "tool", "cover", "-func="+path).CombinedOutput()
