@@ -71,3 +71,23 @@ type Err struct {
 }
 
 func (s Err) A(int) {}
+
+func TestPanicAsFailure(t *testing.T) {
+	as := got.New(t)
+
+	m := &mock{t: t}
+	it := func(t *mock) PanicAsFailure { return PanicAsFailure{} }
+	as.Eq(got.Each(m, it), 2)
+	as.True(m.failed)
+	as.Has(m.msg, "panic: err")
+}
+
+type PanicAsFailure struct {
+}
+
+func (p PanicAsFailure) A() {
+	panic("err")
+}
+
+func (p PanicAsFailure) B() {
+}

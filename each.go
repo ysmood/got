@@ -2,6 +2,8 @@ package got
 
 import (
 	"reflect"
+	"runtime/debug"
+	"strings"
 )
 
 // Skip current test
@@ -44,10 +46,11 @@ func Each(t Testable, iteratee interface{}) (count int) {
 		runVal.Call([]reflect.Value{
 			reflect.ValueOf(method.Name),
 			reflect.MakeFunc(cbType, func(args []reflect.Value) []reflect.Value {
-				doSkip(args[0], method)
+				t := args[0].Interface().(Testable)
+				doSkip(t, method)
 				count++
 				res := itVal.Call(args)
-				return callMethod(method, res[0])
+				return callMethod(t, method, res[0])
 			}),
 		})
 	}
@@ -99,13 +102,21 @@ func normalizeIteratee(t Testable, iteratee interface{}) reflect.Value {
 	return itVal
 }
 
-func callMethod(method reflect.Method, receiver reflect.Value) []reflect.Value {
+func callMethod(t Testable, method reflect.Method, receiver reflect.Value) []reflect.Value {
 	args := make([]reflect.Value, method.Type.NumIn())
 	args[0] = receiver
 
 	for i := 1; i < len(args); i++ {
 		args[i] = reflect.New(method.Type.In(i)).Elem()
 	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			loc := strings.TrimLeft(strings.Split(string(debug.Stack()), "\n")[8], "\t")
+			t.Logf("panic: %v\n%s", err, loc)
+			t.Fail()
+		}
+	}()
 
 	method.Func.Call(args)
 
@@ -145,9 +156,9 @@ func filterMethods(typ reflect.Type) []reflect.Method {
 	return methods
 }
 
-func doSkip(t reflect.Value, method reflect.Method) {
+func doSkip(t Testable, method reflect.Method) {
 	if method.Type.NumIn() > 1 && method.Type.In(1) == skipType {
-		t.Interface().(Testable).SkipNow()
+		t.SkipNow()
 	}
 }
 
