@@ -9,8 +9,13 @@ import (
 type Type int
 
 const (
-	// LineNum
+	// LineNum type
 	LineNum Type = iota
+
+	// ChunkStart type
+	ChunkStart
+	// ChunkEnd type
+	ChunkEnd
 
 	// SameSymbol type
 	SameSymbol
@@ -33,6 +38,9 @@ const (
 	AddWords
 	// DelWords type
 	DelWords
+
+	// EmptyLine type
+	EmptyLine
 )
 
 // Token presents a symbol in diff layout
@@ -41,44 +49,88 @@ type Token struct {
 	Literal string
 }
 
-// Tokenize text block a and b into diff tokens.
-func Tokenize(x, y string) []*Token {
+// TokenizeText text block a and b into diff tokens.
+func TokenizeText(x, y string) []*Token {
 	xls := NewText(x) // x lines
 	yls := NewText(y) // y lines
 	s := LCS(xls, yls)
-	var i, j, k int
 
 	ts := []*Token{}
 
 	xNum, yNum, sNum := numFormat(xls, yls)
+	chunkStarted := false
 
-	for i < len(xls) && j < len(yls) && k < len(s) {
-		xl := xls[i].(*Line)
-		yl := yls[j].(*Line)
-		l := s[k].(*Line)
+	for i, j, k := 0, 0, 0; i < len(xls) || j < len(yls); {
+		if i < len(xls) && (k == len(s) || !equal(xls[i], s[k])) {
+			ts, chunkStarted = tokenizeChunk(true, chunkStarted, ts)
 
-		if !equal(xl, l) {
 			ts = append(ts,
 				&Token{LineNum, fmt.Sprintf(xNum, i+1)},
 				&Token{DelSymbol, "- "},
-				&Token{DelLine, string(xl.str) + "\n"})
+				&Token{DelLine, string(xls[i].(*Line).str) + "\n"})
 			i++
-		} else if !equal(yl, l) {
+		} else if j < len(yls) && (k == len(s) || !equal(yls[j], s[k])) {
+			ts, chunkStarted = tokenizeChunk(true, chunkStarted, ts)
+
 			ts = append(ts,
 				&Token{LineNum, fmt.Sprintf(yNum, j+1)},
 				&Token{AddSymbol, "+ "},
-				&Token{AddLine, string(yl.str) + "\n"})
+				&Token{AddLine, string(yls[j].(*Line).str) + "\n"})
 			j++
 		} else {
+			ts, chunkStarted = tokenizeChunk(false, chunkStarted, ts)
+
 			ts = append(ts,
 				&Token{LineNum, fmt.Sprintf(sNum, i+1, j+1)},
 				&Token{SameSymbol, "  "},
-				&Token{SameLine, string(l.str) + "\n"})
+				&Token{SameLine, string(s[k].(*Line).str) + "\n"})
 			i, j, k = i+1, j+1, k+1
 		}
 	}
 
+	ts, _ = tokenizeChunk(false, chunkStarted, ts)
+
 	return ts
+}
+
+// TokenizeLine two different lines
+func TokenizeLine(x, y string) ([]*Token, []*Token) {
+	xs := NewString(x)
+	ys := NewString(y)
+
+	s := LCS(xs, ys)
+
+	xTokens := []*Token{}
+	for i, j := 0, 0; i < len(xs); i++ {
+		if j < len(s) && equal(xs[i], s[j]) {
+			xTokens = append(xTokens, &Token{SameWords, string(s[j].(Char))})
+			j++
+		} else {
+			xTokens = append(xTokens, &Token{DelWords, string(xs[i].(Char))})
+		}
+	}
+
+	yTokens := []*Token{}
+	for i, j := 0, 0; i < len(ys); i++ {
+		if j < len(s) && equal(ys[i], s[j]) {
+			yTokens = append(yTokens, &Token{SameWords, string(s[j].(Char))})
+			j++
+		} else {
+			yTokens = append(yTokens, &Token{AddWords, string(ys[i].(Char))})
+		}
+	}
+
+	return xTokens, yTokens
+}
+
+func tokenizeChunk(start bool, started bool, ts []*Token) ([]*Token, bool) {
+	if start && !started {
+		return append(ts, &Token{ChunkStart, ""}), true
+	}
+	if !start && started {
+		return append(ts, &Token{ChunkEnd, ""}), false
+	}
+	return ts, started
 }
 
 func numFormat(x, y []Comparable) (string, string, string) {

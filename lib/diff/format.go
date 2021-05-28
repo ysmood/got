@@ -6,6 +6,12 @@ import (
 
 // DefaultTheme colors for Sprint
 var DefaultTheme = func(t Type) gop.Color {
+	switch t {
+	case AddSymbol, AddLine:
+		return gop.Green
+	case DelSymbol, DelLine:
+		return gop.Red
+	}
 	return gop.None
 }
 
@@ -16,40 +22,16 @@ var NoTheme = func(t Type) gop.Color {
 
 // Diff x and y into a human readable string.
 func Diff(x, y string) string {
-	return Format(Tokenize(x, y), DefaultTheme)
-}
-
-// Narrow the context around each diff section to n lines.
-func Narrow(n int, ts []*Token) []*Token {
-	if n < 0 {
-		n = 0
-	}
-
-	out := []*Token{}
-	pivot := 0
-
-	lines := ParseTokenLines(ts)
-	hunks := ParseTokenHunks(lines)
-
-	for _, h := range hunks {
-		from, to := h.From(), h.To()
-		if from-n >= 0 {
-			from = from - n
-		}
-		if to+n < len(lines) {
-			to = to + n
-		}
-
-		if pivot < from {
-			out = append(out, lines[from:to]...)
-		}
-
-	}
-
-	return out
+	return Format(TokenizeText(x, y), DefaultTheme)
 }
 
 // Format tokens into a human readable string
 func Format(ts []*Token, theme func(Type) gop.Color) string {
-	return ""
+	out := ""
+
+	for _, t := range ts {
+		out += gop.ColorStr(theme(t.Type), t.Literal)
+	}
+
+	return out
 }

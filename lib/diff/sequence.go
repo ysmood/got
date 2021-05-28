@@ -13,7 +13,7 @@ var _ Comparable = Char(0)
 // Char is a rune
 type Char rune
 
-// Equal interface
+// Hash interface
 func (c Char) Hash() []byte {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b[:], uint32(c))
@@ -59,7 +59,7 @@ func NewLine(b []byte) *Line {
 	}
 }
 
-// Equal interface
+// Hash interface
 func (c *Line) Hash() []byte {
 	return c.hash
 }

@@ -24,7 +24,7 @@ const (
 	// Cyan type
 	Cyan
 
-	// None
+	// None type
 	None Color = -1
 )
 
