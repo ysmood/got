@@ -1,9 +1,10 @@
-// +build !windows
-
 package gop
 
 import (
 	"fmt"
+	"os/exec"
+	"strconv"
+	"strings"
 )
 
 // Color type
@@ -30,9 +31,16 @@ const (
 
 // ColorStr string
 func ColorStr(c Color, s string) string {
-	if c == -1 {
+	if c == -1 || !SupportsColor {
 		return s
 	}
 
 	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", c, s)
 }
+
+// SupportsColor returns true if current shell supports ANSI color
+var SupportsColor = func() bool {
+	b, _ := exec.Command("tput", "colors").CombinedOutput()
+	n, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 32)
+	return n > 0
+}()

@@ -18,6 +18,8 @@ jobs:
       run: go install github.com/ysmood/golangci-lint@latest && golangci-lint
 
     - name: test
+      env:
+        TERM: xterm-256color
       run: |
         go test -race -coverprofile=coverage.out ./...
         go run ./cmd/check-cov
