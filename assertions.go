@@ -149,6 +149,23 @@ func (as Assertions) NotNil(args ...interface{}) {
 	as.err("<%s>%s", reflect.TypeOf(last), as.k("shouldn't be <nil>"))
 }
 
+// Zero fails if x is not zero value for its type.
+func (as Assertions) Zero(x interface{}) {
+	as.Helper()
+	if reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface()) {
+		return
+	}
+	as.err("%s%s", as.d(x), as.k("should be zero value for its type"))
+}
+
+// Zero fails if x is not zero value for its type.
+func (as Assertions) NotZero(x interface{}) {
+	as.Helper()
+	if reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface()) {
+		as.err("%s%s", as.d(x), as.k("should not be zero value for its type"))
+	}
+}
+
 // Regex matches str
 func (as Assertions) Regex(pattern, str string) {
 	as.Helper()

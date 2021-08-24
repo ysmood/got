@@ -46,6 +46,13 @@ func TestAssertion(t *testing.T) {
 	as.Nil(os.Stat("go.mod"))
 	as.NotNil(1)
 
+	as.Zero("")
+	as.Zero(0)
+	as.Zero(time.Time{})
+	as.NotZero(1)
+	as.NotZero("ok")
+	as.NotZero(time.Now())
+
 	as.Regex(`\d\d`, "10")
 	as.Has(`test`, "es")
 
@@ -128,6 +135,11 @@ func TestAssertionErr(t *testing.T) {
 	m.check("<*int> ⦗shouldn't be <nil>⦘ ")
 	as.NotNil()
 	m.check(" ⦗no args received⦘ ")
+
+	as.Zero(1)
+	m.check("1 ⦗should be zero value for its type⦘ ")
+	as.NotZero(0)
+	m.check("0 ⦗should not be zero value for its type⦘ ")
 
 	as.Regex(`\d\d`, "aaa")
 	m.check(`\d\d ⦗should match⦘ aaa`)
