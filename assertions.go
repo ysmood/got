@@ -36,88 +36,99 @@ func (as Assertions) Must() Assertions {
 	return n
 }
 
-// Eq a ≂ b
-func (as Assertions) Eq(a, b interface{}) {
+// Eq asserts that x equals y when converted to the same type, such as compare float 1.0 and integer 1 .
+// For strict value and type comparison use Assertions.Equal .
+func (as Assertions) Eq(x, y interface{}) {
 	as.Helper()
-	if compare(a, b) == 0 {
+	if compare(x, y) == 0 {
 		return
 	}
-	as.err("%s%s%s%s", as.d(a), as.k("not ≂"), as.d(b), as.diff(a, b))
-}
-
-// Neq a != b
-func (as Assertions) Neq(a, b interface{}) {
-	as.Helper()
-	if compare(a, b) != 0 {
+	if sameType(x, y) {
+		as.err("%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.diff(x, y))
 		return
 	}
-	as.err("%s%s%s", as.d(a), as.k("not ≠"), as.d(b))
+	as.err("%s%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.k("even when converted to the same type"), as.diff(x, y))
 }
 
-// Equal a == b
-func (as Assertions) Equal(a, b interface{}) {
+// Neq asserts that x not equals y even when converted to the same type.
+func (as Assertions) Neq(x, y interface{}) {
 	as.Helper()
-	if a == b {
+	if compare(x, y) != 0 {
 		return
 	}
-	as.err("%s%s%s%s", as.d(a), as.k("not =="), as.d(b), as.diff(a, b))
-}
 
-// Gt a > b
-func (as Assertions) Gt(a, b interface{}) {
-	as.Helper()
-	if compare(a, b) > 0 {
+	if sameType(x, y) {
+		as.err("%s%s%s", as.d(x), as.k("=="), as.d(y))
 		return
 	}
-	as.err("%s%s%s", as.d(a), as.k("not >"), as.d(b))
+	as.err("%s%s%s%s", as.d(x), as.k("=="), as.d(y), as.k("when converted to the same type"))
 }
 
-// Gte a >= b
-func (as Assertions) Gte(a, b interface{}) {
+// Equal asserts that x equals y.
+// For loose type comparison use Assertions.Eq, such as compare float 1.0 and integer 1 .
+func (as Assertions) Equal(x, y interface{}) {
 	as.Helper()
-	if compare(a, b) >= 0 {
+	if x == y {
 		return
 	}
-	as.err("%s%s%s", as.d(a), as.k("not ≥"), as.d(b))
+	as.err("%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.diff(x, y))
 }
 
-// Lt a < b
-func (as Assertions) Lt(a, b interface{}) {
+// Gt asserts that x is greater than y.
+func (as Assertions) Gt(x, y interface{}) {
 	as.Helper()
-	if compare(a, b) < 0 {
+	if compare(x, y) > 0 {
 		return
 	}
-	as.err("%s%s%s", as.d(a), as.k("not <"), as.d(b))
+	as.err("%s%s%s", as.d(x), as.k("not >"), as.d(y))
 }
 
-// Lte a <= b
-func (as Assertions) Lte(a, b interface{}) {
+// Gte asserts that x is greater than or equal to y.
+func (as Assertions) Gte(x, y interface{}) {
 	as.Helper()
-	if compare(a, b) <= 0 {
+	if compare(x, y) >= 0 {
 		return
 	}
-	as.err("%s%s%s", as.d(a), as.k("not ≤"), as.d(b))
+	as.err("%s%s%s", as.d(x), as.k("not ≥"), as.d(y))
 }
 
-// True a == true
-func (as Assertions) True(a bool) {
+// Lt asserts that x is less than y.
+func (as Assertions) Lt(x, y interface{}) {
 	as.Helper()
-	if a {
+	if compare(x, y) < 0 {
 		return
 	}
-	as.err("%s", as.k("should be <true>"))
+	as.err("%s%s%s", as.d(x), as.k("not <"), as.d(y))
 }
 
-// False a == false
-func (as Assertions) False(a bool) {
+// Lte asserts that x is less than or equal to b.
+func (as Assertions) Lte(x, y interface{}) {
 	as.Helper()
-	if !a {
+	if compare(x, y) <= 0 {
 		return
 	}
-	as.err("%s", as.k("should be <false>"))
+	as.err("%s%s%s", as.d(x), as.k("not ≤"), as.d(y))
 }
 
-// Nil fails if last arg is not nil
+// True asserts that x is true.
+func (as Assertions) True(x bool) {
+	as.Helper()
+	if x {
+		return
+	}
+	as.err("%s%s", as.k("should be"), as.d(true))
+}
+
+// False asserts that x is false.
+func (as Assertions) False(x bool) {
+	as.Helper()
+	if !x {
+		return
+	}
+	as.err("%s%s", as.k("should be"), as.d(false))
+}
+
+// Nil asserts that the last item in args is nil
 func (as Assertions) Nil(args ...interface{}) {
 	as.Helper()
 	if len(args) == 0 {
@@ -128,10 +139,10 @@ func (as Assertions) Nil(args ...interface{}) {
 	if isNil(last) {
 		return
 	}
-	as.err("%s%s%s", as.k("last value"), as.d(last), as.k("should be <nil>"))
+	as.err("%s%s%s%s", as.k("last value"), as.d(last), as.k("should be"), as.d(nil))
 }
 
-// NotNil fails if last arg is nil
+// NotNil asserts that the last item in args is not nil
 func (as Assertions) NotNil(args ...interface{}) {
 	as.Helper()
 	if len(args) == 0 {
@@ -143,13 +154,13 @@ func (as Assertions) NotNil(args ...interface{}) {
 		return
 	}
 	if last == nil {
-		as.err("%s", as.k("last value shouldn't be <nil>"))
+		as.err("%s%s", as.k("last value shouldn't be"), as.d(nil))
 		return
 	}
-	as.err("<%s>%s", reflect.TypeOf(last), as.k("shouldn't be <nil>"))
+	as.err("<%s>%s%s", reflect.TypeOf(last), as.k("shouldn't be"), as.d(nil))
 }
 
-// Zero fails if x is not zero value for its type.
+// Zero asserts x is zero value for its type.
 func (as Assertions) Zero(x interface{}) {
 	as.Helper()
 	if reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface()) {
@@ -158,7 +169,7 @@ func (as Assertions) Zero(x interface{}) {
 	as.err("%s%s", as.d(x), as.k("should be zero value for its type"))
 }
 
-// Zero fails if x is not zero value for its type.
+// NotZero asserts that x is not zero value for its type.
 func (as Assertions) NotZero(x interface{}) {
 	as.Helper()
 	if reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface()) {
@@ -166,7 +177,7 @@ func (as Assertions) NotZero(x interface{}) {
 	}
 }
 
-// Regex matches str
+// Regex asserts that str matches the regex pattern
 func (as Assertions) Regex(pattern, str string) {
 	as.Helper()
 	if regexp.MustCompile(pattern).MatchString(str) {
@@ -175,7 +186,7 @@ func (as Assertions) Regex(pattern, str string) {
 	as.err("%s%s%s", pattern, as.k("should match"), str)
 }
 
-// Has str in container
+// Has asserts that container contains str
 func (as Assertions) Has(container, str string) {
 	as.Helper()
 	if strings.Contains(container, str) {
@@ -184,7 +195,7 @@ func (as Assertions) Has(container, str string) {
 	as.err("%s%s%s", container, as.k("should has"), str)
 }
 
-// Len len(list) == l
+// Len asserts that the length of list equals l
 func (as Assertions) Len(list interface{}, l int) {
 	as.Helper()
 	actual := reflect.ValueOf(list).Len()
@@ -194,7 +205,7 @@ func (as Assertions) Len(list interface{}, l int) {
 	as.err("%s%d%s%d", as.k("expect len"), actual, as.k("to be"), l)
 }
 
-// Err fails if last arg is not error
+// Err asserts that the last item in args is error
 func (as Assertions) Err(args ...interface{}) {
 	as.Helper()
 	if len(args) == 0 {
@@ -214,7 +225,7 @@ func (as Assertions) E(args ...interface{}) {
 	as.Must().Nil(args...)
 }
 
-// Panic fails if fn doesn't panic
+// Panic executes fn and asserts that fn panics
 func (as Assertions) Panic(fn func()) {
 	as.Helper()
 
@@ -230,16 +241,17 @@ func (as Assertions) Panic(fn func()) {
 	fn()
 }
 
-// Is fails if a is not kind of b
-func (as Assertions) Is(a, b interface{}) {
+// Is asserts that x is kind of y, it uses reflect.Kind to compare.
+// If x and y are both error type, it will use errors.Is to compare.
+func (as Assertions) Is(x, y interface{}) {
 	as.Helper()
 
-	if a == nil && b == nil {
+	if x == nil && y == nil {
 		return
 	}
 
-	if ae, ok := a.(error); ok {
-		if be, ok := b.(error); ok {
+	if ae, ok := x.(error); ok {
+		if be, ok := y.(error); ok {
 			if ae == be {
 				return
 			}
@@ -247,28 +259,28 @@ func (as Assertions) Is(a, b interface{}) {
 			if errors.Is(ae, be) {
 				return
 			}
-			as.err("%s%s%s", as.d(a), as.k("should in chain of"), as.d(b))
+			as.err("%s%s%s", as.d(x), as.k("should in chain of"), as.d(y))
 			return
 		}
 	}
 
-	at := reflect.TypeOf(a)
-	bt := reflect.TypeOf(b)
-	if a != nil && b != nil && at.Kind() == bt.Kind() {
+	at := reflect.TypeOf(x)
+	bt := reflect.TypeOf(y)
+	if x != nil && y != nil && at.Kind() == bt.Kind() {
 		return
 	}
-	as.err("%s%s%s", as.d(a), as.k("should be kind of"), as.d(b))
+	as.err("%s%s%s", as.d(x), as.k("should be kind of"), as.d(y))
 }
 
-// Count returns a function that must be called with the specified times
-func (as Assertions) Count(times int) func() {
+// Count asserts that the returned function will be called n times
+func (as Assertions) Count(n int) func() {
 	as.Helper()
 	var count int64
 
 	as.Cleanup(func() {
-		if int(atomic.LoadInt64(&count)) != times {
+		if int(atomic.LoadInt64(&count)) != n {
 			as.Helper()
-			as.Logf("Should count %d times, but got %d", times, count)
+			as.Logf("Should count %d times, but got %d", n, count)
 			as.Fail()
 		}
 	})
@@ -294,49 +306,57 @@ func (as Assertions) err(format string, args ...interface{}) {
 	as.Fail()
 }
 
-func castType(a, b interface{}) interface{} {
-	ta := reflect.ValueOf(a)
-	tb := reflect.ValueOf(b)
+func castType(x, y interface{}) interface{} {
+	ta := reflect.ValueOf(x)
+	tb := reflect.ValueOf(y)
 
-	if (a == nil || b == nil) && (a != b) {
-		return a
+	if (x == nil || y == nil) && (x != y) {
+		return x
 	}
 
 	if ta.Type().ConvertibleTo(tb.Type()) {
 		return ta.Convert(tb.Type()).Interface()
 	}
-	return a
+	return x
 }
 
-func compare(a, b interface{}) float64 {
-	if reflect.DeepEqual(a, b) {
+func compare(x, y interface{}) float64 {
+	if reflect.DeepEqual(x, y) {
 		return 0
 	}
 
-	if na, ok := castType(a, 0.0).(float64); ok {
-		if nb, ok := castType(b, 0.0).(float64); ok {
+	if na, ok := castType(x, 0.0).(float64); ok {
+		if nb, ok := castType(y, 0.0).(float64); ok {
 			return na - nb
 		}
 	}
 
-	sa := fmt.Sprintf("%#v", a)
-	sb := fmt.Sprintf("%#v", b)
+	sa := fmt.Sprintf("%#v", x)
+	sb := fmt.Sprintf("%#v", y)
 
 	return float64(strings.Compare(sa, sb))
 }
 
-func isNil(a interface{}) (yes bool) {
-	if a == nil {
+func sameType(x, y interface{}) bool {
+	if x == nil || y == nil {
+		return x == y
+	}
+
+	return reflect.TypeOf(x).Kind() == reflect.TypeOf(y).Kind()
+}
+
+func isNil(x interface{}) (yes bool) {
+	if x == nil {
 		return true
 	}
 
-	try(func() { yes = reflect.ValueOf(a).IsNil() })
+	try(func() { yes = reflect.ValueOf(x).IsNil() })
 	return
 }
 
-func (as Assertions) diff(a, b interface{}) string {
+func (as Assertions) diff(x, y interface{}) string {
 	if as.df != nil {
-		return as.df(a, b)
+		return as.df(x, y)
 	}
 	return ""
 }

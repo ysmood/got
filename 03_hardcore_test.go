@@ -15,7 +15,7 @@ func Example_standlone() {
 	})
 
 	// Output:
-	// 1 ⦗not ≂⦘ 2
+	// 1 ⦗not ==⦘ 2
 	// 1 ⦗not >⦘ 1
 }
 

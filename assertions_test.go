@@ -84,31 +84,33 @@ func TestAssertionErr(t *testing.T) {
 	}
 
 	as.Desc("not %s", "equal").Eq(1, 2.0)
-	m.check("not equal\n1 ⦗not ≂⦘ float64(2)")
+	m.check("not equal\n1 ⦗not ==⦘ float64(2) ⦗even when converted to the same type⦘ ")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check(`got_test.data{
     A: 1,
     S: "a",
-} ⦗not ≂⦘ got_test.data{
+} ⦗not ==⦘ got_test.data{
     A: 1,
     S: "b",
 }`)
 
 	as.Eq(true, "a&")
-	m.check(`true ⦗not ≂⦘ "a&"`)
+	m.check(`true ⦗not ==⦘ "a&" ⦗even when converted to the same type⦘ `)
 
 	as.Eq(nil, "ok")
-	m.check(`nil ⦗not ≂⦘ "ok"`)
+	m.check(`nil ⦗not ==⦘ "ok" ⦗even when converted to the same type⦘ `)
 
 	as.Eq(1, nil)
-	m.check(`1 ⦗not ≂⦘ nil`)
+	m.check(`1 ⦗not ==⦘ nil ⦗even when converted to the same type⦘ `)
 
 	as.Equal(1, 1.0)
 	m.check("1 ⦗not ==⦘ float64(1)")
 
 	as.Neq(1, 1)
-	m.check("1 ⦗not ≠⦘ 1")
+	m.check("1 ⦗==⦘ 1")
+	as.Neq(1.0, 1)
+	m.check("float64(1) ⦗==⦘ 1 ⦗when converted to the same type⦘ ")
 
 	as.Lt(1, 1)
 	m.check("1 ⦗not <⦘ 1")
@@ -121,18 +123,18 @@ func TestAssertionErr(t *testing.T) {
 	m.check("1 ⦗not ≥⦘ 2")
 
 	as.True(false)
-	m.check(" ⦗should be <true>⦘ ")
+	m.check(" ⦗should be⦘ true")
 	as.False(true)
-	m.check(" ⦗should be <false>⦘ ")
+	m.check(" ⦗should be⦘ false")
 
 	as.Nil(1)
-	m.check(" ⦗last value⦘ 1 ⦗should be <nil>⦘ ")
+	m.check(" ⦗last value⦘ 1 ⦗should be⦘ nil")
 	as.Nil()
 	m.check(" ⦗no args received⦘ ")
 	as.NotNil(nil)
-	m.check(" ⦗last value shouldn't be <nil>⦘ ")
+	m.check(" ⦗last value shouldn't be⦘ nil")
 	as.NotNil((*int)(nil))
-	m.check("<*int> ⦗shouldn't be <nil>⦘ ")
+	m.check("<*int> ⦗shouldn't be⦘ nil")
 	as.NotNil()
 	m.check(" ⦗no args received⦘ ")
 
@@ -166,7 +168,7 @@ func TestAssertionErr(t *testing.T) {
 	}()
 	m.check(` ⦗last value⦘ &errors.errorString{
     s: "E",
-} ⦗should be <nil>⦘ `)
+} ⦗should be⦘ nil`)
 
 	as.Is(1, 2.2)
 	m.check("1 ⦗should be kind of⦘ float64(2.2)")
@@ -191,7 +193,7 @@ func TestAssertionErr(t *testing.T) {
 	}
 	asDiff := got.NewWith(m, opts)
 	asDiff.Eq("a", "b")
-	m.check(`"a" ⦗not ≂⦘ "b" diff`)
+	m.check(`"a" ⦗not ==⦘ "b" diff`)
 
 	{
 		count := as.Count(2)
