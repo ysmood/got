@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 	"unsafe"
 
 	"github.com/ysmood/got"
@@ -54,6 +55,8 @@ func (t T) Tokenize() {
 		&[]int{1, 2},
 		&[2]int{1, 2},
 		&[]byte{1, 2},
+		time.Now(),
+		time.Hour,
 	}
 
 	gop.F(v)

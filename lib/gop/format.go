@@ -76,7 +76,7 @@ func Format(ts []*Token, theme func(Type) Color) string {
 			out += s + "\n"
 		case SliceItem, MapKey, StructKey:
 			out += strings.Repeat(indentUnit, depth)
-		case Colon:
+		case Colon, InlineComma:
 			out += s + " "
 		case Comma:
 			out += s + "\n"

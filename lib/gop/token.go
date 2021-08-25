@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"time"
 	"unicode"
 	"unicode/utf8"
 )
@@ -55,6 +56,8 @@ const (
 	SliceOpen
 	// SliceItem type
 	SliceItem
+	// InlineComma type
+	InlineComma
 	// Comma type
 	Comma
 	// SliceClose type
@@ -113,14 +116,13 @@ func tokenize(sn seen, v reflect.Value) []*Token {
 
 	if v.Kind() == reflect.Invalid {
 		t.Literal = "nil"
-		ts = append(ts, t)
-		return ts
+		return append(ts, t)
 	} else if r, ok := v.Interface().(rune); ok && unicode.IsGraphic(r) {
-		ts = append(ts, tokenizeRune(t, r))
-		return ts
+		return append(ts, tokenizeRune(t, r))
 	} else if b, ok := v.Interface().(byte); ok {
-		ts = append(ts, tokenizeByte(t, b))
-		return ts
+		return append(ts, tokenizeByte(t, b))
+	} else if tt, ok := v.Interface().(time.Time); ok {
+		return tokenizeTime(tt)
 	}
 
 	switch v.Kind() {
@@ -248,6 +250,17 @@ func tokenizeByte(t *Token, b byte) *Token {
 		t.Literal = fmt.Sprintf("byte(0x%x)", b)
 	}
 	return t
+}
+
+func tokenizeTime(t time.Time) []*Token {
+	ts := []*Token{}
+	ts = append(ts, &Token{TypeName, "time.Parse"})
+	ts = append(ts, &Token{ParenOpen, "("})
+	ts = append(ts, &Token{TypeName, "time.RFC3339Nano"})
+	ts = append(ts, &Token{InlineComma, ","})
+	ts = append(ts, &Token{String, `"` + t.Format(time.RFC3339Nano) + `"`})
+	ts = append(ts, &Token{ParenClose, ")"})
+	return ts
 }
 
 func tokenizeBytes(data []byte) []*Token {
