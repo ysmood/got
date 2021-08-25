@@ -44,7 +44,7 @@ func TestAssertion(t *testing.T) {
 	as.Nil(nil)
 	as.Nil((*int)(nil))
 	as.Nil(os.Stat("go.mod"))
-	as.NotNil(1)
+	as.NotNil([]int{})
 
 	as.Zero("")
 	as.Zero(0)
@@ -128,15 +128,17 @@ func TestAssertionErr(t *testing.T) {
 	m.check(" ⦗should be⦘ false")
 
 	as.Nil(1)
-	m.check(" ⦗last value⦘ 1 ⦗should be⦘ nil")
+	m.check(" ⦗last item in args⦘ 1 ⦗should be⦘ nil")
 	as.Nil()
 	m.check(" ⦗no args received⦘ ")
 	as.NotNil(nil)
 	m.check(" ⦗last value shouldn't be⦘ nil")
 	as.NotNil((*int)(nil))
-	m.check("<*int> ⦗shouldn't be⦘ nil")
+	m.check(" ⦗last item in args⦘ (*int)(nil) ⦗shouldn't be⦘ nil")
 	as.NotNil()
 	m.check(" ⦗no args received⦘ ")
+	as.NotNil(1)
+	m.check(" ⦗last item in args⦘ 1 ⦗is not nilable⦘ ")
 
 	as.Zero(1)
 	m.check("1 ⦗should be zero value for its type⦘ ")
@@ -166,7 +168,7 @@ func TestAssertionErr(t *testing.T) {
 		}()
 		as.E(1, errors.New("E"))
 	}()
-	m.check(` ⦗last value⦘ &errors.errorString{
+	m.check(` ⦗last item in args⦘ &errors.errorString{
     s: "E",
 } ⦗should be⦘ nil`)
 

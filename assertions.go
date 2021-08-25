@@ -128,7 +128,7 @@ func (as Assertions) False(x bool) {
 	as.err("%s%s", as.k("should be"), as.d(false))
 }
 
-// Nil asserts that the last item in args is nil
+// Nil asserts that the last item in args is nilable and nil
 func (as Assertions) Nil(args ...interface{}) {
 	as.Helper()
 	if len(args) == 0 {
@@ -136,13 +136,13 @@ func (as Assertions) Nil(args ...interface{}) {
 		return
 	}
 	last := args[len(args)-1]
-	if isNil(last) {
+	if _, yes := isNil(last); yes {
 		return
 	}
-	as.err("%s%s%s%s", as.k("last value"), as.d(last), as.k("should be"), as.d(nil))
+	as.err("%s%s%s%s", as.k("last item in args"), as.d(last), as.k("should be"), as.d(nil))
 }
 
-// NotNil asserts that the last item in args is not nil
+// NotNil asserts that the last item in args is nilable and not nil
 func (as Assertions) NotNil(args ...interface{}) {
 	as.Helper()
 	if len(args) == 0 {
@@ -150,14 +150,21 @@ func (as Assertions) NotNil(args ...interface{}) {
 		return
 	}
 	last := args[len(args)-1]
-	if !isNil(last) {
-		return
-	}
+
 	if last == nil {
 		as.err("%s%s", as.k("last value shouldn't be"), as.d(nil))
 		return
 	}
-	as.err("<%s>%s%s", reflect.TypeOf(last), as.k("shouldn't be"), as.d(nil))
+
+	nilable, yes := isNil(last)
+	if !nilable {
+		as.err("%s%s%s", as.k("last item in args"), as.d(last), as.k("is not nilable"))
+		return
+	}
+
+	if yes {
+		as.err("%s%s%s%s", as.k("last item in args"), as.d(last), as.k("shouldn't be"), as.d(nil))
+	}
 }
 
 // Zero asserts x is zero value for its type.
@@ -345,13 +352,26 @@ func sameType(x, y interface{}) bool {
 	return reflect.TypeOf(x).Kind() == reflect.TypeOf(y).Kind()
 }
 
-func isNil(x interface{}) (yes bool) {
+// the first return value is true if x is nilable
+func isNil(x interface{}) (bool, bool) {
 	if x == nil {
-		return true
+		return true, true
 	}
 
-	try(func() { yes = reflect.ValueOf(x).IsNil() })
-	return
+	val := reflect.ValueOf(x)
+	k := val.Kind()
+	nilable := k == reflect.Chan ||
+		k == reflect.Func ||
+		k == reflect.Interface ||
+		k == reflect.Map ||
+		k == reflect.Ptr ||
+		k == reflect.Slice
+
+	if nilable {
+		return true, val.IsNil()
+	}
+
+	return false, false
 }
 
 func (as Assertions) diff(x, y interface{}) string {
