@@ -1,11 +1,11 @@
 # Overview
 
-A dependency-free test framework for go projects. Examples:
+An enjoyable golang test framework.
 
-- [as a lightweight assertion lib](00_assertions_test.go)
+## Guides
 
-- [simple usage](01_simple_test.go)
+- [As assertion lib](00_assertions_test.go)
 
-- [advanced usage](02_advanced_test.go)
+- [Suite of tests](01_suite_test.go)
 
-- [hardcore usage](03_hardcore_test.go)
+- [Advanced usage](02_advanced_test.go)

@@ -6,7 +6,7 @@ import (
 	"github.com/ysmood/got"
 )
 
-// Use got as an light weight assertion lib.
+// Use got as an light weight assertion lib in standard Go test function.
 
 func TestAssertions(t *testing.T) {
 	g := got.New(t)
