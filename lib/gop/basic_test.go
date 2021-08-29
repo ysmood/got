@@ -1,6 +1,7 @@
 package gop_test
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"reflect"
@@ -22,6 +23,7 @@ func Test(t *testing.T) {
 
 func (t T) Tokenize() {
 	ref := "test"
+	timeStamp, _ := time.Parse(time.RFC3339Nano, "2021-08-28T08:36:36.807908+08:00")
 
 	v := []interface{}{
 		nil,
@@ -55,11 +57,77 @@ func (t T) Tokenize() {
 		&[]int{1, 2},
 		&[2]int{1, 2},
 		&[]byte{1, 2},
-		time.Now(),
+		timeStamp,
 		time.Hour,
 	}
 
-	gop.F(v)
+	out := gop.StripColor(gop.F(v))
+
+	t.Eq(out, `[]interface {}{
+    nil,
+    []interface {}{
+        true,
+        false,
+        uintptr(23),
+        float32(100.12111),
+    },
+    true,
+    10,
+    int8(2),
+    'd',
+    float64(100.121111133),
+    complex128((1+2i)),
+    [3]int{
+        1,
+        2,
+        0,
+    },
+    make(chan int),
+    make(chan string, 3),
+    (func(string) int)(nil),
+    map[interface {}]interface {}{
+        "a": 1,
+        "test": 10,
+    },
+    unsafe.Pointer(uintptr(`+fmt.Sprintf("%v", &ref)+`)),
+    struct { Int int; str string; M map[int]int }{
+        Int: 10,
+        str: "ok",
+        M: map[int]int{
+            1: 32,
+        },
+    },
+    gop.Base64("YWHi"),
+    []byte("" +
+        "bytes\n" +
+        "\tbytes"),
+    byte('a'),
+    byte(0x1),
+    '天',
+    "" +
+        "\n" +
+        "test",
+    gop.ToPtr("test").(*string),
+    (*struct { Int int })(nil),
+    &struct { Int int }{
+        Int: 0,
+    },
+    &map[int]int{
+        1: 2,
+        3: 4,
+    },
+    &[]int{
+        1,
+        2,
+    },
+    &[2]int{
+        1,
+        2,
+    },
+    &[]byte("\x01\x02"),
+    time.Parse(time.RFC3339Nano, "`+timeStamp.Format(time.RFC3339Nano)+`"),
+    Duration(1h0m0s),
+}`)
 }
 
 type A struct {

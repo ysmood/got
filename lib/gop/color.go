@@ -3,6 +3,7 @@ package gop
 import (
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -44,3 +45,12 @@ var SupportsColor = func() bool {
 	n, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 32)
 	return n > 0
 }()
+
+const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+
+var re = regexp.MustCompile(ansi)
+
+// StripColor is copied from https://github.com/acarl005/stripansi
+func StripColor(str string) string {
+	return re.ReplaceAllString(str, "")
+}

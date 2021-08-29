@@ -4,10 +4,13 @@ import (
 	"encoding/base64"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/ysmood/got/lib/utils"
 )
 
 // Type of token
@@ -149,12 +152,15 @@ func tokenize(sn seen, v reflect.Value) []*Token {
 	case reflect.Map:
 		ts = append(ts, &Token{TypeName, v.Type().String()})
 		ts = append(ts, &Token{MapOpen, "{"})
-		it := v.MapRange()
-		for it.Next() {
+		keys := v.MapKeys()
+		sort.Slice(keys, func(i, j int) bool {
+			return utils.Compare(keys[i], keys[j]) < 0
+		})
+		for _, k := range keys {
 			ts = append(ts, &Token{MapKey, ""})
-			ts = append(ts, tokenize(sn, it.Key())...)
+			ts = append(ts, tokenize(sn, k)...)
 			ts = append(ts, &Token{Colon, ":"})
-			ts = append(ts, tokenize(sn, it.Value())...)
+			ts = append(ts, tokenize(sn, v.MapIndex(k))...)
 			ts = append(ts, &Token{Comma, ","})
 		}
 		ts = append(ts, &Token{MapClose, "}"})

@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"sync/atomic"
+
+	"github.com/ysmood/got/lib/utils"
 )
 
 // Assertions helpers
@@ -40,7 +42,7 @@ func (as Assertions) Must() Assertions {
 // For strict value and type comparison use Assertions.Equal .
 func (as Assertions) Eq(x, y interface{}) {
 	as.Helper()
-	if compare(x, y) == 0 {
+	if utils.Compare(x, y) == 0 {
 		return
 	}
 	if sameType(x, y) {
@@ -53,7 +55,7 @@ func (as Assertions) Eq(x, y interface{}) {
 // Neq asserts that x not equals y even when converted to the same type.
 func (as Assertions) Neq(x, y interface{}) {
 	as.Helper()
-	if compare(x, y) != 0 {
+	if utils.Compare(x, y) != 0 {
 		return
 	}
 
@@ -77,7 +79,7 @@ func (as Assertions) Equal(x, y interface{}) {
 // Gt asserts that x is greater than y.
 func (as Assertions) Gt(x, y interface{}) {
 	as.Helper()
-	if compare(x, y) > 0 {
+	if utils.Compare(x, y) > 0 {
 		return
 	}
 	as.err("%s%s%s", as.d(x), as.k("not >"), as.d(y))
@@ -86,7 +88,7 @@ func (as Assertions) Gt(x, y interface{}) {
 // Gte asserts that x is greater than or equal to y.
 func (as Assertions) Gte(x, y interface{}) {
 	as.Helper()
-	if compare(x, y) >= 0 {
+	if utils.Compare(x, y) >= 0 {
 		return
 	}
 	as.err("%s%s%s", as.d(x), as.k("not ≥"), as.d(y))
@@ -95,7 +97,7 @@ func (as Assertions) Gte(x, y interface{}) {
 // Lt asserts that x is less than y.
 func (as Assertions) Lt(x, y interface{}) {
 	as.Helper()
-	if compare(x, y) < 0 {
+	if utils.Compare(x, y) < 0 {
 		return
 	}
 	as.err("%s%s%s", as.d(x), as.k("not <"), as.d(y))
@@ -104,7 +106,7 @@ func (as Assertions) Lt(x, y interface{}) {
 // Lte asserts that x is less than or equal to b.
 func (as Assertions) Lte(x, y interface{}) {
 	as.Helper()
-	if compare(x, y) <= 0 {
+	if utils.Compare(x, y) <= 0 {
 		return
 	}
 	as.err("%s%s%s", as.d(x), as.k("not ≤"), as.d(y))
@@ -311,37 +313,6 @@ func (as Assertions) err(format string, args ...interface{}) {
 	}
 
 	as.Fail()
-}
-
-func castType(x, y interface{}) interface{} {
-	ta := reflect.ValueOf(x)
-	tb := reflect.ValueOf(y)
-
-	if (x == nil || y == nil) && (x != y) {
-		return x
-	}
-
-	if ta.Type().ConvertibleTo(tb.Type()) {
-		return ta.Convert(tb.Type()).Interface()
-	}
-	return x
-}
-
-func compare(x, y interface{}) float64 {
-	if reflect.DeepEqual(x, y) {
-		return 0
-	}
-
-	if na, ok := castType(x, 0.0).(float64); ok {
-		if nb, ok := castType(y, 0.0).(float64); ok {
-			return na - nb
-		}
-	}
-
-	sa := fmt.Sprintf("%#v", x)
-	sb := fmt.Sprintf("%#v", y)
-
-	return float64(strings.Compare(sa, sb))
 }
 
 func sameType(x, y interface{}) bool {
