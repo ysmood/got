@@ -10,12 +10,12 @@ jobs:
 
     - uses: actions/setup-go@v2
       with:
-        go-version: 1.16
+        go-version: 1.17
 
     - uses: actions/checkout@v2
 
     - name: lint
-      run: go install github.com/ysmood/golangci-lint@latest && golangci-lint
+      run: go run github.com/ysmood/golangci-lint@latest
 
     - name: test
       env:
