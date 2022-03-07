@@ -2,8 +2,10 @@ package got_test
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/ysmood/got"
@@ -115,4 +117,35 @@ func TestHelper(t *testing.T) {
 	m.msg = ""
 	mut.Skipf("test skip")
 	ut.Eq(m.msg, "test skip")
+}
+
+func TestServe(t *testing.T) {
+	ut := got.New(t)
+
+	key := ut.Srand(8)
+	s := ut.Serve().Route("/", "", key)
+	count := 30
+
+	wg := sync.WaitGroup{}
+	wg.Add(count)
+
+	request := func() {
+		req, err := http.NewRequest(http.MethodGet, s.URL(), nil)
+		ut.E(err)
+
+		res, err := http.DefaultClient.Do(req)
+		ut.E(err)
+
+		b, err := io.ReadAll(res.Body)
+		ut.E(err)
+
+		ut.Eq(string(b), key)
+		wg.Done()
+	}
+
+	for i := 0; i < count; i++ {
+		go request()
+	}
+
+	wg.Wait()
 }

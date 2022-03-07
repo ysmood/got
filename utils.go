@@ -209,7 +209,7 @@ func (ut Utils) ToJSONString(obj interface{}) string {
 // If obj is not []byte, string, or io.Reader, it will be encoded as JSON.
 func (ut Utils) Write(obj interface{}) (writer func(io.Writer)) {
 	lock := sync.Mutex{}
-	var cache io.ReadWriter
+	var cache []byte
 	return func(w io.Writer) {
 		lock.Lock()
 		defer lock.Unlock()
@@ -217,13 +217,13 @@ func (ut Utils) Write(obj interface{}) (writer func(io.Writer)) {
 		ut.Helper()
 
 		if cache != nil {
-			_, err := io.Copy(w, cache)
+			_, err := w.Write(cache)
 			ut.err(err)
 			return
 		}
 
-		cache = bytes.NewBuffer(nil)
-		w = io.MultiWriter(cache, w)
+		buf := bytes.NewBuffer(nil)
+		w = io.MultiWriter(buf, w)
 
 		var err error
 		switch v := obj.(type) {
@@ -237,6 +237,7 @@ func (ut Utils) Write(obj interface{}) (writer func(io.Writer)) {
 			err = json.NewEncoder(w).Encode(v)
 		}
 		ut.err(err)
+		cache = buf.Bytes()
 	}
 }
 
