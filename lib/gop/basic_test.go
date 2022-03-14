@@ -140,14 +140,48 @@ type B struct {
 	a *A
 }
 
-func (t T) Cyclic() {
+func (t T) CyclicRef() {
 	a := A{Int: 10}
 	b := B{"test", &a}
 	a.B = &b
 
 	ts := gop.Tokenize(a)
 
-	t.Has(gop.Format(ts, gop.NoTheme), `gop.Cyclic(`)
+	t.Eq(gop.Format(ts, gop.NoTheme), ""+
+		"gop_test.A{\n"+
+		"    Int: 10,\n"+
+		"    B: &gop_test.B{\n"+
+		"        s: \"test\",\n"+
+		"        a: &gop_test.A{\n"+
+		"            Int: 10,\n"+
+		"            B: gop.Cyclic(\"B\").(*gop_test.B),\n"+
+		"        },\n"+
+		"    },\n"+
+		"}")
+}
+
+func (t T) CyclicMap() {
+	a := map[int]interface{}{}
+	a[0] = a
+
+	ts := gop.Tokenize(a)
+
+	t.Eq(gop.Format(ts, gop.NoTheme), ""+
+		"map[int]interface {}{\n"+
+		"    0: gop.Cyclic().(map[int]interface {}),\n"+
+		"}")
+}
+
+func (t T) CyclicSlice() {
+	a := []interface{}{nil}
+	a[0] = a
+
+	ts := gop.Tokenize(a)
+
+	t.Eq(gop.Format(ts, gop.NoTheme), ""+
+		"[]interface {}{\n"+
+		"    gop.Cyclic().([]interface {}),\n"+
+		"}")
 }
 
 func (t T) Plain() {
@@ -162,7 +196,7 @@ func (t T) P() {
 
 func (t T) Others() {
 	gop.ToPtr(nil)
-	_ = gop.Cyclic(0)
+	_ = gop.Cyclic("")
 	_ = gop.Base64("")
 }
 

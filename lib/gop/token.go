@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -93,7 +94,7 @@ type Token struct {
 
 // Tokenize a random Go value
 func Tokenize(v interface{}) []*Token {
-	return tokenize(seen{}, reflect.ValueOf(v))
+	return tokenize(seen{}, []interface{}{}, reflect.ValueOf(v))
 }
 
 // ToPtr converts a Go value to its pointer
@@ -101,8 +102,8 @@ func ToPtr(interface{}) interface{} {
 	return nil
 }
 
-// Cyclic reference
-func Cyclic(uintptr) interface{} {
+// Cyclic reference of the path from the root
+func Cyclic(path ...interface{}) interface{} {
 	return nil
 }
 
@@ -111,9 +112,35 @@ func Base64(string) []byte {
 	return nil
 }
 
-type seen map[interface{}]struct{}
+type path []interface{}
 
-func tokenize(sn seen, v reflect.Value) []*Token {
+func (p path) String() string {
+	out := []string{}
+	for _, seg := range p {
+		out = append(out, fmt.Sprintf("%#v", seg))
+	}
+	return strings.Join(out, ", ")
+}
+
+type seen map[uintptr]path
+
+func (sn seen) cyclic(p path, v reflect.Value) *Token {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Slice:
+		ptr := v.Pointer()
+		if p, has := sn[ptr]; has {
+			return &Token{
+				PointerCyclic,
+				fmt.Sprintf("gop.Cyclic(%s).(%s)", p.String(), v.Type().String()),
+			}
+		}
+		sn[ptr] = p
+	}
+
+	return nil
+}
+
+func tokenize(sn seen, p path, v reflect.Value) []*Token {
 	ts := []*Token{}
 	t := &Token{Nil, ""}
 
@@ -128,9 +155,13 @@ func tokenize(sn seen, v reflect.Value) []*Token {
 		return tokenizeTime(tt)
 	}
 
+	if t := sn.cyclic(p, v); t != nil {
+		return append(ts, t)
+	}
+
 	switch v.Kind() {
 	case reflect.Interface:
-		ts = append(ts, tokenize(sn, v.Elem())...)
+		ts = append(ts, tokenize(sn, p, v.Elem())...)
 
 	case reflect.Slice, reflect.Array:
 		if data, ok := v.Interface().([]byte); ok {
@@ -142,9 +173,10 @@ func tokenize(sn seen, v reflect.Value) []*Token {
 
 		ts = append(ts, &Token{SliceOpen, "{"})
 		for i := 0; i < v.Len(); i++ {
+			p = append(p, i)
 			el := v.Index(i)
 			ts = append(ts, &Token{SliceItem, ""})
-			ts = append(ts, tokenize(sn, el)...)
+			ts = append(ts, tokenize(sn, p, el)...)
 			ts = append(ts, &Token{Comma, ","})
 		}
 		ts = append(ts, &Token{SliceClose, "}"})
@@ -157,10 +189,11 @@ func tokenize(sn seen, v reflect.Value) []*Token {
 			return utils.Compare(keys[i], keys[j]) < 0
 		})
 		for _, k := range keys {
+			p = append(p, k)
 			ts = append(ts, &Token{MapKey, ""})
-			ts = append(ts, tokenize(sn, k)...)
+			ts = append(ts, tokenize(sn, p, k)...)
 			ts = append(ts, &Token{Colon, ":"})
-			ts = append(ts, tokenize(sn, v.MapIndex(k))...)
+			ts = append(ts, tokenize(sn, p, v.MapIndex(k))...)
 			ts = append(ts, &Token{Comma, ","})
 		}
 		ts = append(ts, &Token{MapClose, "}"})
@@ -171,15 +204,16 @@ func tokenize(sn seen, v reflect.Value) []*Token {
 		ts = append(ts, &Token{TypeName, t.String()})
 		ts = append(ts, &Token{StructOpen, "{"})
 		for i := 0; i < v.NumField(); i++ {
+			name := t.Field(i).Name
 			ts = append(ts, &Token{StructKey, ""})
-			ts = append(ts, &Token{StructField, t.Field(i).Name})
+			ts = append(ts, &Token{StructField, name})
 
 			f := v.Field(i)
 			if !f.CanInterface() {
 				f = GetPrivateField(v, i)
 			}
 			ts = append(ts, &Token{Colon, ":"})
-			ts = append(ts, tokenize(sn, f)...)
+			ts = append(ts, tokenize(sn, append(p, name), f)...)
 			ts = append(ts, &Token{Comma, ","})
 		}
 		ts = append(ts, &Token{StructClose, "}"})
@@ -231,7 +265,7 @@ func tokenize(sn seen, v reflect.Value) []*Token {
 		ts = append(ts, t)
 
 	case reflect.Ptr:
-		ts = append(ts, tokenizePtr(sn, v)...)
+		ts = append(ts, tokenizePtr(sn, p, v)...)
 
 	case reflect.UnsafePointer:
 		t.Type = UnsafePointer
@@ -286,7 +320,7 @@ func tokenizeBytes(data []byte) []*Token {
 	return ts
 }
 
-func tokenizePtr(sn seen, v reflect.Value) []*Token {
+func tokenizePtr(sn seen, p path, v reflect.Value) []*Token {
 	ts := []*Token{}
 
 	if v.Elem().Kind() == reflect.Invalid {
@@ -294,23 +328,13 @@ func tokenizePtr(sn seen, v reflect.Value) []*Token {
 		return ts
 	}
 
-	if _, has := sn[v.Interface()]; has {
-		ts = append(ts, &Token{
-			PointerCyclic,
-			fmt.Sprintf("gop.Cyclic(0x%x).(%s)", v.Pointer(), v.Type().String()),
-		})
-		return ts
-	}
-
-	sn[v.Interface()] = struct{}{}
-
 	switch v.Elem().Kind() {
 	case reflect.Struct, reflect.Map, reflect.Slice, reflect.Array:
 		ts = append(ts, &Token{TypeName, "&"})
-		ts = append(ts, tokenize(sn, v.Elem())...)
+		ts = append(ts, tokenize(sn, p, v.Elem())...)
 	default:
 		ts = append(ts, &Token{PointerOpen, "gop.ToPtr("})
-		ts = append(ts, tokenize(sn, v.Elem())...)
+		ts = append(ts, tokenize(sn, p, v.Elem())...)
 		ts = append(ts, &Token{PointerOpen, fmt.Sprintf(").(%s)", v.Type().String())})
 	}
 
