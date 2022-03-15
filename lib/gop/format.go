@@ -17,6 +17,8 @@ var DefaultTheme = func(t Type) Color {
 	switch t {
 	case TypeName:
 		return Cyan
+	case Bool:
+		return Blue
 	case Rune, Byte, String:
 		return Yellow
 	case Number:

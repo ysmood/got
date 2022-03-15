@@ -247,7 +247,6 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32, reflect.Float64,
-		reflect.Complex64, reflect.Complex128,
 		reflect.Uintptr:
 
 		ts = append(ts, &Token{TypeName, v.Type().Name()})
@@ -256,6 +255,21 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		t.Literal = fmt.Sprintf("%v", v.Interface())
 		ts = append(ts, t)
 		ts = append(ts, &Token{ParenClose, ")"})
+
+	case reflect.Complex64:
+		ts = append(ts, &Token{TypeName, v.Type().Name()})
+		ts = append(ts, &Token{ParenOpen, "("})
+		t.Type = Number
+		t.Literal = fmt.Sprintf("%v", v.Interface())
+		t.Literal = t.Literal[1 : len(t.Literal)-1]
+		ts = append(ts, t)
+		ts = append(ts, &Token{ParenClose, ")"})
+
+	case reflect.Complex128:
+		t.Type = Number
+		t.Literal = fmt.Sprintf("%v", v.Interface())
+		t.Literal = t.Literal[1 : len(t.Literal)-1]
+		ts = append(ts, t)
 
 	case reflect.String:
 		t.Type = String
