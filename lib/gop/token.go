@@ -347,14 +347,24 @@ func tokenizePtr(sn seen, p path, v reflect.Value) []*Token {
 		return ts
 	}
 
+	fn := false
+
 	switch v.Elem().Kind() {
 	case reflect.Struct, reflect.Map, reflect.Slice, reflect.Array:
-		ts = append(ts, &Token{TypeName, "&"})
-		ts = append(ts, tokenize(sn, p, v.Elem())...)
+		if _, ok := v.Elem().Interface().([]byte); ok {
+			fn = true
+		}
 	default:
+		fn = true
+	}
+
+	if fn {
 		ts = append(ts, &Token{PointerOpen, "gop.ToPtr("})
 		ts = append(ts, tokenize(sn, p, v.Elem())...)
 		ts = append(ts, &Token{PointerOpen, fmt.Sprintf(").(%s)", v.Type().String())})
+	} else {
+		ts = append(ts, &Token{TypeName, "&"})
+		ts = append(ts, tokenize(sn, p, v.Elem())...)
 	}
 
 	return ts

@@ -124,7 +124,7 @@ func (t T) Tokenize() {
         1,
         2,
     },
-    &[]byte("\x01\x02"),
+    gop.ToPtr([]byte("\x01\x02")).(*[]uint8),
     gop.Time("`+timeStamp.Format(time.RFC3339Nano)+`"),
     gop.Duration("1h0m0s"),
 }`)
