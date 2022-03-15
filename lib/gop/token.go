@@ -112,6 +112,16 @@ func Base64(string) []byte {
 	return nil
 }
 
+// Time from string
+func Time(string) time.Time {
+	return time.Time{}
+}
+
+// Duration from string
+func Duration(string) time.Duration {
+	return 0
+}
+
 type path []interface{}
 
 func (p path) String() string {
@@ -153,6 +163,8 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		return append(ts, tokenizeByte(t, b))
 	} else if tt, ok := v.Interface().(time.Time); ok {
 		return tokenizeTime(tt)
+	} else if d, ok := v.Interface().(time.Duration); ok {
+		return tokenizeDuration(d)
 	}
 
 	if t := sn.cyclic(p, v); t != nil {
@@ -294,11 +306,18 @@ func tokenizeByte(t *Token, b byte) *Token {
 
 func tokenizeTime(t time.Time) []*Token {
 	ts := []*Token{}
-	ts = append(ts, &Token{TypeName, "time.Parse"})
+	ts = append(ts, &Token{TypeName, "gop.Time"})
 	ts = append(ts, &Token{ParenOpen, "("})
-	ts = append(ts, &Token{TypeName, "time.RFC3339Nano"})
-	ts = append(ts, &Token{InlineComma, ","})
 	ts = append(ts, &Token{String, `"` + t.Format(time.RFC3339Nano) + `"`})
+	ts = append(ts, &Token{ParenClose, ")"})
+	return ts
+}
+
+func tokenizeDuration(d time.Duration) []*Token {
+	ts := []*Token{}
+	ts = append(ts, &Token{TypeName, "gop.Duration"})
+	ts = append(ts, &Token{ParenOpen, "("})
+	ts = append(ts, &Token{String, `"` + d.String() + `"`})
 	ts = append(ts, &Token{ParenClose, ")"})
 	return ts
 }

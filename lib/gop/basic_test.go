@@ -125,8 +125,8 @@ func (t T) Tokenize() {
         2,
     },
     &[]byte("\x01\x02"),
-    time.Parse(time.RFC3339Nano, "`+timeStamp.Format(time.RFC3339Nano)+`"),
-    Duration(1h0m0s),
+    gop.Time("`+timeStamp.Format(time.RFC3339Nano)+`"),
+    gop.Duration("1h0m0s"),
 }`)
 }
 
@@ -198,6 +198,8 @@ func (t T) Others() {
 	gop.ToPtr(nil)
 	_ = gop.Cyclic("")
 	_ = gop.Base64("")
+	_ = gop.Time("")
+	_ = gop.Duration("")
 }
 
 func (t T) GetPrivateFieldErr() {
