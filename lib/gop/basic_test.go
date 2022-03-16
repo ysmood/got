@@ -1,6 +1,7 @@
 package gop_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -64,9 +65,9 @@ func (t T) Tokenize() {
 
 	out := gop.StripColor(gop.F(v))
 
-	t.Eq(out, `[]interface {}{
+	t.Eq(out, `[]interface {}/* len=31 */{
     nil,
-    []interface {}{
+    []interface {}/* len=4 */{
         true,
         false,
         uintptr(23),
@@ -87,38 +88,38 @@ func (t T) Tokenize() {
     make(chan int),
     make(chan string, 3),
     (func(string) int)(nil),
-    map[interface {}]interface {}{
+    map[interface {}]interface {}/* len=2 */{
         "a": 1,
         "test": 10,
     },
     unsafe.Pointer(uintptr(`+fmt.Sprintf("%v", &ref)+`)),
-    struct { Int int; str string; M map[int]int }{
+    struct { Int int; str string; M map[int]int }/* len=3 */{
         Int: 10,
         str: "ok",
         M: map[int]int{
             1: 32,
         },
     },
-    gop.Base64("YWHi"),
+    gop.Base64("YWHi")/* len=3 */,
     []byte("" +
         "bytes\n" +
-        "\tbytes"),
+        "\tbytes")/* len=12 */,
     byte('a'),
     byte(0x1),
     '天',
     "" +
         "\n" +
-        "test",
-    gop.ToPtr("test").(*string),
+        "test"/* len=5 */,
+    gop.Ptr("test").(*string),
     (*struct { Int int })(nil),
     &struct { Int int }{
         Int: 0,
     },
-    &map[int]int{
+    &map[int]int/* len=2 */{
         1: 2,
         3: 4,
     },
-    &[]int{
+    &[]int/* len=2 */{
         1,
         2,
     },
@@ -126,7 +127,7 @@ func (t T) Tokenize() {
         1,
         2,
     },
-    gop.ToPtr([]byte("\x01\x02")).(*[]uint8),
+    gop.Ptr([]byte("\x01\x02")/* len=2 */).(*[]uint8),
     gop.Time("`+timeStamp.Format(time.RFC3339Nano)+`"),
     gop.Duration("1h0m0s"),
 }`)
@@ -150,11 +151,11 @@ func (t T) CyclicRef() {
 	ts := gop.Tokenize(a)
 
 	t.Eq(gop.Format(ts, gop.NoTheme), ""+
-		"gop_test.A{\n"+
+		"gop_test.A/* len=2 */{\n"+
 		"    Int: 10,\n"+
-		"    B: &gop_test.B{\n"+
+		"    B: &gop_test.B/* len=2 */{\n"+
 		"        s: \"test\",\n"+
-		"        a: &gop_test.A{\n"+
+		"        a: &gop_test.A/* len=2 */{\n"+
 		"            Int: 10,\n"+
 		"            B: gop.Cyclic(\"B\").(*gop_test.B),\n"+
 		"        },\n"+
@@ -196,12 +197,18 @@ func (t T) P() {
 	gop.Stdout = os.Stdout
 }
 
-func (t T) Others() {
-	gop.ToPtr(nil)
-	_ = gop.Cyclic("")
-	_ = gop.Base64("")
-	_ = gop.Time("")
-	_ = gop.Duration("")
+func (t T) Convertors() {
+	t.Nil(gop.Cyclic(""))
+
+	s := t.Srand(8)
+	t.Eq(gop.Ptr(s).(*string), &s)
+
+	bs := base64.StdEncoding.EncodeToString([]byte(s))
+
+	t.Eq(gop.Base64(bs), []byte(s))
+	now := time.Now()
+	t.Lt(gop.Time(now.Format(time.RFC3339Nano)).Sub(now), time.Second)
+	t.Eq(gop.Duration("10m"), 10*time.Minute)
 }
 
 func (t T) GetPrivateFieldErr() {

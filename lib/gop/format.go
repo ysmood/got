@@ -25,6 +25,8 @@ var DefaultTheme = func(t Type) Color {
 		return Green
 	case Chan, Func, UnsafePointer:
 		return Magenta
+	case Len:
+		return White
 	default:
 		return None
 	}

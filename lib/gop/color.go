@@ -12,9 +12,10 @@ import (
 type Color int
 
 const (
-
+	// Black type
+	Black Color = iota + 30
 	// Red type
-	Red Color = iota + 31
+	Red
 	// Green type
 	Green
 	// Yellow type
@@ -25,6 +26,8 @@ const (
 	Magenta
 	// Cyan type
 	Cyan
+	// White type
+	White
 
 	// None type
 	None Color = -1
@@ -32,7 +35,7 @@ const (
 
 // ColorStr string
 func ColorStr(c Color, s string) string {
-	if c == -1 || !SupportsColor {
+	if c == None || !SupportsColor {
 		return s
 	}
 
@@ -48,9 +51,9 @@ var SupportsColor = func() bool {
 
 const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
 
-var re = regexp.MustCompile(ansi)
+var regStripColor = regexp.MustCompile(ansi)
 
 // StripColor is copied from https://github.com/acarl005/stripansi
 func StripColor(str string) string {
-	return re.ReplaceAllString(str, "")
+	return regStripColor.ReplaceAllString(str, "")
 }

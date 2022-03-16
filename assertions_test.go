@@ -87,10 +87,10 @@ func TestAssertionErr(t *testing.T) {
 	m.check("not equal\n1 ⦗not ==⦘ float64(2) ⦗even when converted to the same type⦘ ")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
-	m.check(`got_test.data{
+	m.check(`got_test.data/* len=2 */{
     A: 1,
     S: "a",
-} ⦗not ==⦘ got_test.data{
+} ⦗not ==⦘ got_test.data/* len=2 */{
     A: 1,
     S: "b",
 }`)

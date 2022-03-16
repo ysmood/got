@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -40,6 +41,9 @@ const (
 	Func
 	// UnsafePointer type
 	UnsafePointer
+
+	// Len type
+	Len
 
 	// TypeName type
 	TypeName
@@ -97,9 +101,12 @@ func Tokenize(v interface{}) []*Token {
 	return tokenize(seen{}, []interface{}{}, reflect.ValueOf(v))
 }
 
-// ToPtr converts a Go value to its pointer
-func ToPtr(interface{}) interface{} {
-	return nil
+// Ptr returns a pointer to v
+func Ptr(v interface{}) interface{} {
+	val := reflect.ValueOf(v)
+	ptr := reflect.New(val.Type())
+	ptr.Elem().Set(val)
+	return ptr.Interface()
 }
 
 // Cyclic reference of the path from the root
@@ -107,19 +114,22 @@ func Cyclic(path ...interface{}) interface{} {
 	return nil
 }
 
-// Base64 from string
-func Base64(string) []byte {
-	return nil
+// Base64 returns the []byte that s represents
+func Base64(s string) []byte {
+	b, _ := base64.StdEncoding.DecodeString(s)
+	return b
 }
 
-// Time from string
-func Time(string) time.Time {
-	return time.Time{}
+// Time from parsing s
+func Time(s string) time.Time {
+	t, _ := time.Parse(time.RFC3339Nano, s)
+	return t
 }
 
-// Duration from string
-func Duration(string) time.Duration {
-	return 0
+// Duration from parsing s
+func Duration(s string) time.Duration {
+	d, _ := time.ParseDuration(s)
+	return d
 }
 
 type path []interface{}
@@ -178,11 +188,16 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 	case reflect.Slice, reflect.Array:
 		if data, ok := v.Interface().([]byte); ok {
 			ts = append(ts, tokenizeBytes(data)...)
+			if len(data) > 1 {
+				ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", len(data))})
+			}
 			break
 		} else {
 			ts = append(ts, &Token{TypeName, v.Type().String()})
 		}
-
+		if v.Kind() == reflect.Slice && v.Len() > 1 {
+			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", v.Len())})
+		}
 		ts = append(ts, &Token{SliceOpen, "{"})
 		for i := 0; i < v.Len(); i++ {
 			p := append(p, i)
@@ -195,11 +210,14 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 
 	case reflect.Map:
 		ts = append(ts, &Token{TypeName, v.Type().String()})
-		ts = append(ts, &Token{MapOpen, "{"})
 		keys := v.MapKeys()
 		sort.Slice(keys, func(i, j int) bool {
 			return utils.Compare(keys[i], keys[j]) < 0
 		})
+		if len(keys) > 1 {
+			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", len(keys))})
+		}
+		ts = append(ts, &Token{MapOpen, "{"})
 		for _, k := range keys {
 			p := append(p, k)
 			ts = append(ts, &Token{MapKey, ""})
@@ -214,6 +232,9 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		t := v.Type()
 
 		ts = append(ts, &Token{TypeName, t.String()})
+		if v.NumField() > 1 {
+			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", v.NumField())})
+		}
 		ts = append(ts, &Token{StructOpen, "{"})
 		for i := 0; i < v.NumField(); i++ {
 			name := t.Field(i).Name
@@ -275,6 +296,9 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		t.Type = String
 		t.Literal = fmt.Sprintf("%#v", v.Interface())
 		ts = append(ts, t)
+		if regNewline.MatchString(v.Interface().(string)) {
+			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", v.Len())})
+		}
 
 	case reflect.Chan:
 		t.Type = Chan
@@ -373,7 +397,7 @@ func tokenizePtr(sn seen, p path, v reflect.Value) []*Token {
 	}
 
 	if fn {
-		ts = append(ts, &Token{PointerOpen, "gop.ToPtr("})
+		ts = append(ts, &Token{PointerOpen, "gop.Ptr("})
 		ts = append(ts, tokenize(sn, p, v.Elem())...)
 		ts = append(ts, &Token{PointerOpen, fmt.Sprintf(").(%s)", v.Type().String())})
 	} else {
@@ -383,3 +407,5 @@ func tokenizePtr(sn seen, p path, v reflect.Value) []*Token {
 
 	return ts
 }
+
+var regNewline = regexp.MustCompile(`\n`)
