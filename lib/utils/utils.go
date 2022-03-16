@@ -4,21 +4,10 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
-func castType(x, y interface{}) interface{} {
-	ta := reflect.ValueOf(x)
-	tb := reflect.ValueOf(y)
-
-	if (x == nil || y == nil) && (x != y) {
-		return x
-	}
-
-	if ta.Type().ConvertibleTo(tb.Type()) {
-		return ta.Convert(tb.Type()).Interface()
-	}
-	return x
-}
+var float64Type = reflect.TypeOf(0.0)
 
 // Compare returns the float value of x minus y
 func Compare(x, y interface{}) float64 {
@@ -26,9 +15,18 @@ func Compare(x, y interface{}) float64 {
 		return 0
 	}
 
-	if na, ok := castType(x, 0.0).(float64); ok {
-		if nb, ok := castType(y, 0.0).(float64); ok {
-			return na - nb
+	if x != nil && y != nil {
+		xVal := reflect.Indirect(reflect.ValueOf(x))
+		yVal := reflect.Indirect(reflect.ValueOf(y))
+
+		if xVal.CanConvert(float64Type) && yVal.CanConvert(float64Type) {
+			return xVal.Convert(float64Type).Float() - yVal.Convert(float64Type).Float()
+		}
+
+		if xt, ok := xVal.Interface().(time.Time); ok {
+			if yt, ok := yVal.Interface().(time.Time); ok {
+				return float64(xt.Sub(yt))
+			}
 		}
 	}
 

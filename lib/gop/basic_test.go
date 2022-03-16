@@ -207,7 +207,7 @@ func (t T) Convertors() {
 
 	t.Eq(gop.Base64(bs), []byte(s))
 	now := time.Now()
-	t.Lt(gop.Time(now.Format(time.RFC3339Nano)).Sub(now), time.Second)
+	t.Eq(gop.Time(now.Format(time.RFC3339Nano)), now)
 	t.Eq(gop.Duration("10m"), 10*time.Minute)
 }
 
