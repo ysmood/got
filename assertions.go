@@ -3,6 +3,7 @@ package got
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"regexp"
 	"strings"
@@ -110,6 +111,15 @@ func (as Assertions) Lte(x, y interface{}) {
 		return
 	}
 	as.err("%s%s%s", as.d(x), as.k("not ≤"), as.d(y))
+}
+
+// InDelta asserts that x and y are within the delta of each other.
+func (as Assertions) InDelta(x, y interface{}, delta float64) {
+	as.Helper()
+	if math.Abs(utils.Compare(x, y)) <= delta {
+		return
+	}
+	as.err("delta between %s and %s%s%s", as.d(x), as.d(y), as.k("not ≤"), as.d(delta))
 }
 
 // True asserts that x is true.

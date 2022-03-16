@@ -38,6 +38,8 @@ func TestAssertion(t *testing.T) {
 	as.Lt(now, now.Add(time.Second))
 	as.Gt(now.Add(time.Second), now)
 
+	as.InDelta(1.1, 1.2, 0.2)
+
 	as.True(true)
 	as.False(false)
 
@@ -121,6 +123,9 @@ func TestAssertionErr(t *testing.T) {
 	m.check("1 ⦗not >⦘ 1")
 	as.Gte(1, 2)
 	m.check("1 ⦗not ≥⦘ 2")
+
+	as.InDelta(10, 20, 3)
+	m.check("delta between 10 and 20 ⦗not ≤⦘ float64(3)")
 
 	as.True(false)
 	m.check(" ⦗should be⦘ true")
