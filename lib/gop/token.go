@@ -185,7 +185,7 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 
 		ts = append(ts, &Token{SliceOpen, "{"})
 		for i := 0; i < v.Len(); i++ {
-			p = append(p, i)
+			p := append(p, i)
 			el := v.Index(i)
 			ts = append(ts, &Token{SliceItem, ""})
 			ts = append(ts, tokenize(sn, p, el)...)
@@ -201,7 +201,7 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 			return utils.Compare(keys[i], keys[j]) < 0
 		})
 		for _, k := range keys {
-			p = append(p, k)
+			p := append(p, k)
 			ts = append(ts, &Token{MapKey, ""})
 			ts = append(ts, tokenize(sn, p, k)...)
 			ts = append(ts, &Token{Colon, ":"})
