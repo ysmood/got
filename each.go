@@ -3,7 +3,6 @@ package got
 import (
 	"reflect"
 	"runtime/debug"
-	"strings"
 )
 
 // Only run tests with it
@@ -108,8 +107,7 @@ func callMethod(t Testable, method reflect.Method, receiver reflect.Value) []ref
 
 	defer func() {
 		if err := recover(); err != nil {
-			loc := strings.TrimLeft(strings.Split(string(debug.Stack()), "\n")[8], "\t")
-			t.Logf("panic: %v\n%s", err, loc)
+			t.Logf("[panic] %v\n%s", err, debug.Stack())
 			t.Fail()
 		}
 	}()

@@ -79,7 +79,7 @@ func TestPanicAsFailure(t *testing.T) {
 	it := func(t *mock) PanicAsFailure { return PanicAsFailure{} }
 	as.Eq(got.Each(m, it), 2)
 	as.True(m.failed)
-	as.Has(m.msg, "panic: err")
+	as.Has(m.msg, "[panic] err")
 }
 
 type PanicAsFailure struct {
