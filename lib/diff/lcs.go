@@ -8,12 +8,6 @@ import (
 	"bytes"
 )
 
-// Comparable interface
-type Comparable interface {
-	// Hash for comparison
-	Hash() []byte
-}
-
 // LCS computes the lcs of x and y
 func LCS(x, y []Comparable) []Comparable {
 	x, y = sort(x, y)

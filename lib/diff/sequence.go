@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+// Comparable interface
+type Comparable interface {
+	// Hash for comparison
+	Hash() []byte
+}
+
 var _ Comparable = Char(0)
 
 // Char is a rune
