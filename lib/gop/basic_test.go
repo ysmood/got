@@ -65,9 +65,9 @@ func (t T) Tokenize() {
 
 	out := gop.StripColor(gop.F(v))
 
-	t.Eq(out, `[]interface {}/* len=31 */{
+	t.Eq(out, `[]interface {}/* len=31 cap=31 */{
     nil,
-    []interface {}/* len=4 */{
+    []interface {}/* len=4 cap=4 */{
         true,
         false,
         uintptr(23),
@@ -119,7 +119,7 @@ func (t T) Tokenize() {
         1: 2,
         3: 4,
     },
-    &[]int/* len=2 */{
+    &[]int/* len=2 cap=2 */{
         1,
         2,
     },
@@ -182,7 +182,7 @@ func (t T) CircularSlice() {
 	ts := gop.Tokenize(a)
 
 	t.Eq(gop.Format(ts, gop.NoTheme), ""+
-		"[]interface {}{\n"+
+		"[]interface {}/* len=1 cap=1 */{\n"+
 		"    gop.Circular().([]interface {}),\n"+
 		"}")
 }

@@ -195,8 +195,8 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		} else {
 			ts = append(ts, &Token{TypeName, v.Type().String()})
 		}
-		if v.Kind() == reflect.Slice && v.Len() > 1 {
-			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", v.Len())})
+		if v.Kind() == reflect.Slice {
+			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d cap=%d */", v.Len(), v.Cap())})
 		}
 		ts = append(ts, &Token{SliceOpen, "{"})
 		for i := 0; i < v.Len(); i++ {
