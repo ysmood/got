@@ -44,7 +44,7 @@ func main() {
 }
 ```
 
-The output will be:
+The output will be something like:
 
 ```go
 map[string]interface {}/* len=7 */{

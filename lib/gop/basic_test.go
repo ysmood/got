@@ -65,7 +65,8 @@ func (t T) Tokenize() {
 
 	out := gop.StripColor(gop.F(v))
 
-	t.Eq(out, `[]interface {}/* len=31 cap=31 */{
+	expected := `
+[]interface {}/* len=31 cap=31 */{
     nil,
     []interface {}/* len=4 cap=4 */{
         true,
@@ -92,7 +93,7 @@ func (t T) Tokenize() {
         "a": 1,
         "test": 10,
     },
-    unsafe.Pointer(uintptr(`+fmt.Sprintf("%v", &ref)+`)),
+    unsafe.Pointer(uintptr(` + fmt.Sprintf("%v", &ref) + `)),
     struct { Int int; str string; M map[int]int }/* len=3 */{
         Int: 10,
         str: "ok",
@@ -128,9 +129,11 @@ func (t T) Tokenize() {
         2,
     },
     gop.Ptr([]byte("\x01\x02")/* len=2 */).(*[]uint8),
-    gop.Time("`+timeStamp.Format(time.RFC3339Nano)+`"),
+    gop.Time("2021-08-28T08:36:36.807908+08:00"),
     gop.Duration("1h0m0s"),
-}`)
+}`
+
+	t.Eq(out, expected[1:])
 }
 
 type A struct {
