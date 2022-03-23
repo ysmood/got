@@ -57,8 +57,8 @@ const (
 	PointerOpen
 	// PointerClose type
 	PointerClose
-	// PointerCyclic type
-	PointerCyclic
+	// PointerCircular type
+	PointerCircular
 
 	// SliceOpen type
 	SliceOpen
@@ -109,8 +109,8 @@ func Ptr(v interface{}) interface{} {
 	return ptr.Interface()
 }
 
-// Cyclic reference of the path from the root
-func Cyclic(path ...interface{}) interface{} {
+// Circular reference of the path from the root
+func Circular(path ...interface{}) interface{} {
 	return nil
 }
 
@@ -144,14 +144,14 @@ func (p path) String() string {
 
 type seen map[uintptr]path
 
-func (sn seen) cyclic(p path, v reflect.Value) *Token {
+func (sn seen) circular(p path, v reflect.Value) *Token {
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Map, reflect.Slice:
 		ptr := v.Pointer()
 		if p, has := sn[ptr]; has {
 			return &Token{
-				PointerCyclic,
-				fmt.Sprintf("gop.Cyclic(%s).(%s)", p.String(), v.Type().String()),
+				PointerCircular,
+				fmt.Sprintf("gop.Circular(%s).(%s)", p.String(), v.Type().String()),
 			}
 		}
 		sn[ptr] = p
@@ -177,7 +177,7 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		return tokenizeDuration(d)
 	}
 
-	if t := sn.cyclic(p, v); t != nil {
+	if t := sn.circular(p, v); t != nil {
 		return append(ts, t)
 	}
 

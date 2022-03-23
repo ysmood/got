@@ -143,7 +143,7 @@ type B struct {
 	a *A
 }
 
-func (t T) CyclicRef() {
+func (t T) CircularRef() {
 	a := A{Int: 10}
 	b := B{"test", &a}
 	a.B = &b
@@ -157,13 +157,13 @@ func (t T) CyclicRef() {
 		"        s: \"test\",\n"+
 		"        a: &gop_test.A/* len=2 */{\n"+
 		"            Int: 10,\n"+
-		"            B: gop.Cyclic(\"B\").(*gop_test.B),\n"+
+		"            B: gop.Circular(\"B\").(*gop_test.B),\n"+
 		"        },\n"+
 		"    },\n"+
 		"}")
 }
 
-func (t T) CyclicMap() {
+func (t T) CircularMap() {
 	a := map[int]interface{}{}
 	a[0] = a
 
@@ -171,11 +171,11 @@ func (t T) CyclicMap() {
 
 	t.Eq(gop.Format(ts, gop.NoTheme), ""+
 		"map[int]interface {}{\n"+
-		"    0: gop.Cyclic().(map[int]interface {}),\n"+
+		"    0: gop.Circular().(map[int]interface {}),\n"+
 		"}")
 }
 
-func (t T) CyclicSlice() {
+func (t T) CircularSlice() {
 	a := []interface{}{nil}
 	a[0] = a
 
@@ -183,7 +183,7 @@ func (t T) CyclicSlice() {
 
 	t.Eq(gop.Format(ts, gop.NoTheme), ""+
 		"[]interface {}{\n"+
-		"    gop.Cyclic().([]interface {}),\n"+
+		"    gop.Circular().([]interface {}),\n"+
 		"}")
 }
 
@@ -198,7 +198,7 @@ func (t T) P() {
 }
 
 func (t T) Convertors() {
-	t.Nil(gop.Cyclic(""))
+	t.Nil(gop.Circular(""))
 
 	s := t.Srand(8)
 	t.Eq(gop.Ptr(s).(*string), &s)

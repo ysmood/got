@@ -56,7 +56,7 @@ map[string]interface {}/* len=7 */{
     "number": 1+1i,
     "slice": []interface {}/* len=2 */{
         1,
-        gop.Cyclic("slice").([]interface {}),
+        gop.Circular("slice").([]interface {}),
     },
     "struct": struct { test int32 }{
         test: int32(13),
