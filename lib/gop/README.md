@@ -5,7 +5,7 @@ Make a random Go value human readable. The output format uses valid golang synta
 ## Features
 
 - Uses valid golang syntax to print the data
-- Correctly prints cyclic data
+- Prints the path of circular reference
 - Make rune, []byte, time, etc. data human readable
 - No invisible char in string
 - Color output with customizable theme
@@ -54,13 +54,13 @@ map[string]interface {}/* len=7 */{
         "multiline string\n" +
         "line two"/* len=25 */,
     "number": 1+1i,
-    "slice": []interface {}/* len=2 */{
+    "slice": []interface {}/* len=2 cap=2 */{
         1,
         gop.Circular("slice").([]interface {}),
     },
     "struct": struct { test int32 }{
         test: int32(13),
     },
-    "time": gop.Time("2022-03-16T21:38:22.135011+08:00"),
+    "time": gop.Time("2022-03-23T10:25:54.424021+08:00"),
 }
 ```
