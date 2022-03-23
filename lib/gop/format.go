@@ -27,6 +27,8 @@ var DefaultTheme = func(t Type) Color {
 		return Magenta
 	case Len:
 		return White
+	case PointerCircular:
+		return Red
 	default:
 		return None
 	}
