@@ -151,9 +151,7 @@ func (t T) CircularRef() {
 	b := B{"test", &a}
 	a.B = &b
 
-	ts := gop.Tokenize(a)
-
-	t.Eq(gop.Format(ts, gop.NoTheme), ""+
+	t.Eq(gop.StripColor(gop.F(a)), ""+
 		"gop_test.A/* len=2 */{\n"+
 		"    Int: 10,\n"+
 		"    B: &gop_test.B/* len=2 */{\n"+

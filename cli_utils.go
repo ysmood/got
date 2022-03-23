@@ -1,8 +1,8 @@
 package got
 
 import (
-	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -11,31 +11,28 @@ import (
 
 // EnsureCoverage via report file generated from, for example:
 //     go test -coverprofile=coverage.out
-// Return error if any functions's coverage is less than min, min is a percentage value.
+// Return error if any file's coverage is less than min, min is a percentage value.
 func EnsureCoverage(path string, min float64) error {
-	out, err := exec.Command("go", "tool", "cover", "-func="+path).CombinedOutput()
+	tmp, _ := os.CreateTemp("", "")
+	report := tmp.Name()
+	defer func() { _ = os.Remove(report) }()
+	_ = tmp.Close()
+	_, err := exec.Command("go", "tool", "cover", "-html", path, "-o", report).CombinedOutput()
 	if err != nil {
-		return errors.New(string(out))
+		return err
 	}
 
-	list := strings.Split(strings.TrimSpace(string(out)), "\n")
+	list := parseReport(report)
 	rejected := []string{}
-	for _, l := range list {
-		if strings.HasPrefix(l, "total:") {
-			continue
-		}
-
-		covStr := regexp.MustCompile(`(\d+.\d+)%\z`).FindStringSubmatch(l)[1]
-
-		cov, _ := strconv.ParseFloat(string(covStr), 64)
-		if compareFloat(cov, min) < 0 {
-			rejected = append(rejected, l)
+	for _, c := range list {
+		if c.coverage < min {
+			rejected = append(rejected, fmt.Sprintf("  %s (%0.1f%%)", c.path, c.coverage))
 		}
 	}
 
 	if len(rejected) > 0 {
 		return fmt.Errorf(
-			"[lint] Test coverage for these functions should be greater than %.2f%%:\n%s",
+			"Test coverage for these files should be greater than %.2f%%:\n%s",
 			min,
 			strings.Join(rejected, "\n"),
 		)
@@ -43,6 +40,22 @@ func EnsureCoverage(path string, min float64) error {
 	return nil
 }
 
-func compareFloat(a, b float64) int {
-	return int(a*10000) - int(b*10000) // to avoid machine epsilon
+type cov struct {
+	path     string
+	coverage float64
+}
+
+var regCov = regexp.MustCompile(`<option value="file\d+">(.+) \((\d+\.\d+)%\)</option>`)
+
+func parseReport(path string) []cov {
+	out, _ := os.ReadFile(path)
+
+	ms := regCov.FindAllStringSubmatch(string(out), -1)
+
+	list := []cov{}
+	for _, m := range ms {
+		c, _ := strconv.ParseFloat(m[2], 32)
+		list = append(list, cov{m[1], c})
+	}
+	return list
 }
