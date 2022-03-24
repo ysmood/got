@@ -2,10 +2,20 @@
 
 An enjoyable golang test framework.
 
+## Features
+
+- Pretty output using [gop](lib/gop) and [diff](lib/diff)
+- Fluent API design that takes the full advantage of IDE
+- Handy assertion helpers
+- Handy utils for testing
+- No dependency, and 100% test coverage
+
 ## Guides
 
-- [As assertion lib](00_assertions_test.go)
+Read the [example project](lib/example) to get started.
 
-- [Suite of tests](01_suite_test.go)
+Got uses itself as the test framework, so the source code itself is the best doc.
 
-- [Advanced usage](02_advanced_test.go)
+Install the vscode extension for snippets like: `gt` and `gts`.
+
+API reference is [here](pkg.go.dev/github.com/ysmood/got).
