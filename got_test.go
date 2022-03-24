@@ -6,6 +6,11 @@ import (
 	"github.com/ysmood/got"
 )
 
+func TestSetup(t *testing.T) {
+	g := setup(t)
+	g.Eq(1, 1)
+}
+
 func TestOptions(t *testing.T) {
 	m := &mock{t: t}
 	g := got.NewWith(m, got.Defaults())

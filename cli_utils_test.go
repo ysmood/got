@@ -7,7 +7,7 @@ import (
 )
 
 func TestEnsureCoverage(t *testing.T) {
-	g := got.New(t)
+	g := setup(t)
 	g.Nil(got.EnsureCoverage("fixtures/coverage/cov.txt", 100))
 
 	g.Err(got.EnsureCoverage("fixtures/coverage/cov.txt", 120))

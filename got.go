@@ -44,6 +44,13 @@ type Options struct {
 	Diff func(a, b interface{}) string
 }
 
+func defaults() Options {
+	if _, has := os.LookupEnv("NO_COLOR"); has {
+		return NoColor()
+	}
+	return Defaults()
+}
+
 // Defaults for Options
 func Defaults() Options {
 	return Options{
@@ -82,13 +89,32 @@ func (opts Options) NoDiff() Options {
 	return opts
 }
 
+// Setup returns a helper to init G instance.
+// It will respect https://no-color.org/
+func Setup(init func(g G)) func(t Testable) G {
+	return SetupWith(defaults(), init)
+}
+
+// SetupWith options
+func SetupWith(opts Options, init func(g G)) func(t Testable) G {
+	return func(t Testable) G {
+		g := NewWith(t, opts)
+		if init != nil {
+			init(g)
+		}
+		return g
+	}
+}
+
+// T is the shortcut for New
+func T(t Testable) G {
+	return New(t)
+}
+
 // New G instance.
 // It will respect https://no-color.org/
 func New(t Testable) G {
-	if _, has := os.LookupEnv("NO_COLOR"); has {
-		return NewWith(t, NoColor())
-	}
-	return NewWith(t, Defaults())
+	return NewWith(t, defaults())
 }
 
 // NewWith G with options
