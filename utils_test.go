@@ -16,7 +16,7 @@ func init() {
 }
 
 func TestHelper(t *testing.T) {
-	ut := got.New(t)
+	ut := got.T(t)
 
 	ctx := ut.Context()
 	ctx.Cancel()
@@ -120,7 +120,7 @@ func TestHelper(t *testing.T) {
 }
 
 func TestServe(t *testing.T) {
-	ut := got.New(t)
+	ut := setup(t)
 
 	key := ut.Srand(8)
 	s := ut.Serve().Route("/", "", key)

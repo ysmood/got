@@ -14,6 +14,10 @@ func init() {
 	_ = os.Setenv("NO_COLOR", "")
 }
 
+var setup = got.Setup(func(g got.G) {
+	g.Parallel()
+})
+
 var _ got.Testable = &mock{}
 
 type mock struct {

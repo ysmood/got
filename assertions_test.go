@@ -12,7 +12,7 @@ import (
 )
 
 func TestAssertion(t *testing.T) {
-	as := got.New(t)
+	as := setup(t)
 
 	as.Eq(1, 1)
 	as.Eq(1.0, 1)
