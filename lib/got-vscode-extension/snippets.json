@@ -1,17 +1,1 @@
-{
-	"got test function": {
-		"prefix": "gt",
-		"body": [
-			"func (t ${1:T}) ${2:Basic}() {\n\t${0:t.Eq(1, 1)}\n}"
-		],
-        "description": "got test function"
-	},
-
-	"got test setup": {
-		"prefix": "gtest",
-		"body": [
-			"package ${1:main}_test\n\nimport (\n\t\"testing\"\n\n\t\"github.com/ysmood/got\"\n)\n\ntype ${0:T} struct {\n\tgot.G\n}\n\nfunc Test(t *testing.T) {\n\tgot.Each(t, ${0:T}{})\n}\n\nfunc (t ${0:T}) Basic() {\n\tt.Eq(1, 1)\n}"
-		],
-        "description": "init got test file"
-	}
-}
+{"got setup":{"prefix":"gots","body":["package ${0:example}_test\n\nimport (\n\t\"testing\"\n\t\"time\"\n\n\t\"github.com/ysmood/got\"\n\t\"github.com/ysmood/gotrace\"\n)\n\nfunc init() {\n\t// Set default timeout for the entire \"go test\"\n\tgot.DefaultFlags(\"timeout=10s\")\n}\n\nfunc TestMain(m *testing.M) {\n\t// Make sure we don't leaking goroutines\n\tgotrace.CheckMain(m, 0)\n}\n\nvar setup = got.Setup(func(g got.G) {\n\t// The function passed to it will be surely executed after the test\n\tg.Cleanup(func() {})\n\n\tif got.Parallel() \u003e 0 {\n\t\t// Concurrently run each test\n\t\tg.Parallel()\n\t} else {\n\t\t// Make sure there's no goroutine leak for each test\n\t\tgotrace.Check(g, 0)\n\t}\n\n\t// Timeout for each test\n\tg.PanicAfter(time.Second)\n})\n"]},"got test function":{"prefix":"got","body":["\nfunc Test$1(t *testing.T) {\n\tg := setup(t)\n\n\t${0:g.Eq(1, 1)}\n}"]}}
