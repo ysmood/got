@@ -14,15 +14,8 @@ import (
 	"github.com/ysmood/got/lib/gop"
 )
 
-type T struct {
-	got.G
-}
-
-func Test(t *testing.T) {
-	got.Each(t, T{})
-}
-
-func (t T) Tokenize() {
+func TestTokenize(t *testing.T) {
+	g := got.New(t)
 	ref := "test"
 	timeStamp, _ := time.Parse(time.RFC3339Nano, "2021-08-28T08:36:36.807908+08:00")
 
@@ -133,7 +126,7 @@ func (t T) Tokenize() {
     gop.Duration("1h0m0s"),
 }`
 
-	t.Eq(out, expected[1:])
+	g.Eq(out, expected[1:])
 }
 
 type A struct {
@@ -146,12 +139,13 @@ type B struct {
 	a *A
 }
 
-func (t T) CircularRef() {
+func TestCircularRef(t *testing.T) {
+	g := got.New(t)
 	a := A{Int: 10}
 	b := B{"test", &a}
 	a.B = &b
 
-	t.Eq(gop.StripColor(gop.F(a)), ""+
+	g.Eq(gop.StripColor(gop.F(a)), ""+
 		"gop_test.A/* len=2 */{\n"+
 		"    Int: 10,\n"+
 		"    B: &gop_test.B/* len=2 */{\n"+
@@ -164,60 +158,64 @@ func (t T) CircularRef() {
 		"}")
 }
 
-func (t T) CircularMap() {
+func TestCircularMap(t *testing.T) {
+	g := got.New(t)
 	a := map[int]interface{}{}
 	a[0] = a
 
 	ts := gop.Tokenize(a)
 
-	t.Eq(gop.Format(ts, gop.NoTheme), ""+
+	g.Eq(gop.Format(ts, gop.NoTheme), ""+
 		"map[int]interface {}{\n"+
 		"    0: gop.Circular().(map[int]interface {}),\n"+
 		"}")
 }
 
-func (t T) CircularSlice() {
+func TestCircularSlice(t *testing.T) {
+	g := got.New(t)
 	a := []interface{}{nil}
 	a[0] = a
 
 	ts := gop.Tokenize(a)
 
-	t.Eq(gop.Format(ts, gop.NoTheme), ""+
+	g.Eq(gop.Format(ts, gop.NoTheme), ""+
 		"[]interface {}/* len=1 cap=1 */{\n"+
 		"    gop.Circular().([]interface {}),\n"+
 		"}")
 }
 
-func (t T) Plain() {
-	t.Eq(gop.Plain(10), "10")
+func TestPlain(t *testing.T) {
+	g := got.New(t)
+	g.Eq(gop.Plain(10), "10")
 }
 
-func (t T) P() {
+func TestP(t *testing.T) {
 	gop.Stdout = io.Discard
 	_, _ = gop.P("test")
 	gop.Stdout = os.Stdout
 }
 
-func (t T) Convertors() {
-	t.Nil(gop.Circular(""))
+func TestConvertors(t *testing.T) {
+	g := got.New(t)
+	g.Nil(gop.Circular(""))
 
-	s := t.Srand(8)
-	t.Eq(gop.Ptr(s).(*string), &s)
+	s := g.Srand(8)
+	g.Eq(gop.Ptr(s).(*string), &s)
 
 	bs := base64.StdEncoding.EncodeToString([]byte(s))
 
-	t.Eq(gop.Base64(bs), []byte(s))
+	g.Eq(gop.Base64(bs), []byte(s))
 	now := time.Now()
-	t.Eq(gop.Time(now.Format(time.RFC3339Nano)), now)
-	t.Eq(gop.Duration("10m"), 10*time.Minute)
+	g.Eq(gop.Time(now.Format(time.RFC3339Nano)), now)
+	g.Eq(gop.Duration("10m"), 10*time.Minute)
 }
 
-func (t T) GetPrivateFieldErr() {
-	t.Panic(func() {
+func TestGetPrivateFieldErr(t *testing.T) {
+	g := got.New(t)
+	g.Panic(func() {
 		gop.GetPrivateField(reflect.ValueOf(1), 0)
 	})
 }
 
-func (t T) Lab() {
-
+func TestLab(t *testing.T) {
 }
