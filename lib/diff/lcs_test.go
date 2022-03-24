@@ -2,16 +2,18 @@ package diff_test
 
 import (
 	"strings"
+	"testing"
 
 	"github.com/ysmood/got/lib/diff"
 )
 
-func (t T) LCSString() {
+func TestLCSString(t *testing.T) {
+	g := setup(t)
 	eq := func(x, y, expected string) {
 		t.Helper()
 
 		lcs := diff.LCS(diff.NewString(x), diff.NewString(y))
-		t.Eq(diff.String(lcs).String(), expected)
+		g.Eq(diff.String(lcs).String(), expected)
 	}
 
 	eq("", "", "")
@@ -23,14 +25,16 @@ func (t T) LCSString() {
 	eq("agcat", "gac", "ac")
 }
 
-func (t T) Text() {
-	t.Len(diff.NewText("a"), 1)
-	t.Len(diff.NewText("a\n"), 2)
-	t.Len(diff.NewText("a\n\n"), 3)
-	t.Len(diff.NewText("\na"), 2)
+func TestText(t *testing.T) {
+	g := setup(t)
+	g.Len(diff.NewText("a"), 1)
+	g.Len(diff.NewText("a\n"), 2)
+	g.Len(diff.NewText("a\n\n"), 3)
+	g.Len(diff.NewText("\na"), 2)
 }
 
-func (t T) LCSText() {
+func TestLCSText(t *testing.T) {
+	g := setup(t)
 	eq := func(x, y, expected string) {
 		t.Helper()
 
@@ -39,7 +43,7 @@ func (t T) LCSText() {
 		expected = strings.Join(strings.Split(expected, ""), "\n")
 
 		lcs := diff.LCS(diff.NewText(x), diff.NewText(y))
-		t.Eq(diff.Text(lcs).String(), expected)
+		g.Eq(diff.Text(lcs).String(), expected)
 	}
 
 	eq("", "", "")

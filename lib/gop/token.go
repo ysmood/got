@@ -161,30 +161,93 @@ func (sn seen) circular(p path, v reflect.Value) *Token {
 }
 
 func tokenize(sn seen, p path, v reflect.Value) []*Token {
-	ts := []*Token{}
-	t := &Token{Nil, ""}
-
-	if v.Kind() == reflect.Invalid {
-		t.Literal = "nil"
-		return append(ts, t)
-	} else if r, ok := v.Interface().(rune); ok && unicode.IsGraphic(r) {
-		return append(ts, tokenizeRune(t, r))
-	} else if b, ok := v.Interface().(byte); ok {
-		return append(ts, tokenizeByte(t, b))
-	} else if tt, ok := v.Interface().(time.Time); ok {
-		return tokenizeTime(tt)
-	} else if d, ok := v.Interface().(time.Duration); ok {
-		return tokenizeDuration(d)
+	if ts, has := tokenizeSpecial(v); has {
+		return ts
 	}
 
 	if t := sn.circular(p, v); t != nil {
-		return append(ts, t)
+		return []*Token{t}
 	}
+
+	t := &Token{Nil, ""}
 
 	switch v.Kind() {
 	case reflect.Interface:
-		ts = append(ts, tokenize(sn, p, v.Elem())...)
+		return tokenize(sn, p, v.Elem())
 
+	case reflect.Bool:
+		t.Type = Bool
+		if v.Bool() {
+			t.Literal = "true"
+		} else {
+			t.Literal = "false"
+		}
+
+	case reflect.String:
+		t.Type = String
+		t.Literal = fmt.Sprintf("%#v", v.Interface())
+		ts := []*Token{t}
+		if regNewline.MatchString(v.Interface().(string)) {
+			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", v.Len())})
+		}
+		return ts
+
+	case reflect.Chan:
+		t.Type = Chan
+		if v.Cap() == 0 {
+			t.Literal = fmt.Sprintf("make(chan %s)", v.Type().Elem().Name())
+		} else {
+			t.Literal = fmt.Sprintf("make(chan %s, %d)", v.Type().Elem().Name(), v.Cap())
+		}
+
+	case reflect.Func:
+		t.Type = Func
+		t.Literal = fmt.Sprintf("(%s)(nil)", v.Type().String())
+
+	case reflect.Ptr:
+		return tokenizePtr(sn, p, v)
+
+	case reflect.UnsafePointer:
+		t.Type = UnsafePointer
+		t.Literal = fmt.Sprintf("unsafe.Pointer(uintptr(%v))", v.Interface())
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.Uintptr, reflect.Complex64, reflect.Complex128:
+		return tokenizeNumber(v)
+
+	case reflect.Slice, reflect.Array, reflect.Map, reflect.Struct:
+		return tokenizeCollection(sn, p, v)
+	}
+
+	return []*Token{t}
+}
+
+func tokenizeSpecial(v reflect.Value) ([]*Token, bool) {
+	t := &Token{Nil, ""}
+	ts := []*Token{}
+
+	if v.Kind() == reflect.Invalid {
+		t.Literal = "nil"
+		return append(ts, t), true
+	} else if r, ok := v.Interface().(rune); ok && unicode.IsGraphic(r) {
+		return []*Token{tokenizeRune(t, r)}, true
+	} else if b, ok := v.Interface().(byte); ok {
+		return append(ts, tokenizeByte(t, b)), true
+	} else if tt, ok := v.Interface().(time.Time); ok {
+		return tokenizeTime(tt), true
+	} else if d, ok := v.Interface().(time.Duration); ok {
+		return tokenizeDuration(d), true
+	}
+
+	return ts, false
+}
+
+func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
+	ts := []*Token{}
+
+	switch v.Kind() {
 	case reflect.Slice, reflect.Array:
 		if data, ok := v.Interface().([]byte); ok {
 			ts = append(ts, tokenizeBytes(data)...)
@@ -250,16 +313,16 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 			ts = append(ts, &Token{Comma, ","})
 		}
 		ts = append(ts, &Token{StructClose, "}"})
+	}
 
-	case reflect.Bool:
-		t.Type = Bool
-		if v.Bool() {
-			t.Literal = "true"
-		} else {
-			t.Literal = "false"
-		}
-		ts = append(ts, t)
+	return ts
+}
 
+func tokenizeNumber(v reflect.Value) []*Token {
+	t := &Token{Nil, ""}
+	ts := []*Token{}
+
+	switch v.Kind() {
 	case reflect.Int:
 		t.Type = Number
 		t.Literal = strconv.FormatInt(v.Int(), 10)
@@ -290,36 +353,6 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		t.Type = Number
 		t.Literal = fmt.Sprintf("%v", v.Interface())
 		t.Literal = t.Literal[1 : len(t.Literal)-1]
-		ts = append(ts, t)
-
-	case reflect.String:
-		t.Type = String
-		t.Literal = fmt.Sprintf("%#v", v.Interface())
-		ts = append(ts, t)
-		if regNewline.MatchString(v.Interface().(string)) {
-			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", v.Len())})
-		}
-
-	case reflect.Chan:
-		t.Type = Chan
-		if v.Cap() == 0 {
-			t.Literal = fmt.Sprintf("make(chan %s)", v.Type().Elem().Name())
-		} else {
-			t.Literal = fmt.Sprintf("make(chan %s, %d)", v.Type().Elem().Name(), v.Cap())
-		}
-		ts = append(ts, t)
-
-	case reflect.Func:
-		t.Type = Func
-		t.Literal = fmt.Sprintf("(%s)(nil)", v.Type().String())
-		ts = append(ts, t)
-
-	case reflect.Ptr:
-		ts = append(ts, tokenizePtr(sn, p, v)...)
-
-	case reflect.UnsafePointer:
-		t.Type = UnsafePointer
-		t.Literal = fmt.Sprintf("unsafe.Pointer(uintptr(%v))", v.Interface())
 		ts = append(ts, t)
 	}
 
