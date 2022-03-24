@@ -9,7 +9,7 @@
     "url": "https://github.com/ysmood/got.git"
   },
   "engines": {
-    "vscode": "^1.55.0"
+    "vscode": "^1.65.2"
   },
   "categories": [
     "Snippets"
@@ -33,22 +33,17 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
-  },
-  "devDependencies": {
-    "@types/glob": "^7.1.3",
-    "@types/node": "^12.11.7",
-    "@types/vscode": "^1.55.0",
-    "@typescript-eslint/eslint-plugin": "^4.14.1",
-    "@typescript-eslint/parser": "^4.14.1",
-    "eslint": "^7.19.0",
-    "glob": "^7.1.6",
-    "typescript": "^4.1.3",
-    "vscode-test": "^1.5.0"
-  }
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint . --ext .ts,.tsx",
+		"watch": "tsc -watch -p ./"
+	},
+	"devDependencies": {
+		"@types/node": "^16.0.0",
+		"@types/vscode": "^1.65.0",
+		"@typescript-eslint/eslint-plugin": "^4.16.0",
+		"@typescript-eslint/parser": "^4.16.0",
+		"eslint": "^7.21.0",
+		"typescript": "^4.6.2"
+	}
 }
