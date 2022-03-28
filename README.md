@@ -16,6 +16,6 @@ Read the [example project](lib/example) to get started.
 
 Got uses itself as the test framework, so the source code itself is the best doc.
 
-Install the vscode extension for snippets like: `gt` and `gts`.
+Install the [vscode extension](https://marketplace.visualstudio.com/items?itemName=ysmood.got-vscode-extension) for snippets like: `gt` and `gts`.
 
 API reference is [here](pkg.go.dev/github.com/ysmood/got).
