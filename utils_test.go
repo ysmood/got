@@ -7,6 +7,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/ysmood/got"
 )
@@ -75,6 +76,8 @@ func TestHelper(t *testing.T) {
 		ut.Req(http.MethodPost, s.URL("/d"), 1)
 		ut.Req(http.MethodPost, s.URL("/f"), http.Header{"Test-Header": {"ok"}}, got.ReqMIME(".json"), 1)
 	}
+
+	ut.DoAfter(time.Hour, func() {})
 
 	m := &mock{t: t}
 	mut := got.New(m)
