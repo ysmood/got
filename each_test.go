@@ -46,6 +46,17 @@ type Embedded struct {
 func (c Embedded) A() {}
 func (c Embedded) C() { c.Fail() }
 
+func TestEachWithOnly(t *testing.T) {
+	got.Each(t, Only{})
+}
+
+type Only struct {
+	*testing.T
+}
+
+func (c Only) A(got.Only) {}
+func (c Only) B()         { panic("") }
+
 func TestEachErr(t *testing.T) {
 	as := got.New(t)
 	m := &mock{t: t}
