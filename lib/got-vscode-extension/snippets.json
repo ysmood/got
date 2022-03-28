@@ -1,1 +1,55 @@
-{"got setup":{"prefix":"gots","body":["package ${0:example}_test\n\nimport (\n\t\"testing\"\n\t\"time\"\n\n\t\"github.com/ysmood/got\"\n\t\"github.com/ysmood/gotrace\"\n)\n\nfunc init() {\n\t// Set default timeout for the entire \"go test\"\n\tgot.DefaultFlags(\"timeout=10s\")\n}\n\nfunc TestMain(m *testing.M) {\n\t// Make sure we don't leaking goroutines\n\tgotrace.CheckMain(m, 0)\n}\n\nvar setup = got.Setup(func(g got.G) {\n\t// The function passed to it will be surely executed after the test\n\tg.Cleanup(func() {})\n\n\tif got.Parallel() \u003e 0 {\n\t\t// Concurrently run each test\n\t\tg.Parallel()\n\t} else {\n\t\t// Make sure there's no goroutine leak for each test\n\t\tgotrace.Check(g, 0)\n\t}\n\n\t// Timeout for each test\n\tg.PanicAfter(time.Second)\n})\n"]},"got test function":{"prefix":"got","body":["\nfunc Test$1(t *testing.T) {\n\tg := setup(t)\n\n\t${0:g.Eq(1, 1)}\n}"]}}
+{
+  "got setup": {
+    "prefix": "gts",
+    "body": [
+      "package ${0:example}_test",
+      "",
+      "import (",
+      "\t\"testing\"",
+      "\t\"time\"",
+      "",
+      "\t\"github.com/ysmood/got\"",
+      "\t\"github.com/ysmood/gotrace\"",
+      ")",
+      "",
+      "func init() {",
+      "\t// Set default timeout for the entire \"go test\"",
+      "\tgot.DefaultFlags(\"timeout=10s\")",
+      "}",
+      "",
+      "func TestMain(m *testing.M) {",
+      "\t// Make sure we don't leaking goroutines",
+      "\tgotrace.CheckMain(m, 0)",
+      "}",
+      "",
+      "var setup = got.Setup(func(g got.G) {",
+      "\t// The function passed to it will be surely executed after the test",
+      "\tg.Cleanup(func() {})",
+      "",
+      "\tif got.Parallel() > 0 {",
+      "\t\t// Concurrently run each test",
+      "\t\tg.Parallel()",
+      "\t} else {",
+      "\t\t// Make sure there's no goroutine leak for each test",
+      "\t\tgotrace.Check(g, 0)",
+      "\t}",
+      "",
+      "\t// Timeout for each test",
+      "\tg.PanicAfter(time.Second)",
+      "})",
+      ""
+    ]
+  },
+  "got test function": {
+    "prefix": "gt",
+    "body": [
+      "",
+      "func Test$1(t *testing.T) {",
+      "\tg := setup(t)",
+      "",
+      "\t${0:g.Eq(1, 1)}",
+      "}",
+      ""
+    ]
+  }
+}

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"log"
 	"os"
 	"strings"
 )
@@ -15,27 +17,41 @@ type snippet struct {
 type snippets map[string]snippet
 
 func main() {
-	b, _ := os.ReadFile("lib/example/setup_test.go")
+	b, err := os.ReadFile("lib/example/03_setup_test.go")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	setup := strings.Replace(string(b), "example_test", "${0:example}_test", -1)
 
 	s := snippets{
 		"got test function": {
 			Prefix: "gt",
-			Body: []string{`
+			Body: strings.Split(`
 func Test$1(t *testing.T) {
 	g := setup(t)
 
 	${0:g.Eq(1, 1)}
-}`},
+}
+`, "\n"),
 		},
 		"got setup": {
 			Prefix: "gts",
-			Body:   []string{string(setup)},
+			Body:   strings.Split(string(setup), "\n"),
 		},
 	}
 
-	b, _ = json.Marshal(s)
+	buf := bytes.NewBuffer(nil)
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(s)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	_ = os.WriteFile("lib/got-vscode-extension/snippets.json", b, 0764)
+	err = os.WriteFile("lib/got-vscode-extension/snippets.json", buf.Bytes(), 0764)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
