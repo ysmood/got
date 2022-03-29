@@ -2,7 +2,7 @@
   "name": "got-vscode-extension",
   "displayName": "got-vscode-extension",
   "description": "got vscode extension",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "ysmood",
   "repository": {
     "type": "git",

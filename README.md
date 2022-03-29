@@ -16,6 +16,17 @@ Read the [example project](lib/example) to get started.
 
 Got uses itself as the test framework, so the source code itself is the best doc.
 
-Install the [vscode extension](https://marketplace.visualstudio.com/items?itemName=ysmood.got-vscode-extension) for snippets like: `gt` and `gts`.
+Install the [vscode extension](https://marketplace.visualstudio.com/items?itemName=ysmood.got-vscode-extension) for snippets like: `gp`, `gt`, and `gsetup`.
 
-API reference is [here](pkg.go.dev/github.com/ysmood/got).
+To ensure test coverage of your project, you can run the command below:
+
+```shell
+go test -race -coverprofile=coverage.out ./...
+go run github.com/ysmood/got/cmd/check-cov@latest
+```
+
+By default the [check-cov](cmd/check-cov) requires 100% coverage, run it with the `-h` flag to see the help doc.
+
+## API reference
+
+[Link](https://pkg.go.dev/github.com/ysmood/got)

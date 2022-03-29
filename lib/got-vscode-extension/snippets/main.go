@@ -25,8 +25,22 @@ func main() {
 	setup := strings.Replace(string(b), "example_test", "${0:example}_test", -1)
 
 	s := snippets{
+		"gop print": {
+			Prefix: "gp",
+			Body:   []string{"gop.P($0)"},
+		},
 		"got test function": {
 			Prefix: "gt",
+			Body: strings.Split(`
+func Test$1(t *testing.T) {
+	g := got.T(t)
+
+	${0:g.Eq(1, 1)}
+}
+`, "\n"),
+		},
+		"got test function with setup": {
+			Prefix: "gts",
 			Body: strings.Split(`
 func Test$1(t *testing.T) {
 	g := setup(t)
@@ -36,7 +50,7 @@ func Test$1(t *testing.T) {
 `, "\n"),
 		},
 		"got setup": {
-			Prefix: "gts",
+			Prefix: "gsetup",
 			Body:   strings.Split(string(setup), "\n"),
 		},
 	}

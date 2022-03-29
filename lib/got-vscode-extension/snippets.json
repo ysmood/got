@@ -1,6 +1,12 @@
 {
+  "gop print": {
+    "prefix": "gp",
+    "body": [
+      "gop.P($0)"
+    ]
+  },
   "got setup": {
-    "prefix": "gts",
+    "prefix": "gsetup",
     "body": [
       "package ${0:example}_test",
       "",
@@ -42,6 +48,18 @@
   },
   "got test function": {
     "prefix": "gt",
+    "body": [
+      "",
+      "func Test$1(t *testing.T) {",
+      "\tg := got.T(t)",
+      "",
+      "\t${0:g.Eq(1, 1)}",
+      "}",
+      ""
+    ]
+  },
+  "got test function with setup": {
+    "prefix": "gts",
     "body": [
       "",
       "func Test$1(t *testing.T) {",
