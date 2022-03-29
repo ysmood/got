@@ -42,8 +42,8 @@ const (
 	// UnsafePointer type
 	UnsafePointer
 
-	// Len type
-	Len
+	// Comment type
+	Comment
 
 	// TypeName type
 	TypeName
@@ -188,7 +188,7 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		t.Literal = fmt.Sprintf("%#v", v.Interface())
 		ts := []*Token{t}
 		if regNewline.MatchString(v.Interface().(string)) {
-			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", v.Len())})
+			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", v.Len())})
 		}
 		return ts
 
@@ -252,14 +252,14 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 		if data, ok := v.Interface().([]byte); ok {
 			ts = append(ts, tokenizeBytes(data)...)
 			if len(data) > 1 {
-				ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", len(data))})
+				ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(data))})
 			}
 			break
 		} else {
 			ts = append(ts, &Token{TypeName, v.Type().String()})
 		}
 		if v.Kind() == reflect.Slice {
-			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d cap=%d */", v.Len(), v.Cap())})
+			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d cap=%d */", v.Len(), v.Cap())})
 		}
 		ts = append(ts, &Token{SliceOpen, "{"})
 		for i := 0; i < v.Len(); i++ {
@@ -278,7 +278,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 			return utils.Compare(keys[i], keys[j]) < 0
 		})
 		if len(keys) > 1 {
-			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", len(keys))})
+			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(keys))})
 		}
 		ts = append(ts, &Token{MapOpen, "{"})
 		for _, k := range keys {
@@ -296,7 +296,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 
 		ts = append(ts, &Token{TypeName, t.String()})
 		if v.NumField() > 1 {
-			ts = append(ts, &Token{Len, fmt.Sprintf("/* len=%d */", v.NumField())})
+			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", v.NumField())})
 		}
 		ts = append(ts, &Token{StructOpen, "{"})
 		for i := 0; i < v.NumField(); i++ {
