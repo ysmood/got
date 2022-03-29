@@ -191,7 +191,7 @@ func TestPlain(t *testing.T) {
 
 func TestP(t *testing.T) {
 	gop.Stdout = io.Discard
-	_, _ = gop.P("test")
+	_ = gop.P("test")
 	gop.Stdout = os.Stdout
 }
 

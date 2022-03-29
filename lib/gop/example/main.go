@@ -20,5 +20,5 @@ func main() {
 	}
 	val["slice"].([]interface{})[1] = val["slice"]
 
-	_, _ = gop.P(val)
+	_ = gop.P(val)
 }

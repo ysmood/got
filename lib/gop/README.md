@@ -47,6 +47,7 @@ func main() {
 The output will be something like:
 
 ```go
+// 2022-03-29T09:58:44.690232+08:00 (main.main) lib/gop/example/main.go:23
 map[string]interface {}/* len=7 */{
     "bool": true,
     "bytes": []byte("abc")/* len=3 */,
@@ -61,6 +62,6 @@ map[string]interface {}/* len=7 */{
     "struct": struct { test int32 }{
         test: int32(13),
     },
-    "time": gop.Time("2022-03-23T10:25:54.424021+08:00"),
+    "time": gop.Time("2022-03-29T09:58:44.689892+08:00"),
 }
 ```

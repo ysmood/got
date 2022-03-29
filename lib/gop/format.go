@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
+	"time"
 )
 
 // Stdout is the default stdout for gop.P .
@@ -25,7 +28,7 @@ var DefaultTheme = func(t Type) Color {
 		return Green
 	case Chan, Func, UnsafePointer:
 		return Magenta
-	case Len:
+	case Comment:
 		return White
 	case PointerCircular:
 		return Red
@@ -44,13 +47,22 @@ func F(v interface{}) string {
 	return Format(Tokenize(v), nil)
 }
 
-// P pretty print the value list vs
-func P(vs ...interface{}) (int, error) {
+// P pretty print the values
+func P(values ...interface{}) error {
 	list := []interface{}{}
-	for _, v := range vs {
-		list = append(list, Format(Tokenize(v), nil))
+	for _, v := range values {
+		list = append(list, F(v))
 	}
-	return fmt.Fprintln(Stdout, list...)
+
+	pc, file, line, _ := runtime.Caller(1)
+	fn := runtime.FuncForPC(pc).Name()
+	cwd, _ := os.Getwd()
+	file, _ = filepath.Rel(cwd, file)
+	tpl := ColorStr(DefaultTheme(Comment), "// %s (%s) %s:%d\n")
+	_, _ = fmt.Fprintf(Stdout, tpl, time.Now().Format(time.RFC3339Nano), fn, file, line)
+
+	_, err := fmt.Fprintln(Stdout, list...)
+	return err
 }
 
 // Plain is a shortcut for Format with plain color
