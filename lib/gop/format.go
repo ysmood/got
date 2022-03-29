@@ -58,8 +58,8 @@ func P(values ...interface{}) error {
 	fn := runtime.FuncForPC(pc).Name()
 	cwd, _ := os.Getwd()
 	file, _ = filepath.Rel(cwd, file)
-	tpl := ColorStr(DefaultTheme(Comment), "// %s (%s) %s:%d\n")
-	_, _ = fmt.Fprintf(Stdout, tpl, time.Now().Format(time.RFC3339Nano), fn, file, line)
+	tpl := ColorStr(DefaultTheme(Comment), "// %s %s:%d (%s)\n")
+	_, _ = fmt.Fprintf(Stdout, tpl, time.Now().Format(time.RFC3339Nano), file, line, fn)
 
 	_, err := fmt.Fprintln(Stdout, list...)
 	return err
