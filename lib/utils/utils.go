@@ -19,7 +19,7 @@ func Compare(x, y interface{}) float64 {
 		xVal := reflect.Indirect(reflect.ValueOf(x))
 		yVal := reflect.Indirect(reflect.ValueOf(y))
 
-		if xVal.CanConvert(float64Type) && yVal.CanConvert(float64Type) {
+		if xVal.Type().ConvertibleTo(float64Type) && yVal.Type().ConvertibleTo(float64Type) {
 			return xVal.Convert(float64Type).Float() - yVal.Convert(float64Type).Float()
 		}
 

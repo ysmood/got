@@ -3,7 +3,7 @@ package gop_test
 import (
 	"encoding/base64"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -190,7 +190,7 @@ func TestPlain(t *testing.T) {
 }
 
 func TestP(t *testing.T) {
-	gop.Stdout = io.Discard
+	gop.Stdout = ioutil.Discard
 	_ = gop.P("test")
 	gop.Stdout = os.Stdout
 }

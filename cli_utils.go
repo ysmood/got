@@ -2,6 +2,7 @@ package got
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
@@ -13,7 +14,7 @@ import (
 //     go test -coverprofile=coverage.out
 // Return error if any file's coverage is less than min, min is a percentage value.
 func EnsureCoverage(path string, min float64) error {
-	tmp, _ := os.CreateTemp("", "")
+	tmp, _ := ioutil.TempFile("", "")
 	report := tmp.Name()
 	defer func() { _ = os.Remove(report) }()
 	_ = tmp.Close()
@@ -48,7 +49,7 @@ type cov struct {
 var regCov = regexp.MustCompile(`<option value="file\d+">(.+) \((\d+\.\d+)%\)</option>`)
 
 func parseReport(path string) []cov {
-	out, _ := os.ReadFile(path)
+	out, _ := ioutil.ReadFile(path)
 
 	ms := regCov.FindAllStringSubmatch(string(out), -1)
 
