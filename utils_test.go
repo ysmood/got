@@ -24,7 +24,7 @@ func TestHelper(t *testing.T) {
 	<-ctx.Done()
 	<-ut.Timeout(0).Done()
 
-	ut.Len(ut.Srand(10), 10)
+	ut.Len(ut.RandStr(10), 10)
 
 	f := ut.Open(true, "tmp/test.txt")
 	ut.Nil(os.Stat("tmp/test.txt"))
@@ -125,7 +125,7 @@ func TestHelper(t *testing.T) {
 func TestServe(t *testing.T) {
 	ut := setup(t)
 
-	key := ut.Srand(8)
+	key := ut.RandStr(8)
 	s := ut.Serve().Route("/", "", key)
 	count := 30
 

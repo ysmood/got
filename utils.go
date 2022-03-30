@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"mime"
 	"net"
 	"net/http"
@@ -136,8 +137,8 @@ func (ut Utils) Timeout(d time.Duration) Context {
 	return Context{ctx, cancel}
 }
 
-// Srand generates a random string with the specified length
-func (ut Utils) Srand(l int) string {
+// RandStr generates a random string with the specified length
+func (ut Utils) RandStr(l int) string {
 	ut.Helper()
 	b := make([]byte, (l+1)/2)
 	_, err := rand.Read(b)

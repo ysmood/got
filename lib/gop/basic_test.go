@@ -199,7 +199,7 @@ func TestConvertors(t *testing.T) {
 	g := got.New(t)
 	g.Nil(gop.Circular(""))
 
-	s := g.Srand(8)
+	s := g.RandStr(8)
 	g.Eq(gop.Ptr(s).(*string), &s)
 
 	bs := base64.StdEncoding.EncodeToString([]byte(s))
