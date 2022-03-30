@@ -20,17 +20,17 @@ var DefaultTheme = func(t Type) Color {
 	switch t {
 	case TypeName:
 		return Cyan
-	case Bool:
+	case Bool, Chan:
 		return Blue
 	case Rune, Byte, String:
 		return Yellow
 	case Number:
 		return Green
-	case Chan, Func, UnsafePointer:
+	case Func:
 		return Magenta
 	case Comment:
 		return White
-	case PointerCircular:
+	case Nil:
 		return Red
 	default:
 		return None
@@ -94,7 +94,7 @@ func Format(ts []*Token, theme func(Type) Color) string {
 			out += s + "\n"
 		case SliceItem, MapKey, StructKey:
 			out += strings.Repeat(indentUnit, depth)
-		case Colon, InlineComma:
+		case Colon, InlineComma, Chan:
 			out += s + " "
 		case Comma:
 			out += s + "\n"

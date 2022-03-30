@@ -2,18 +2,20 @@ package gop
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"reflect"
-	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/ysmood/got/lib/utils"
 )
+
+// StringCommentLimit to enable the length comment
+var StringCommentLimit = 15
 
 // Type of token
 type Type int
@@ -39,8 +41,6 @@ const (
 	Chan
 	// Func type
 	Func
-	// UnsafePointer type
-	UnsafePointer
 
 	// Comment type
 	Comment
@@ -53,12 +53,10 @@ const (
 	// ParenClose type
 	ParenClose
 
-	// PointerOpen type
-	PointerOpen
-	// PointerClose type
-	PointerClose
-	// PointerCircular type
-	PointerCircular
+	// Dot type
+	Dot
+	// And type
+	And
 
 	// SliceOpen type
 	SliceOpen
@@ -101,6 +99,15 @@ func Tokenize(v interface{}) []*Token {
 	return tokenize(seen{}, []interface{}{}, reflect.ValueOf(v))
 }
 
+// Any type
+type Any interface{}
+
+// Obj type
+type Obj map[string]Any
+
+// Arr type
+type Arr []Any
+
 // Ptr returns a pointer to v
 func Ptr(v interface{}) interface{} {
 	val := reflect.ValueOf(v)
@@ -132,27 +139,40 @@ func Duration(s string) time.Duration {
 	return d
 }
 
+// JSONStr returns the raw
+func JSONStr(v interface{}, raw string) string {
+	return raw
+}
+
+// JSONBytes returns the raw as []byte
+func JSONBytes(v interface{}, raw string) []byte {
+	return []byte(raw)
+}
+
 type path []interface{}
 
-func (p path) String() string {
-	out := []string{}
-	for _, seg := range p {
-		out = append(out, fmt.Sprintf("%#v", seg))
+func (p path) tokens() []*Token {
+	ts := []*Token{}
+	for i, seg := range p {
+		ts = append(ts, &Token{String, fmt.Sprintf("%#v", seg)})
+		if i < len(p)-1 {
+			ts = append(ts, &Token{InlineComma, ","})
+		}
 	}
-	return strings.Join(out, ", ")
+	return ts
 }
 
 type seen map[uintptr]path
 
-func (sn seen) circular(p path, v reflect.Value) *Token {
+func (sn seen) circular(p path, v reflect.Value) []*Token {
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Map, reflect.Slice:
 		ptr := v.Pointer()
 		if p, has := sn[ptr]; has {
-			return &Token{
-				PointerCircular,
-				fmt.Sprintf("gop.Circular(%s).(%s)", p.String(), v.Type().String()),
-			}
+			ts := []*Token{{Func, "gop.Circular"}, {ParenOpen, "("}}
+			ts = append(ts, p.tokens()...)
+			return append(ts, &Token{ParenClose, ")"}, &Token{Dot, "."},
+				&Token{ParenOpen, "("}, typeName(v.Type().String()), &Token{ParenClose, ")"})
 		}
 		sn[ptr] = p
 	}
@@ -165,8 +185,8 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		return ts
 	}
 
-	if t := sn.circular(p, v); t != nil {
-		return []*Token{t}
+	if ts := sn.circular(p, v); ts != nil {
+		return ts
 	}
 
 	t := &Token{Nil, ""}
@@ -184,32 +204,27 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		}
 
 	case reflect.String:
-		t.Type = String
-		t.Literal = fmt.Sprintf("%#v", v.Interface())
-		ts := []*Token{t}
-		if regNewline.MatchString(v.Interface().(string)) {
-			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", v.Len())})
-		}
-		return ts
+		return tokenizeString(v)
 
 	case reflect.Chan:
-		t.Type = Chan
 		if v.Cap() == 0 {
-			t.Literal = fmt.Sprintf("make(chan %s)", v.Type().Elem().Name())
-		} else {
-			t.Literal = fmt.Sprintf("make(chan %s, %d)", v.Type().Elem().Name(), v.Cap())
+			return []*Token{{Func, "make"}, {ParenOpen, "("},
+				{Chan, "chan"}, typeName(v.Type().Elem().Name()), {ParenClose, ")"}}
 		}
+		return []*Token{{Func, "make"}, {ParenOpen, "("}, {Chan, "chan"},
+			typeName(v.Type().Elem().Name()), {InlineComma, ","},
+			{Number, fmt.Sprintf("%d", v.Cap())}, {ParenClose, ")"}}
 
 	case reflect.Func:
-		t.Type = Func
-		t.Literal = fmt.Sprintf("(%s)(nil)", v.Type().String())
+		return []*Token{{ParenOpen, "("}, {Func, v.Type().String()},
+			{ParenClose, ")"}, {ParenOpen, "("}, {Nil, "nil"}, {ParenClose, ")"}}
 
 	case reflect.Ptr:
 		return tokenizePtr(sn, p, v)
 
 	case reflect.UnsafePointer:
-		t.Type = UnsafePointer
-		t.Literal = fmt.Sprintf("unsafe.Pointer(uintptr(%v))", v.Interface())
+		return []*Token{typeName("unsafe.Pointer"), {ParenOpen, "("}, typeName("uintptr"),
+			{ParenOpen, "("}, typeName(fmt.Sprintf("%v", v.Interface())), {ParenClose, ")"}, {ParenClose, ")"}}
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
@@ -225,23 +240,19 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 }
 
 func tokenizeSpecial(v reflect.Value) ([]*Token, bool) {
-	t := &Token{Nil, ""}
-	ts := []*Token{}
-
 	if v.Kind() == reflect.Invalid {
-		t.Literal = "nil"
-		return append(ts, t), true
+		return []*Token{{Nil, "nil"}}, true
 	} else if r, ok := v.Interface().(rune); ok && unicode.IsGraphic(r) {
-		return []*Token{tokenizeRune(t, r)}, true
+		return []*Token{tokenizeRune(&Token{Nil, ""}, r)}, true
 	} else if b, ok := v.Interface().(byte); ok {
-		return append(ts, tokenizeByte(t, b)), true
-	} else if tt, ok := v.Interface().(time.Time); ok {
-		return tokenizeTime(tt), true
+		return tokenizeByte(&Token{Nil, ""}, b), true
+	} else if t, ok := v.Interface().(time.Time); ok {
+		return tokenizeTime(t), true
 	} else if d, ok := v.Interface().(time.Duration); ok {
 		return tokenizeDuration(d), true
 	}
 
-	return ts, false
+	return tokenizeJSON(v)
 }
 
 func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
@@ -256,7 +267,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 			}
 			break
 		} else {
-			ts = append(ts, &Token{TypeName, v.Type().String()})
+			ts = append(ts, typeName(v.Type().String()))
 		}
 		if v.Kind() == reflect.Slice {
 			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d cap=%d */", v.Len(), v.Cap())})
@@ -272,7 +283,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 		ts = append(ts, &Token{SliceClose, "}"})
 
 	case reflect.Map:
-		ts = append(ts, &Token{TypeName, v.Type().String()})
+		ts = append(ts, typeName(v.Type().String()))
 		keys := v.MapKeys()
 		sort.Slice(keys, func(i, j int) bool {
 			return utils.Compare(keys[i], keys[j]) < 0
@@ -294,7 +305,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 	case reflect.Struct:
 		t := v.Type()
 
-		ts = append(ts, &Token{TypeName, t.String()})
+		ts = append(ts, typeName(t.String()))
 		if v.NumField() > 1 {
 			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", v.NumField())})
 		}
@@ -333,21 +344,17 @@ func tokenizeNumber(v reflect.Value) []*Token {
 		reflect.Float32, reflect.Float64,
 		reflect.Uintptr:
 
-		ts = append(ts, &Token{TypeName, v.Type().Name()})
-		ts = append(ts, &Token{ParenOpen, "("})
+		ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("})
 		t.Type = Number
 		t.Literal = fmt.Sprintf("%v", v.Interface())
-		ts = append(ts, t)
-		ts = append(ts, &Token{ParenClose, ")"})
+		ts = append(ts, t, &Token{ParenClose, ")"})
 
 	case reflect.Complex64:
-		ts = append(ts, &Token{TypeName, v.Type().Name()})
-		ts = append(ts, &Token{ParenOpen, "("})
+		ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("})
 		t.Type = Number
 		t.Literal = fmt.Sprintf("%v", v.Interface())
 		t.Literal = t.Literal[1 : len(t.Literal)-1]
-		ts = append(ts, t)
-		ts = append(ts, &Token{ParenClose, ")"})
+		ts = append(ts, t, &Token{ParenClose, ")"})
 
 	case reflect.Complex128:
 		t.Type = Number
@@ -365,20 +372,18 @@ func tokenizeRune(t *Token, r rune) *Token {
 	return t
 }
 
-func tokenizeByte(t *Token, b byte) *Token {
-	t.Type = Byte
+func tokenizeByte(t *Token, b byte) []*Token {
+	ts := []*Token{typeName("byte"), {ParenOpen, "("}}
 	if unicode.IsGraphic(rune(b)) {
-		t.Literal = fmt.Sprintf("byte('%s')", string(b))
+		ts = append(ts, &Token{Byte, fmt.Sprintf("'%s'", string(b))})
 	} else {
-		t.Literal = fmt.Sprintf("byte(0x%x)", b)
+		ts = append(ts, &Token{Byte, fmt.Sprintf("0x%x", b)})
 	}
-	return t
+	return append(ts, &Token{ParenClose, ")"})
 }
 
 func tokenizeTime(t time.Time) []*Token {
-	ts := []*Token{}
-	ts = append(ts, &Token{TypeName, "gop.Time"})
-	ts = append(ts, &Token{ParenOpen, "("})
+	ts := []*Token{{Func, "gop.Time"}, {ParenOpen, "("}}
 	ts = append(ts, &Token{String, `"` + t.Format(time.RFC3339Nano) + `"`})
 	ts = append(ts, &Token{ParenClose, ")"})
 	return ts
@@ -386,10 +391,17 @@ func tokenizeTime(t time.Time) []*Token {
 
 func tokenizeDuration(d time.Duration) []*Token {
 	ts := []*Token{}
-	ts = append(ts, &Token{TypeName, "gop.Duration"})
-	ts = append(ts, &Token{ParenOpen, "("})
+	ts = append(ts, typeName("gop.Duration"), &Token{ParenOpen, "("})
 	ts = append(ts, &Token{String, `"` + d.String() + `"`})
 	ts = append(ts, &Token{ParenClose, ")"})
+	return ts
+}
+
+func tokenizeString(v reflect.Value) []*Token {
+	ts := []*Token{{String, fmt.Sprintf("%#v", v.Interface())}}
+	if v.Len() > StringCommentLimit || regNewline.MatchString(v.Interface().(string)) {
+		ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", v.Len())})
+	}
 	return ts
 }
 
@@ -397,14 +409,13 @@ func tokenizeBytes(data []byte) []*Token {
 	ts := []*Token{}
 
 	if utf8.Valid(data) {
-		ts = append(ts, &Token{TypeName, "[]byte"})
-		ts = append(ts, &Token{ParenOpen, "("})
+		ts = append(ts, typeName("[]byte"), &Token{ParenOpen, "("})
 		ts = append(ts, &Token{String, fmt.Sprintf("%#v", string(data))})
 		ts = append(ts, &Token{ParenClose, ")"})
 		return ts
 	}
 
-	ts = append(ts, &Token{ParenOpen, "gop.Base64("})
+	ts = append(ts, &Token{Func, "gop.Base64"}, &Token{ParenOpen, "("})
 	ts = append(ts, &Token{String, fmt.Sprintf("%#v", base64.StdEncoding.EncodeToString(data))})
 	ts = append(ts, &Token{ParenClose, ")"})
 	return ts
@@ -414,7 +425,9 @@ func tokenizePtr(sn seen, p path, v reflect.Value) []*Token {
 	ts := []*Token{}
 
 	if v.Elem().Kind() == reflect.Invalid {
-		ts = append(ts, &Token{Nil, fmt.Sprintf("(%s)(nil)", v.Type().String())})
+		ts = append(ts,
+			&Token{ParenOpen, "("}, typeName(v.Type().String()), &Token{ParenClose, ")"},
+			&Token{ParenOpen, "("}, &Token{Nil, "nil"}, &Token{ParenClose, ")"})
 		return ts
 	}
 
@@ -430,15 +443,59 @@ func tokenizePtr(sn seen, p path, v reflect.Value) []*Token {
 	}
 
 	if fn {
-		ts = append(ts, &Token{PointerOpen, "gop.Ptr("})
+		ts = append(ts, &Token{Func, "gop.Ptr"}, &Token{ParenOpen, "("})
 		ts = append(ts, tokenize(sn, p, v.Elem())...)
-		ts = append(ts, &Token{PointerOpen, fmt.Sprintf(").(%s)", v.Type().String())})
+		ts = append(ts, &Token{ParenClose, ")"}, &Token{Dot, "."}, &Token{ParenOpen, "("},
+			typeName(v.Type().String()), &Token{ParenClose, ")"})
 	} else {
-		ts = append(ts, &Token{TypeName, "&"})
+		ts = append(ts, &Token{And, "&"})
 		ts = append(ts, tokenize(sn, p, v.Elem())...)
 	}
 
 	return ts
 }
 
-var regNewline = regexp.MustCompile(`\n`)
+func tokenizeJSON(v reflect.Value) ([]*Token, bool) {
+	var jv interface{}
+	ts := []*Token{}
+	s := ""
+	if v.Kind() == reflect.String {
+		s = v.String()
+		err := json.Unmarshal([]byte(s), &jv)
+		if err != nil {
+			return nil, false
+		}
+		ts = append(ts, &Token{Func, "gop.JSONStr"})
+	} else if b, ok := v.Interface().([]byte); ok {
+		err := json.Unmarshal(b, &jv)
+		if err != nil {
+			return nil, false
+		}
+		s = string(b)
+		ts = append(ts, &Token{Func, "gop.JSONBytes"})
+	}
+
+	_, isObj := jv.(map[string]interface{})
+	_, isArr := jv.(map[string]interface{})
+
+	if isObj || isArr {
+		ts = append(ts, &Token{ParenOpen, "("})
+		ts = append(ts, Tokenize(jv)...)
+		ts = append(ts, &Token{InlineComma, ","},
+			&Token{String, fmt.Sprintf("%#v", s)}, &Token{ParenClose, ")"})
+		return ts, true
+	}
+
+	return nil, false
+}
+
+func typeName(t string) *Token {
+	switch t {
+	case "map[string]interface {}":
+		return &Token{TypeName, "gop.Obj"}
+	case "[]interface {}":
+		return &Token{TypeName, "gop.Arr"}
+	default:
+		return &Token{TypeName, t}
+	}
+}

@@ -14,9 +14,11 @@ func main() {
 		"lines":  "multiline string\nline two",
 		"slice":  []interface{}{1, 2},
 		"time":   time.Now(),
+		"chan":   make(chan int, 1),
 		"struct": struct{ test int32 }{
 			test: 13,
 		},
+		"json": `{"a": 1}`,
 	}
 	val["slice"].([]interface{})[1] = val["slice"]
 

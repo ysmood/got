@@ -54,14 +54,16 @@ func TestTokenize(t *testing.T) {
 		&[]byte{1, 2},
 		timeStamp,
 		time.Hour,
+		`{"a": 1}`,
+		[]byte(`{"a": 1}`),
 	}
 
 	out := gop.StripColor(gop.F(v))
 
 	expected := `
-[]interface {}/* len=31 cap=31 */{
+gop.Arr/* len=33 cap=33 */{
     nil,
-    []interface {}/* len=4 cap=4 */{
+    gop.Arr/* len=4 cap=4 */{
         true,
         false,
         uintptr(23),
@@ -124,6 +126,12 @@ func TestTokenize(t *testing.T) {
     gop.Ptr([]byte("\x01\x02")/* len=2 */).(*[]uint8),
     gop.Time("2021-08-28T08:36:36.807908+08:00"),
     gop.Duration("1h0m0s"),
+    gop.JSONStr(gop.Obj{
+        "a": float64(1),
+    }, "{\"a\": 1}"),
+    gop.JSONBytes(gop.Obj{
+        "a": float64(1),
+    }, "{\"a\": 1}"),
 }`
 
 	g.Eq(out, expected[1:])
@@ -173,14 +181,20 @@ func TestCircularMap(t *testing.T) {
 
 func TestCircularSlice(t *testing.T) {
 	g := got.New(t)
-	a := []interface{}{nil}
-	a[0] = a
+	a := [][]interface{}{{nil}, {nil}}
+	a[0][0] = a[1]
+	a[1][0] = a[0][0]
 
 	ts := gop.Tokenize(a)
 
 	g.Eq(gop.Format(ts, gop.NoTheme), ""+
-		"[]interface {}/* len=1 cap=1 */{\n"+
-		"    gop.Circular().([]interface {}),\n"+
+		"[][]interface {}/* len=2 cap=2 */{\n"+
+		"    gop.Arr/* len=1 cap=1 */{\n"+
+		"        gop.Arr/* len=1 cap=1 */{\n"+
+		"            gop.Circular(0, 0).(gop.Arr),\n"+
+		"        },\n"+
+		"    },\n"+
+		"    gop.Circular(0, 0).(gop.Arr),\n"+
 		"}")
 }
 
@@ -208,6 +222,9 @@ func TestConvertors(t *testing.T) {
 	now := time.Now()
 	g.Eq(gop.Time(now.Format(time.RFC3339Nano)), now)
 	g.Eq(gop.Duration("10m"), 10*time.Minute)
+
+	g.Eq(gop.JSONStr(nil, "[1, 2]"), "[1, 2]")
+	g.Eq(gop.JSONBytes(nil, "[1, 2]"), []byte("[1, 2]"))
 }
 
 func TestGetPrivateFieldErr(t *testing.T) {

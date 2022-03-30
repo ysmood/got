@@ -2,8 +2,11 @@ package gop
 
 import (
 	"reflect"
+	"regexp"
 	"unsafe"
 )
+
+var regNewline = regexp.MustCompile(`\n`)
 
 // GetPrivateField field value via field index
 // TODO: we can use a LRU cache for the copy of the values, but it might be trivial for just testing.
