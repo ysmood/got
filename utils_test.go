@@ -25,6 +25,8 @@ func TestHelper(t *testing.T) {
 	<-ut.Timeout(0).Done()
 
 	ut.Len(ut.RandStr(10), 10)
+	ut.Lt(ut.RandInt(0, 1), 1)
+	ut.Gt(ut.RandInt(-2, -1), -3)
 
 	f := ut.Open(true, "tmp/test.txt")
 	ut.Nil(os.Stat("tmp/test.txt"))

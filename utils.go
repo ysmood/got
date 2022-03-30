@@ -146,6 +146,14 @@ func (ut Utils) RandStr(l int) string {
 	return hex.EncodeToString(b)[:l]
 }
 
+// RandInt generates a random integer within [min, max)
+func (ut Utils) RandInt(min, max int) int {
+	ut.Helper()
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(max-min)))
+	ut.err(err)
+	return int(n.Int64()) + min
+}
+
 // Open a file. Override it if create is true. Directories will be auto-created.
 // path will be joined with filepath.Join so that it's cross-platform
 func (ut Utils) Open(create bool, path ...string) (f *os.File) {
