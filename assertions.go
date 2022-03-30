@@ -50,7 +50,7 @@ func (as Assertions) Eq(x, y interface{}) {
 		as.err("%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.diff(x, y))
 		return
 	}
-	as.err("%s%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.k("even when converted to the same type"), as.diff(x, y))
+	as.err("%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.diff(x, y))
 }
 
 // Neq asserts that x not equals y even when converted to the same type.

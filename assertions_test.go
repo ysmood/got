@@ -86,7 +86,7 @@ func TestAssertionErr(t *testing.T) {
 	}
 
 	as.Desc("not %s", "equal").Eq(1, 2.0)
-	m.check("not equal\n1 ⦗not ==⦘ float64(2) ⦗even when converted to the same type⦘ ")
+	m.check("not equal\n1 ⦗not ==⦘ float64(2)")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check(`got_test.data/* len=2 */{
@@ -98,13 +98,13 @@ func TestAssertionErr(t *testing.T) {
 }`)
 
 	as.Eq(true, "a&")
-	m.check(`true ⦗not ==⦘ "a&" ⦗even when converted to the same type⦘ `)
+	m.check(`true ⦗not ==⦘ "a&"`)
 
 	as.Eq(nil, "ok")
-	m.check(`nil ⦗not ==⦘ "ok" ⦗even when converted to the same type⦘ `)
+	m.check(`nil ⦗not ==⦘ "ok"`)
 
 	as.Eq(1, nil)
-	m.check(`1 ⦗not ==⦘ nil ⦗even when converted to the same type⦘ `)
+	m.check(`1 ⦗not ==⦘ nil`)
 
 	as.Equal(1, 1.0)
 	m.check("1 ⦗not ==⦘ float64(1)")
