@@ -3,6 +3,7 @@ package gop_test
 import (
 	"encoding/base64"
 	"fmt"
+	"go/parser"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -135,6 +136,8 @@ gop.Arr/* len=33 cap=33 */{
 }`
 
 	g.Eq(out, expected[1:])
+
+	g.Nil(parser.ParseExpr(out))
 }
 
 type A struct {
