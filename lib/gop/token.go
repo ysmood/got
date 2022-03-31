@@ -14,8 +14,11 @@ import (
 	"github.com/ysmood/got/lib/utils"
 )
 
-// StringCommentLimit to enable the length comment
-var StringCommentLimit = 15
+// LongStringLen is the length of that will be treated as long string
+var LongStringLen = 16
+
+// LongBytesLen is the length of that will be treated as long bytes
+var LongBytesLen = 16
 
 // Type of token
 type Type int
@@ -152,9 +155,10 @@ func JSONBytes(v interface{}, raw string) []byte {
 type path []interface{}
 
 func (p path) tokens() []*Token {
+	sn := map[uintptr]path{}
 	ts := []*Token{}
 	for i, seg := range p {
-		ts = append(ts, &Token{String, fmt.Sprintf("%#v", seg)})
+		ts = append(ts, tokenize(sn, p, reflect.ValueOf(seg))...)
 		if i < len(p)-1 {
 			ts = append(ts, &Token{InlineComma, ","})
 		}
@@ -262,9 +266,6 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 	case reflect.Slice, reflect.Array:
 		if data, ok := v.Interface().([]byte); ok {
 			ts = append(ts, tokenizeBytes(data)...)
-			if len(data) > 1 {
-				ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(data))})
-			}
 			break
 		} else {
 			ts = append(ts, typeName(v.Type().String()))
@@ -293,7 +294,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 		}
 		ts = append(ts, &Token{MapOpen, "{"})
 		for _, k := range keys {
-			p := append(p, k)
+			p := append(p, k.Interface())
 			ts = append(ts, &Token{MapKey, ""})
 			ts = append(ts, tokenize(sn, p, k)...)
 			ts = append(ts, &Token{Colon, ":"})
@@ -384,7 +385,7 @@ func tokenizeByte(t *Token, b byte) []*Token {
 
 func tokenizeTime(t time.Time) []*Token {
 	ts := []*Token{{Func, "gop.Time"}, {ParenOpen, "("}}
-	ts = append(ts, &Token{String, `"` + t.Format(time.RFC3339Nano) + `"`})
+	ts = append(ts, &Token{String, t.Format(time.RFC3339Nano)})
 	ts = append(ts, &Token{ParenClose, ")"})
 	return ts
 }
@@ -392,15 +393,16 @@ func tokenizeTime(t time.Time) []*Token {
 func tokenizeDuration(d time.Duration) []*Token {
 	ts := []*Token{}
 	ts = append(ts, typeName("gop.Duration"), &Token{ParenOpen, "("})
-	ts = append(ts, &Token{String, `"` + d.String() + `"`})
+	ts = append(ts, &Token{String, d.String()})
 	ts = append(ts, &Token{ParenClose, ")"})
 	return ts
 }
 
 func tokenizeString(v reflect.Value) []*Token {
-	ts := []*Token{{String, fmt.Sprintf("%#v", v.Interface())}}
-	if v.Len() > StringCommentLimit || regNewline.MatchString(v.Interface().(string)) {
-		ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", v.Len())})
+	s := v.String()
+	ts := []*Token{{String, s}}
+	if v.Len() >= LongStringLen {
+		ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(s))})
 	}
 	return ts
 }
@@ -409,15 +411,18 @@ func tokenizeBytes(data []byte) []*Token {
 	ts := []*Token{}
 
 	if utf8.Valid(data) {
+		s := string(data)
 		ts = append(ts, typeName("[]byte"), &Token{ParenOpen, "("})
-		ts = append(ts, &Token{String, fmt.Sprintf("%#v", string(data))})
+		ts = append(ts, &Token{String, s})
 		ts = append(ts, &Token{ParenClose, ")"})
-		return ts
+	} else {
+		ts = append(ts, &Token{Func, "gop.Base64"}, &Token{ParenOpen, "("})
+		ts = append(ts, &Token{String, base64.StdEncoding.EncodeToString(data)})
+		ts = append(ts, &Token{ParenClose, ")"})
 	}
-
-	ts = append(ts, &Token{Func, "gop.Base64"}, &Token{ParenOpen, "("})
-	ts = append(ts, &Token{String, fmt.Sprintf("%#v", base64.StdEncoding.EncodeToString(data))})
-	ts = append(ts, &Token{ParenClose, ")"})
+	if len(data) >= LongBytesLen {
+		ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(data))})
+	}
 	return ts
 }
 
@@ -482,7 +487,7 @@ func tokenizeJSON(v reflect.Value) ([]*Token, bool) {
 		ts = append(ts, &Token{ParenOpen, "("})
 		ts = append(ts, Tokenize(jv)...)
 		ts = append(ts, &Token{InlineComma, ","},
-			&Token{String, fmt.Sprintf("%#v", s)}, &Token{ParenClose, ")"})
+			&Token{String, s}, &Token{ParenClose, ")"})
 		return ts, true
 	}
 

@@ -18,7 +18,7 @@ func main() {
 		"struct": struct{ test int32 }{
 			test: 13,
 		},
-		"json": `{"a": 1}`,
+		"json": `{"a"   : 1}`,
 	}
 	val["slice"].([]interface{})[1] = val["slice"]
 

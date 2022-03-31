@@ -1,6 +1,7 @@
 package gop_test
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"go/parser"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"text/template"
 	"time"
 	"unsafe"
 
@@ -42,10 +44,13 @@ func TestTokenize(t *testing.T) {
 		}{10, "ok", map[int]int{1: 0x20}},
 		[]byte("aa\xe2"),
 		[]byte("bytes\n\tbytes"),
+		[]byte("long long long long string"),
 		byte('a'),
 		byte(1),
 		'天',
+		"long long long long string",
 		"\ntest",
+		"\t\n`",
 		&ref,
 		(*struct{ Int int })(nil),
 		&struct{ Int int }{},
@@ -61,83 +66,15 @@ func TestTokenize(t *testing.T) {
 
 	out := gop.StripColor(gop.F(v))
 
-	expected := `
-gop.Arr/* len=33 cap=33 */{
-    nil,
-    gop.Arr/* len=4 cap=4 */{
-        true,
-        false,
-        uintptr(23),
-        float32(100.12111),
-    },
-    true,
-    10,
-    int8(2),
-    'd',
-    float64(100.121111133),
-    complex64(1+2i),
-    1+2i,
-    [3]int{
-        1,
-        2,
-        0,
-    },
-    make(chan int),
-    make(chan string, 3),
-    (func(string) int)(nil),
-    map[interface {}]interface {}/* len=2 */{
-        "a": 1,
-        "test": 10,
-    },
-    unsafe.Pointer(uintptr(` + fmt.Sprintf("%v", &ref) + `)),
-    struct { Int int; str string; M map[int]int }/* len=3 */{
-        Int: 10,
-        str: "ok",
-        M: map[int]int{
-            1: 32,
-        },
-    },
-    gop.Base64("YWHi")/* len=3 */,
-    []byte("" +
-        "bytes\n" +
-        "\tbytes")/* len=12 */,
-    byte('a'),
-    byte(0x1),
-    '天',
-    "" +
-        "\n" +
-        "test"/* len=5 */,
-    gop.Ptr("test").(*string),
-    (*struct { Int int })(nil),
-    &struct { Int int }{
-        Int: 0,
-    },
-    &map[int]int/* len=2 */{
-        1: 2,
-        3: 4,
-    },
-    &[]int/* len=2 cap=2 */{
-        1,
-        2,
-    },
-    &[2]int{
-        1,
-        2,
-    },
-    gop.Ptr([]byte("\x01\x02")/* len=2 */).(*[]uint8),
-    gop.Time("2021-08-28T08:36:36.807908+08:00"),
-    gop.Duration("1h0m0s"),
-    gop.JSONStr(gop.Obj{
-        "a": float64(1),
-    }, "{\"a\": 1}"),
-    gop.JSONBytes(gop.Obj{
-        "a": float64(1),
-    }, "{\"a\": 1}"),
-}`
+	expected := bytes.NewBuffer(nil)
 
-	g.Eq(out, expected[1:])
+	tpl := template.New("")
+	g.E(tpl.Parse(g.Read(g.Open(false, "fixtures/expected.tmpl")).String()))
+	g.E(tpl.Execute(expected, gop.Obj{"ptr": fmt.Sprintf("%v", &ref)}))
 
 	g.Nil(parser.ParseExpr(out))
+
+	g.Eq(out, expected.String())
 }
 
 type A struct {
@@ -235,7 +172,4 @@ func TestGetPrivateFieldErr(t *testing.T) {
 	g.Panic(func() {
 		gop.GetPrivateField(reflect.ValueOf(1), 0)
 	})
-}
-
-func TestLab(t *testing.T) {
 }

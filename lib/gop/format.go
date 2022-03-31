@@ -87,23 +87,22 @@ func Format(ts []*Token, theme func(Type) Color) string {
 		}
 
 		color := theme(t.Type)
-		s := ColorStr(color, t.Literal)
 
 		switch t.Type {
 		case SliceOpen, MapOpen, StructOpen:
-			out += s + "\n"
+			out += ColorStr(color, t.Literal) + "\n"
 		case SliceItem, MapKey, StructKey:
 			out += strings.Repeat(indentUnit, depth)
 		case Colon, InlineComma, Chan:
-			out += s + " "
+			out += ColorStr(color, t.Literal) + " "
 		case Comma:
-			out += s + "\n"
+			out += ColorStr(color, t.Literal) + "\n"
 		case SliceClose, MapClose, StructClose:
-			out += strings.Repeat(indentUnit, depth) + s
+			out += strings.Repeat(indentUnit, depth) + ColorStr(color, t.Literal)
 		case String:
 			out += ColorStr(color, readableStr(depth, t.Literal))
 		default:
-			out += s
+			out += ColorStr(color, t.Literal)
 		}
 	}
 
@@ -119,13 +118,18 @@ func oneOf(t Type, list ...Type) bool {
 	return false
 }
 
-// To make line string block more human readable.
+// To make multi-line string block more human readable.
 // Split newline into two strings, convert "\t" into tab.
 // Such as foramt string: "line one \n\t line two" into:
 //     "line one \n" +
 //     "	 line two"
 func readableStr(depth int, s string) string {
-	s, _ = replaceEscaped(s, '\t', "	")
+	if ((len(s) > LongStringLen) || strings.Contains(s, "\n")) && !strings.Contains(s, "`") {
+		return "`" + s + "`"
+	}
+
+	s = fmt.Sprintf("%#v", s)
+	s, _ = replaceEscaped(s, 't', "	")
 
 	indent := strings.Repeat(indentUnit, depth+1)
 	if n, has := replaceEscaped(s, 'n', "\\n\" +\n"+indent+"\""); has {
