@@ -158,6 +158,7 @@ func DefaultFlags(flags ...string) {
 
 // Parallel config of "go test -parallel"
 func Parallel() (n int) {
+	flag.Parse()
 	flag.Visit(func(f *flag.Flag) {
 		if f.Name == "test.parallel" {
 			v := reflect.ValueOf(f.Value).Elem().Convert(reflect.TypeOf(n))
