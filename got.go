@@ -45,7 +45,7 @@ type Options struct {
 }
 
 func defaults() Options {
-	if _, has := os.LookupEnv("NO_COLOR"); has {
+	if gop.NoColor || !gop.SupportsColor {
 		return NoColor()
 	}
 	return Defaults()
@@ -90,7 +90,6 @@ func (opts Options) NoDiff() Options {
 }
 
 // Setup returns a helper to init G instance.
-// It will respect https://no-color.org/
 func Setup(init func(g G)) func(t Testable) G {
 	return SetupWith(defaults(), init)
 }
@@ -112,7 +111,6 @@ func T(t Testable) G {
 }
 
 // New G instance.
-// It will respect https://no-color.org/
 func New(t Testable) G {
 	return NewWith(t, defaults())
 }

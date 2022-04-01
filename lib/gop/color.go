@@ -2,6 +2,7 @@ package gop
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -35,7 +36,7 @@ const (
 
 // ColorStr string
 func ColorStr(c Color, s string) string {
-	if c == None || !SupportsColor {
+	if NoColor || c == None || !SupportsColor {
 		return s
 	}
 
@@ -47,6 +48,12 @@ var SupportsColor = func() bool {
 	b, _ := exec.Command("tput", "colors").CombinedOutput()
 	n, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 32)
 	return n > 0
+}()
+
+// NoColor respects https://no-color.org/
+var NoColor = func() bool {
+	_, has := os.LookupEnv("NO_COLOR")
+	return has
 }()
 
 const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
