@@ -6,6 +6,7 @@ import (
 	"math"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync/atomic"
 
@@ -16,13 +17,11 @@ import (
 type Assertions struct {
 	Testable
 
+	ErrorHandler AssertionError
+
 	must bool
 
 	desc string
-
-	d  func(v interface{}) string    // Options.Dump
-	k  func(string) string           // Options.Keyword
-	df func(a, b interface{}) string // Options.Diff
 }
 
 // Desc returns a clone with the description for failure enabled
@@ -46,11 +45,7 @@ func (as Assertions) Eq(x, y interface{}) {
 	if utils.Compare(x, y) == 0 {
 		return
 	}
-	if sameType(x, y) {
-		as.err("%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.diff(x, y))
-		return
-	}
-	as.err("%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.diff(x, y))
+	as.err(AssertionEq, x, y)
 }
 
 // Neq asserts that x not equals y even when converted to the same type.
@@ -60,11 +55,11 @@ func (as Assertions) Neq(x, y interface{}) {
 		return
 	}
 
-	if sameType(x, y) {
-		as.err("%s%s%s", as.d(x), as.k("=="), as.d(y))
+	if reflect.TypeOf(x).Kind() == reflect.TypeOf(y).Kind() {
+		as.err(AssertionNeqSame, x, y)
 		return
 	}
-	as.err("%s%s%s%s", as.d(x), as.k("=="), as.d(y), as.k("when converted to the same type"))
+	as.err(AssertionNeq, x, y)
 }
 
 // Equal asserts that x equals y.
@@ -74,7 +69,7 @@ func (as Assertions) Equal(x, y interface{}) {
 	if x == y {
 		return
 	}
-	as.err("%s%s%s%s", as.d(x), as.k("not =="), as.d(y), as.diff(x, y))
+	as.err(AssertionEqual, x, y)
 }
 
 // Gt asserts that x is greater than y.
@@ -83,7 +78,7 @@ func (as Assertions) Gt(x, y interface{}) {
 	if utils.Compare(x, y) > 0 {
 		return
 	}
-	as.err("%s%s%s", as.d(x), as.k("not >"), as.d(y))
+	as.err(AssertionGt, x, y)
 }
 
 // Gte asserts that x is greater than or equal to y.
@@ -92,7 +87,7 @@ func (as Assertions) Gte(x, y interface{}) {
 	if utils.Compare(x, y) >= 0 {
 		return
 	}
-	as.err("%s%s%s", as.d(x), as.k("not ≥"), as.d(y))
+	as.err(AssertionGte, x, y)
 }
 
 // Lt asserts that x is less than y.
@@ -101,7 +96,7 @@ func (as Assertions) Lt(x, y interface{}) {
 	if utils.Compare(x, y) < 0 {
 		return
 	}
-	as.err("%s%s%s", as.d(x), as.k("not <"), as.d(y))
+	as.err(AssertionLt, x, y)
 }
 
 // Lte asserts that x is less than or equal to b.
@@ -110,7 +105,7 @@ func (as Assertions) Lte(x, y interface{}) {
 	if utils.Compare(x, y) <= 0 {
 		return
 	}
-	as.err("%s%s%s", as.d(x), as.k("not ≤"), as.d(y))
+	as.err(AssertionLte, x, y)
 }
 
 // InDelta asserts that x and y are within the delta of each other.
@@ -119,7 +114,7 @@ func (as Assertions) InDelta(x, y interface{}, delta float64) {
 	if math.Abs(utils.Compare(x, y)) <= delta {
 		return
 	}
-	as.err("delta between %s and %s%s%s", as.d(x), as.d(y), as.k("not ≤"), as.d(delta))
+	as.err(AssertionInDelta, x, y, delta)
 }
 
 // True asserts that x is true.
@@ -128,7 +123,7 @@ func (as Assertions) True(x bool) {
 	if x {
 		return
 	}
-	as.err("%s%s", as.k("should be"), as.d(true))
+	as.err(AssertionTrue)
 }
 
 // False asserts that x is false.
@@ -137,45 +132,45 @@ func (as Assertions) False(x bool) {
 	if !x {
 		return
 	}
-	as.err("%s%s", as.k("should be"), as.d(false))
+	as.err(AssertionFalse)
 }
 
 // Nil asserts that the last item in args is nilable and nil
 func (as Assertions) Nil(args ...interface{}) {
 	as.Helper()
 	if len(args) == 0 {
-		as.err("%s", as.k("no args received"))
+		as.err(AssertionNoArgs)
 		return
 	}
 	last := args[len(args)-1]
 	if _, yes := isNil(last); yes {
 		return
 	}
-	as.err("%s%s%s%s", as.k("last item in args"), as.d(last), as.k("should be"), as.d(nil))
+	as.err(AssertionNil, last, args)
 }
 
 // NotNil asserts that the last item in args is nilable and not nil
 func (as Assertions) NotNil(args ...interface{}) {
 	as.Helper()
 	if len(args) == 0 {
-		as.err("%s", as.k("no args received"))
+		as.err(AssertionNoArgs)
 		return
 	}
 	last := args[len(args)-1]
 
 	if last == nil {
-		as.err("%s%s", as.k("last value shouldn't be"), as.d(nil))
+		as.err(AssertionNotNil, last, args)
 		return
 	}
 
 	nilable, yes := isNil(last)
 	if !nilable {
-		as.err("%s%s%s", as.k("last item in args"), as.d(last), as.k("is not nilable"))
+		as.err(AssertionNotNilable, last, args)
 		return
 	}
 
 	if yes {
-		as.err("%s%s%s%s", as.k("last item in args"), as.d(last), as.k("shouldn't be"), as.d(nil))
+		as.err(AssertionNotNilableNil, last, args)
 	}
 }
 
@@ -185,14 +180,14 @@ func (as Assertions) Zero(x interface{}) {
 	if reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface()) {
 		return
 	}
-	as.err("%s%s", as.d(x), as.k("should be zero value for its type"))
+	as.err(AssertionZero, x)
 }
 
 // NotZero asserts that x is not zero value for its type.
 func (as Assertions) NotZero(x interface{}) {
 	as.Helper()
 	if reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface()) {
-		as.err("%s%s", as.d(x), as.k("should not be zero value for its type"))
+		as.err(AssertionNotZero, x)
 	}
 }
 
@@ -202,7 +197,7 @@ func (as Assertions) Regex(pattern, str string) {
 	if regexp.MustCompile(pattern).MatchString(str) {
 		return
 	}
-	as.err("%s%s%s", pattern, as.k("should match"), str)
+	as.err(AssertionRegex, pattern, str)
 }
 
 // Has asserts that container contains str
@@ -211,7 +206,7 @@ func (as Assertions) Has(container, str string) {
 	if strings.Contains(container, str) {
 		return
 	}
-	as.err("%s%s%s", container, as.k("should has"), str)
+	as.err(AssertionHas, container, str)
 }
 
 // Len asserts that the length of list equals l
@@ -221,21 +216,21 @@ func (as Assertions) Len(list interface{}, l int) {
 	if actual == l {
 		return
 	}
-	as.err("%s%d%s%d", as.k("expect len"), actual, as.k("to be"), l)
+	as.err(AssertionLen, actual, l, list)
 }
 
 // Err asserts that the last item in args is error
 func (as Assertions) Err(args ...interface{}) {
 	as.Helper()
 	if len(args) == 0 {
-		as.err("%s", as.k("no args received"))
+		as.err(AssertionNoArgs)
 		return
 	}
 	last := args[len(args)-1]
 	if err, _ := last.(error); err != nil {
 		return
 	}
-	as.err("%s%s%s", as.k("last value"), as.d(last), as.k("should be <error>"))
+	as.err(AssertionErr, last, args)
 }
 
 // E is a shortcut for Must().Nil(args...)
@@ -253,7 +248,7 @@ func (as Assertions) Panic(fn func()) {
 
 		val := recover()
 		if val == nil {
-			as.err("%s", as.k("should panic"))
+			as.err(AssertionPanic, fn)
 		}
 	}()
 
@@ -278,7 +273,7 @@ func (as Assertions) Is(x, y interface{}) {
 			if errors.Is(ae, be) {
 				return
 			}
-			as.err("%s%s%s", as.d(x), as.k("should in chain of"), as.d(y))
+			as.err(AssertionIsInChain, x, y)
 			return
 		}
 	}
@@ -288,19 +283,19 @@ func (as Assertions) Is(x, y interface{}) {
 	if x != nil && y != nil && at.Kind() == bt.Kind() {
 		return
 	}
-	as.err("%s%s%s", as.d(x), as.k("should be kind of"), as.d(y))
+	as.err(AssertionIsKind, x, y)
 }
 
 // Count asserts that the returned function will be called n times
 func (as Assertions) Count(n int) func() {
 	as.Helper()
-	var count int64
+	count := int64(0)
 
 	as.Cleanup(func() {
-		if int(atomic.LoadInt64(&count)) != n {
+		c := int(atomic.LoadInt64(&count))
+		if c != n {
 			as.Helper()
-			as.Logf("Should count %d times, but got %d", n, count)
-			as.Fail()
+			as.err(AssertionCount, n, c)
 		}
 	})
 
@@ -309,13 +304,23 @@ func (as Assertions) Count(n int) func() {
 	}
 }
 
-func (as Assertions) err(format string, args ...interface{}) {
+func (as Assertions) err(t AssertionErrType, details ...interface{}) {
 	as.Helper()
 
 	if as.desc != "" {
 		as.Logf("%s", as.desc)
 	}
-	as.Logf(format, args...)
+
+	// TODO: we should take advantage of the Helper function
+	_, f, l, _ := runtime.Caller(2)
+	c := &AssertionCtx{
+		Type:    t,
+		Details: details,
+		File:    f,
+		Line:    l,
+	}
+
+	as.Logf("%s", as.ErrorHandler.Report(c))
 
 	if as.must {
 		as.FailNow()
@@ -323,14 +328,6 @@ func (as Assertions) err(format string, args ...interface{}) {
 	}
 
 	as.Fail()
-}
-
-func sameType(x, y interface{}) bool {
-	if x == nil || y == nil {
-		return x == y
-	}
-
-	return reflect.TypeOf(x).Kind() == reflect.TypeOf(y).Kind()
 }
 
 // the first return value is true if x is nilable
@@ -353,11 +350,4 @@ func isNil(x interface{}) (bool, bool) {
 	}
 
 	return false, false
-}
-
-func (as Assertions) diff(x, y interface{}) string {
-	if as.df != nil {
-		return as.df(x, y)
-	}
-	return ""
 }

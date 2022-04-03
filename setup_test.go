@@ -2,17 +2,11 @@ package got_test
 
 import (
 	"fmt"
-	"os"
 	"sync"
 	"testing"
 
 	"github.com/ysmood/got"
 )
-
-func init() {
-	got.New(nil)
-	_ = os.Setenv("NO_COLOR", "")
-}
 
 var setup = got.Setup(func(g got.G) {
 	g.Parallel()
@@ -77,17 +71,14 @@ func (m *mock) check(expected string) {
 
 	m.t.Helper()
 
-	as := got.NewWith(m.t, got.Options{
-		Dump: func(i interface{}) string {
-			return fmt.Sprintf("\n%v\n", i)
-		},
-		Keyword: func(s string) string {
-			return s
-		},
-	})
+	if !m.failed {
+		m.t.Error("should fail")
+	}
 
-	as.True(m.failed)
-	as.Eq(m.msg, expected)
+	if m.msg != expected {
+		fmt.Printf("%#v", m.msg)
+		m.t.Errorf("\n\n[[[msg]]]\n\n%s\n\n[[[doesn't equal]]]\n\n%s\n\n", m.msg, expected)
+	}
 
 	m.failed = false
 	m.msg = ""

@@ -8,7 +8,9 @@ import (
 	"github.com/ysmood/got/lib/diff"
 )
 
-var setup = got.SetupWith(got.NoColor().NoDiff(), nil)
+var setup = got.Setup(func(g got.G) {
+	g.ErrorHandler = got.NewDefaultAssertionError(false, false)
+})
 
 func TestFormat(t *testing.T) {
 	g := setup(t)

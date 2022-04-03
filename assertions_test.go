@@ -78,7 +78,8 @@ func TestAssertion(t *testing.T) {
 
 func TestAssertionErr(t *testing.T) {
 	m := &mock{t: t}
-	as := got.NewWith(m, got.NoColor().NoDiff())
+	as := got.New(m)
+	as.Assertions.ErrorHandler = got.NewDefaultAssertionError(false, false)
 
 	type data struct {
 		A int
@@ -125,7 +126,7 @@ func TestAssertionErr(t *testing.T) {
 	m.check("1 ⦗not ≥⦘ 2")
 
 	as.InDelta(10, 20, 3)
-	m.check("delta between 10 and 20 ⦗not ≤⦘ float64(3)")
+	m.check(" ⦗delta between⦘ 10 ⦗and⦘ 20 ⦗not ≤⦘ float64(3)")
 
 	as.True(false)
 	m.check(" ⦗should be⦘ true")
@@ -133,27 +134,27 @@ func TestAssertionErr(t *testing.T) {
 	m.check(" ⦗should be⦘ false")
 
 	as.Nil(1)
-	m.check(" ⦗last item in args⦘ 1 ⦗should be⦘ nil")
+	m.check(" ⦗last argument⦘ 1 ⦗should be⦘ nil")
 	as.Nil()
-	m.check(" ⦗no args received⦘ ")
+	m.check(" ⦗no arguments received⦘ ")
 	as.NotNil(nil)
-	m.check(" ⦗last value shouldn't be⦘ nil")
+	m.check(" ⦗last argument shouldn't be⦘ nil")
 	as.NotNil((*int)(nil))
-	m.check(" ⦗last item in args⦘ (*int)(nil) ⦗shouldn't be⦘ nil")
+	m.check(" ⦗last argument⦘ (*int)(nil) ⦗shouldn't be⦘ nil")
 	as.NotNil()
-	m.check(" ⦗no args received⦘ ")
+	m.check(" ⦗no arguments received⦘ ")
 	as.NotNil(1)
-	m.check(" ⦗last item in args⦘ 1 ⦗is not nilable⦘ ")
+	m.check(" ⦗last argument⦘ 1 ⦗is not nilable⦘ ")
 
 	as.Zero(1)
 	m.check("1 ⦗should be zero value for its type⦘ ")
 	as.NotZero(0)
-	m.check("0 ⦗should not be zero value for its type⦘ ")
+	m.check("0 ⦗shouldn't be zero value for its type⦘ ")
 
 	as.Regex(`\d\d`, "aaa")
-	m.check(`\d\d ⦗should match⦘ aaa`)
+	m.check(`"\\d\\d" ⦗should match⦘ "aaa"`)
 	as.Has(`test`, "x")
-	m.check("test ⦗should has⦘ x")
+	m.check(`"test" ⦗should has⦘ "x"`)
 
 	as.Len([]int{1, 2}, 3)
 	m.check(" ⦗expect len⦘ 2 ⦗to be⦘ 3")
@@ -163,7 +164,7 @@ func TestAssertionErr(t *testing.T) {
 	as.Panic(func() {})
 	m.check(" ⦗should panic⦘ ")
 	as.Err()
-	m.check(" ⦗no args received⦘ ")
+	m.check(" ⦗no arguments received⦘ ")
 	as.Err(1)
 	m.check(" ⦗last value⦘ 1 ⦗should be <error>⦘ ")
 
@@ -173,7 +174,7 @@ func TestAssertionErr(t *testing.T) {
 		}()
 		as.E(1, errors.New("E"))
 	}()
-	m.check(` ⦗last item in args⦘ &errors.errorString{
+	m.check(` ⦗last argument⦘ &errors.errorString{
     s: "E",
 } ⦗should be⦘ nil`)
 
@@ -194,19 +195,11 @@ func TestAssertionErr(t *testing.T) {
     s: "a",
 } ⦗should be kind of⦘ nil`)
 
-	opts := got.NoColor()
-	opts.Diff = func(a, b interface{}) string {
-		return " diff"
-	}
-	asDiff := got.NewWith(m, opts)
-	asDiff.Eq("a", "b")
-	m.check(`"a" ⦗not ==⦘ "b" diff`)
-
 	{
 		count := as.Count(2)
 		count()
 		m.cleanup()
-		m.check(`Should count 2 times, but got 1`)
+		m.check(` ⦗should count⦘ 2 ⦗times, but got⦘ 1`)
 
 		count = as.Count(1)
 		wg := sync.WaitGroup{}
@@ -221,6 +214,27 @@ func TestAssertionErr(t *testing.T) {
 		}()
 		wg.Wait()
 		m.cleanup()
-		m.check(`Should count 1 times, but got 2`)
+		m.check(` ⦗should count⦘ 1 ⦗times, but got⦘ 2`)
 	}
+}
+
+func TestCustomAssertionError(t *testing.T) {
+	m := &mock{t: t}
+
+	g := got.New(m)
+	g.Eq(1, 2)
+	m.check("\x1b[32m1\x1b[0m\x1b[31m ⦗not ==⦘ \x1b[0m\x1b[32m2\x1b[0m\n\n1   \x1b[31m- \x1b[0m\x1b[31m1\n\x1b[0m  1 \x1b[32m+ \x1b[0m\x1b[32m2\n\x1b[0m\n")
+
+	g.ErrorHandler = got.NewDefaultAssertionError(false, true)
+	g.Eq(1, 2)
+	m.check("1 ⦗not ==⦘ 2\n\n1   - 1\n  1 + 2\n\n")
+
+	g.ErrorHandler = got.AssertionErrorReport(func(c *got.AssertionCtx) string {
+		if c.Type == got.AssertionEq {
+			return "custom eq"
+		}
+		return ""
+	})
+	g.Eq(1, 2)
+	m.check("custom eq")
 }

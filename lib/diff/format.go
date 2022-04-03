@@ -30,7 +30,11 @@ func Format(ts []*Token, theme func(Type) gop.Color) string {
 	out := ""
 
 	for _, t := range ts {
-		out += gop.ColorStr(theme(t.Type), t.Literal)
+		s := t.Literal
+		if theme(t.Type) != gop.None {
+			s = gop.StripColor(s)
+		}
+		out += gop.ColorStr(theme(t.Type), s)
 	}
 
 	return out

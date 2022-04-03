@@ -6,9 +6,6 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-
-	"github.com/ysmood/got/lib/diff"
-	"github.com/ysmood/got/lib/gop"
 )
 
 // Testable interface. Usually, you use *testing.T as it.
@@ -31,73 +28,10 @@ type G struct {
 	Utils
 }
 
-// Options for Assertion
-type Options struct {
-	// Dump a value to human readable string
-	Dump func(interface{}) string
-
-	// Format keywords in the assertion message.
-	// Such as color it for CLI output.
-	Keyword func(string) string
-
-	// Diff function for Assertions.Eq
-	Diff func(a, b interface{}) string
-}
-
-func defaults() Options {
-	if gop.NoColor || !gop.SupportsColor {
-		return NoColor()
-	}
-	return Defaults()
-}
-
-// Defaults for Options
-func Defaults() Options {
-	return Options{
-		func(v interface{}) string {
-			return gop.F(v)
-		},
-		func(s string) string {
-			return gop.ColorStr(gop.Red, " ⦗"+s+"⦘ ")
-		},
-		func(a, b interface{}) string {
-			df := diff.Diff(gop.Plain(a), gop.Plain(b))
-			return "\n\n" + df + "\n"
-		},
-	}
-}
-
-// NoColor defaults for Options
-func NoColor() Options {
-	return Options{
-		func(v interface{}) string {
-			return gop.Plain(v)
-		},
-		func(s string) string {
-			return " ⦗" + s + "⦘ "
-		},
-		func(a, b interface{}) string {
-			df := diff.Diff(gop.Plain(a), gop.Plain(b))
-			return "\n\n" + df + "\n"
-		},
-	}
-}
-
-// NoDiff returns a clone with diff output disabled.
-func (opts Options) NoDiff() Options {
-	opts.Diff = nil
-	return opts
-}
-
-// Setup returns a helper to init G instance.
+// Setup returns a helper to init G instance
 func Setup(init func(g G)) func(t Testable) G {
-	return SetupWith(defaults(), init)
-}
-
-// SetupWith options
-func SetupWith(opts Options, init func(g G)) func(t Testable) G {
 	return func(t Testable) G {
-		g := NewWith(t, opts)
+		g := New(t)
 		if init != nil {
 			init(g)
 		}
@@ -110,16 +44,11 @@ func T(t Testable) G {
 	return New(t)
 }
 
-// New G instance.
+// New G instance
 func New(t Testable) G {
-	return NewWith(t, defaults())
-}
-
-// NewWith G with options
-func NewWith(t Testable, opts Options) G {
 	return G{
 		t,
-		Assertions{t, false, "", opts.Dump, opts.Keyword, opts.Diff},
+		Assertions{Testable: t, ErrorHandler: NewDefaultAssertionError(true, true)},
 		Utils{t},
 	}
 }
