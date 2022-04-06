@@ -213,15 +213,18 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 	case reflect.Chan:
 		if v.Cap() == 0 {
 			return []*Token{{Func, "make"}, {ParenOpen, "("},
-				{Chan, "chan"}, typeName(v.Type().Elem().Name()), {ParenClose, ")"}}
+				{Chan, "chan"}, typeName(v.Type().Elem().Name()), {ParenClose, ")"},
+				{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
 		}
 		return []*Token{{Func, "make"}, {ParenOpen, "("}, {Chan, "chan"},
 			typeName(v.Type().Elem().Name()), {InlineComma, ","},
-			{Number, fmt.Sprintf("%d", v.Cap())}, {ParenClose, ")"}}
+			{Number, fmt.Sprintf("%d", v.Cap())}, {ParenClose, ")"},
+			{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
 
 	case reflect.Func:
 		return []*Token{{ParenOpen, "("}, {Func, v.Type().String()},
-			{ParenClose, ")"}, {ParenOpen, "("}, {Nil, "nil"}, {ParenClose, ")"}}
+			{ParenClose, ")"}, {ParenOpen, "("}, {Nil, "nil"}, {ParenClose, ")"},
+			{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
 
 	case reflect.Ptr:
 		return tokenizePtr(sn, p, v)

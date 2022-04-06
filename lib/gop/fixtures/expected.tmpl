@@ -18,9 +18,9 @@ gop.Arr/* len=36 cap=36 */{
         2,
         0,
     },
-    make(chan int),
-    make(chan string, 3),
-    (func(string) int)(nil),
+    make(chan int)/* {{.chan}} */,
+    make(chan string, 3)/* {{.chan3}} */,
+    (func(string) int)(nil)/* {{.fn}} */,
     map[interface {}]interface {}/* len=2 */{
         "a": 1,
         "test": 10,

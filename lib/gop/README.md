@@ -39,6 +39,7 @@ func main() {
             test: 13,
         },
         "json": `{"a"   : 1}`,
+        "func": func(int) int { return 0 },
     }
     val["slice"].([]interface{})[1] = val["slice"]
 
@@ -50,10 +51,11 @@ The output will be something like:
 
 ```go
 // 2022-03-31T13:34:23.605474+08:00 example/main.go:25 (main.main)
-gop.Obj/* len=9 */{
+gop.Obj/* len=10 */{
     "bool": true,
     "bytes": []byte("abc"),
-    "chan": make(chan int, 1),
+    "chan": make(chan int, 1)/* 0xc00005c070 */,
+    "func": (func(int) int)(nil)/* 0x10e1ce0 */,
     "json": gop.JSONStr(gop.Obj{
         "a": float64(1),
     }, "{\"a\"   : 1}"),

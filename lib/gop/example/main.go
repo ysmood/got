@@ -19,6 +19,7 @@ func main() {
 			test: 13,
 		},
 		"json": `{"a"   : 1}`,
+		"func": func(int) int { return 0 },
 	}
 	val["slice"].([]interface{})[1] = val["slice"]
 
