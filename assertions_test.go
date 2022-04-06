@@ -199,9 +199,17 @@ got_test.data/* len=2 */{
 		}()
 		as.E(1, errors.New("E"))
 	}()
-	m.check(` ⦗last argument⦘ &errors.errorString{
+	m.check(`
+ ⦗last argument⦘ 
+
+&errors.errorString{
     s: "E",
-} ⦗should be⦘ nil`)
+}
+
+ ⦗should be⦘ 
+
+nil
+`)
 
 	as.Is(1, 2.2)
 	m.check("1 ⦗should be kind of⦘ float64(2.2)")

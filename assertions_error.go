@@ -166,7 +166,7 @@ func NewDefaultAssertionError(enableColor, enableDiff bool) AssertionError {
 		},
 		AssertionNil: func(details ...interface{}) string {
 			last := f(details[0])
-			return k("last argument") + last + k("should be") + f(nil)
+			return j(k("last argument"), last, k("should be"), f(nil))
 		},
 		AssertionNoArgs: func(_ ...interface{}) string {
 			return k("no arguments received")
@@ -193,7 +193,7 @@ func NewDefaultAssertionError(enableColor, enableDiff bool) AssertionError {
 		AssertionRegex: func(details ...interface{}) string {
 			pattern := f(details[0])
 			str := f(details[1])
-			return pattern + k("should match") + str
+			return j(pattern, k("should match"), str)
 		},
 		AssertionHas: func(details ...interface{}) string {
 			container := f(details[0])
