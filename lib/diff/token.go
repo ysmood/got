@@ -12,6 +12,9 @@ const (
 	// LineNum type
 	LineNum Type = iota
 
+	// Newline type
+	Newline
+
 	// ChunkStart type
 	ChunkStart
 	// ChunkEnd type
@@ -67,7 +70,8 @@ func TokenizeText(x, y string) []*Token {
 			ts = append(ts,
 				&Token{LineNum, fmt.Sprintf(xNum, i+1)},
 				&Token{DelSymbol, "- "},
-				&Token{DelLine, string(xls[i].(*Line).str) + "\n"})
+				&Token{DelLine, string(xls[i].(*Line).str)},
+				&Token{Newline, "\n"})
 			i++
 		} else if j < len(yls) && (k == len(s) || !equal(yls[j], s[k])) {
 			ts, chunkStarted = tokenizeChunk(true, chunkStarted, ts)
@@ -75,7 +79,8 @@ func TokenizeText(x, y string) []*Token {
 			ts = append(ts,
 				&Token{LineNum, fmt.Sprintf(yNum, j+1)},
 				&Token{AddSymbol, "+ "},
-				&Token{AddLine, string(yls[j].(*Line).str) + "\n"})
+				&Token{AddLine, string(yls[j].(*Line).str)},
+				&Token{Newline, "\n"})
 			j++
 		} else {
 			ts, chunkStarted = tokenizeChunk(false, chunkStarted, ts)

@@ -29,6 +29,31 @@ const (
 	Cyan
 	// White type
 	White
+	// Forground type
+	Forground
+	// Default type
+	Default
+
+	// BgBlack type
+	BgBlack
+	// BgRed type
+	BgRed
+	// BgGreen type
+	BgGreen
+	// BgYellow type
+	BgYellow
+	// BgBlue type
+	BgBlue
+	// BgMagenta type
+	BgMagenta
+	// BgCyan type
+	BgCyan
+	// BgWhite type
+	BgWhite
+	// Background type
+	Background
+	// BgDefault type
+	BgDefault
 
 	// None type
 	None Color = -1

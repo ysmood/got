@@ -8,9 +8,9 @@ import (
 var DefaultTheme = func(t Type) gop.Color {
 	switch t {
 	case AddSymbol, AddLine:
-		return gop.Green
+		return gop.BgGreen
 	case DelSymbol, DelLine:
-		return gop.Red
+		return gop.BgRed
 	}
 	return gop.None
 }
