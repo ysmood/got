@@ -56,7 +56,14 @@ func TestAssertion(t *testing.T) {
 	as.NotZero(time.Now())
 
 	as.Regex(`\d\d`, "10")
+	as.Has(`test`, 'e')
 	as.Has(`test`, "es")
+	as.Has(`test`, []byte("es"))
+	as.Has([]byte(`test`), "es")
+	as.Has([]byte(`test`), []byte("es"))
+	as.Has([]int{1, 2, 3}, 2)
+	as.Has([3]int{1, 2, 3}, 2)
+	as.Has(map[int]int{1: 4, 2: 5, 3: 6}, 5)
 
 	as.Len([]int{1, 2}, 2)
 

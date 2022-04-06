@@ -200,13 +200,35 @@ func (as Assertions) Regex(pattern, str string) {
 	as.err(AssertionRegex, pattern, str)
 }
 
-// Has asserts that container contains str
-func (as Assertions) Has(container, str string) {
+// Has asserts that container has item.
+// The container can be a string, []byte, slice, array, or map
+func (as Assertions) Has(container, item interface{}) {
 	as.Helper()
-	if strings.Contains(container, str) {
+
+	if c, ok := container.(string); ok && hasStr(c, item) {
+		return
+	} else if c, ok := container.([]byte); ok && hasStr(string(c), item) {
 		return
 	}
-	as.err(AssertionHas, container, str)
+
+	cv := reflect.Indirect(reflect.ValueOf(container))
+	switch cv.Kind() {
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < cv.Len(); i++ {
+			if utils.Compare(cv.Index(i).Interface(), item) == 0 {
+				return
+			}
+		}
+	case reflect.Map:
+		keys := cv.MapKeys()
+		for _, k := range keys {
+			if utils.Compare(cv.MapIndex(k).Interface(), item) == 0 {
+				return
+			}
+		}
+	}
+
+	as.err(AssertionHas, container, item)
 }
 
 // Len asserts that the length of list equals l
@@ -350,4 +372,21 @@ func isNil(x interface{}) (bool, bool) {
 	}
 
 	return false, false
+}
+
+func hasStr(c string, item interface{}) bool {
+	if it, ok := item.(string); ok {
+		if strings.Contains(c, it) {
+			return true
+		}
+	} else if it, ok := item.([]byte); ok {
+		if strings.Contains(c, string(it)) {
+			return true
+		}
+	} else if it, ok := item.(rune); ok {
+		if strings.ContainsRune(c, it) {
+			return true
+		}
+	}
+	return false
 }
