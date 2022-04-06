@@ -97,13 +97,19 @@ func TestAssertionErr(t *testing.T) {
 	m.check("not equal\n1 ⦗not ==⦘ float64(2)")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
-	m.check(`got_test.data/* len=2 */{
+	m.check(`
+got_test.data/* len=2 */{
     A: 1,
     S: "a",
-} ⦗not ==⦘ got_test.data/* len=2 */{
+}
+
+ ⦗not ==⦘ 
+
+got_test.data/* len=2 */{
     A: 1,
     S: "b",
-}`)
+}
+`)
 
 	as.Eq(true, "a&")
 	m.check(`true ⦗not ==⦘ "a&"`)
@@ -116,6 +122,18 @@ func TestAssertionErr(t *testing.T) {
 
 	as.Equal(1, 1.0)
 	m.check("1 ⦗not ==⦘ float64(1)")
+	as.Equal([]int{1}, []int{2})
+	m.check(`
+[]int/* len=1 cap=1 */{
+    1,
+}
+
+ ⦗not ==⦘ 
+
+[]int/* len=1 cap=1 */{
+    2,
+}
+`)
 
 	as.Neq(1, 1)
 	m.check("1 ⦗==⦘ 1")
@@ -188,19 +206,37 @@ func TestAssertionErr(t *testing.T) {
 	as.Is(1, 2.2)
 	m.check("1 ⦗should be kind of⦘ float64(2.2)")
 	as.Is(errors.New("a"), errors.New("b"))
-	m.check(`&errors.errorString{
+	m.check(`
+&errors.errorString{
     s: "a",
-} ⦗should in chain of⦘ &errors.errorString{
+}
+
+ ⦗should in chain of⦘ 
+
+&errors.errorString{
     s: "b",
-}`)
+}
+`)
 	as.Is(nil, errors.New("a"))
-	m.check(`nil ⦗should be kind of⦘ &errors.errorString{
+	m.check(`
+nil
+
+ ⦗should be kind of⦘ 
+
+&errors.errorString{
     s: "a",
-}`)
+}
+`)
 	as.Is(errors.New("a"), nil)
-	m.check(`&errors.errorString{
+	m.check(`
+&errors.errorString{
     s: "a",
-} ⦗should be kind of⦘ nil`)
+}
+
+ ⦗should be kind of⦘ 
+
+nil
+`)
 
 	{
 		count := as.Count(2)
@@ -229,12 +265,47 @@ func TestCustomAssertionError(t *testing.T) {
 	m := &mock{t: t}
 
 	g := got.New(m)
-	g.Eq(1, 2)
-	m.check("\x1b[32m1\x1b[0m\x1b[31m ⦗not ==⦘ \x1b[0m\x1b[32m2\x1b[0m\n\n1   \x1b[31m- \x1b[0m\x1b[31m1\n\x1b[0m  1 \x1b[32m+ \x1b[0m\x1b[32m2\n\x1b[0m\n")
+	g.Eq([]int{1, 2}, []int{1, 3})
+	m.check(`
+[]int/* len=2 cap=2 */{
+    1,
+    2,
+}
+
+ ⦗not ==⦘ 
+
+[]int/* len=2 cap=2 */{
+    1,
+    3,
+}
+
+1 1   []int/* len=2 cap=2 */{
+2 2       1,
+3   -     2,
+  3 +     3,
+4 4   }
+
+`)
 
 	g.ErrorHandler = got.NewDefaultAssertionError(false, true)
-	g.Eq(1, 2)
-	m.check("1 ⦗not ==⦘ 2\n\n1   - 1\n  1 + 2\n\n")
+	g.Eq([]int{1}, []int{2})
+	m.check(`
+[]int/* len=1 cap=1 */{
+    1,
+}
+
+ ⦗not ==⦘ 
+
+[]int/* len=1 cap=1 */{
+    2,
+}
+
+1 1   []int/* len=1 cap=1 */{
+2   -     1,
+  2 +     2,
+3 3   }
+
+`)
 
 	g.ErrorHandler = got.AssertionErrorReport(func(c *got.AssertionCtx) string {
 		if c.Type == got.AssertionEq {

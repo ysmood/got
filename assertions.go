@@ -66,10 +66,10 @@ func (as Assertions) Neq(x, y interface{}) {
 // For loose type comparison use Assertions.Eq, such as compare float 1.0 and integer 1 .
 func (as Assertions) Equal(x, y interface{}) {
 	as.Helper()
-	if x == y {
+	if reflect.DeepEqual(x, y) {
 		return
 	}
-	as.err(AssertionEqual, x, y)
+	as.err(AssertionEq, x, y)
 }
 
 // Gt asserts that x is greater than y.

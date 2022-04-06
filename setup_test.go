@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ysmood/got"
+	"github.com/ysmood/got/lib/gop"
 )
 
 var setup = got.Setup(func(g got.G) {
@@ -75,9 +76,9 @@ func (m *mock) check(expected string) {
 		m.t.Error("should fail")
 	}
 
-	if m.msg != expected {
-		fmt.Printf("%#v", m.msg)
-		m.t.Errorf("\n\n[[[msg]]]\n\n%s\n\n[[[doesn't equal]]]\n\n%s\n\n", m.msg, expected)
+	msg := gop.StripColor(m.msg)
+	if msg != expected {
+		m.t.Errorf("\n\n[[[msg]]]\n\n%s\n\n[[[doesn't equal]]]\n\n%s\n\n", msg, expected)
 	}
 
 	m.failed = false

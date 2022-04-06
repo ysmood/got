@@ -100,5 +100,5 @@ func TestTwoLines(t *testing.T) {
 
 func TestColor(t *testing.T) {
 	g := setup(t)
-	g.Eq(diff.Diff("a", "b"), "1   \x1b[31m- \x1b[0m\x1b[31ma\n\x1b[0m  1 \x1b[32m+ \x1b[0m\x1b[32mb\n\x1b[0m")
+	g.Eq(diff.Diff("a", "b"), "1   \x1b[41m- \x1b[0m\x1b[41ma\x1b[0m\n  1 \x1b[42m+ \x1b[0m\x1b[42mb\x1b[0m\n")
 }
