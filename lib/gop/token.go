@@ -131,7 +131,7 @@ func Base64(s string) []byte {
 }
 
 // Time from parsing s
-func Time(s string) time.Time {
+func Time(s string, monotonic int) time.Time {
 	t, _ := time.Parse(time.RFC3339Nano, s)
 	return t
 }
@@ -387,9 +387,10 @@ func tokenizeByte(t *Token, b byte) []*Token {
 }
 
 func tokenizeTime(t time.Time) []*Token {
+	ext := GetPrivateFieldByName(reflect.ValueOf(t), "ext").Int()
 	ts := []*Token{{Func, "gop.Time"}, {ParenOpen, "("}}
 	ts = append(ts, &Token{String, t.Format(time.RFC3339Nano)})
-	ts = append(ts, &Token{ParenClose, ")"})
+	ts = append(ts, &Token{InlineComma, ","}, &Token{Number, fmt.Sprintf("%d", ext)}, &Token{ParenClose, ")"})
 	return ts
 }
 

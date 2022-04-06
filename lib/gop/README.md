@@ -50,12 +50,12 @@ func main() {
 The output will be something like:
 
 ```go
-// 2022-03-31T13:34:23.605474+08:00 example/main.go:25 (main.main)
+// 2022-04-07T00:16:25.460227+08:00 example/main.go:26 (main.main)
 gop.Obj/* len=10 */{
     "bool": true,
     "bytes": []byte("abc"),
-    "chan": make(chan int, 1)/* 0xc00005c070 */,
-    "func": (func(int) int)(nil)/* 0x10e1ce0 */,
+    "chan": make(chan int, 1)/* 0xc00016e000 */,
+    "func": (func(int) int)(nil)/* 0x10e36c0 */,
     "json": gop.JSONStr(gop.Obj{
         "a": float64(1),
     }, "{\"a\"   : 1}"),
@@ -69,6 +69,6 @@ line two`/* len=25 */,
     "struct": struct { test int32 }{
         test: int32(13),
     },
-    "time": gop.Time(`2022-03-31T13:34:23.605076+08:00`),
+    "time": gop.Time(`2022-04-07T00:16:25.459776+08:00`, 2956128),
 }
 ```

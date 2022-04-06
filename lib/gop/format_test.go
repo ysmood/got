@@ -168,7 +168,7 @@ func TestConvertors(t *testing.T) {
 
 	g.Eq(gop.Base64(bs), []byte(s))
 	now := time.Now()
-	g.Eq(gop.Time(now.Format(time.RFC3339Nano)), now)
+	g.Eq(gop.Time(now.Format(time.RFC3339Nano), 1234), now)
 	g.Eq(gop.Duration("10m"), 10*time.Minute)
 
 	g.Eq(gop.JSONStr(nil, "[1, 2]"), "[1, 2]")
@@ -179,5 +179,8 @@ func TestGetPrivateFieldErr(t *testing.T) {
 	g := got.New(t)
 	g.Panic(func() {
 		gop.GetPrivateField(reflect.ValueOf(1), 0)
+	})
+	g.Panic(func() {
+		gop.GetPrivateFieldByName(reflect.ValueOf(1), "test")
 	})
 }
