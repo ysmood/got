@@ -1,7 +1,9 @@
 package gop
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
@@ -28,4 +30,9 @@ func GetPrivateFieldByName(v reflect.Value, name string) reflect.Value {
 	copied.Set(v)
 	f := copied.FieldByName(name)
 	return reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
+}
+
+// compare returns the float value of x minus y
+func compare(x, y interface{}) int {
+	return strings.Compare(fmt.Sprintf("%#v", x), fmt.Sprintf("%#v", y))
 }

@@ -72,7 +72,7 @@ func TestHelper(t *testing.T) {
 		ut.Eq(ut.Req("", s.URL("/a")).String(), "ok")
 		ut.Eq(ut.Req("", s.URL("/a")).String(), "ok")
 		res := ut.Req("", s.URL("/b"))
-		ut.Eq(res.JSON(), []interface{}{"ok", 1})
+		ut.Eq(res.JSON(), []interface{}{"ok", float64(1)})
 		ut.Has(res.Header.Get("Content-Type"), "application/json")
 		ut.Has(ut.Req("", s.URL("/c")).String(), "ysmood/got")
 		ut.Req(http.MethodPost, s.URL("/d"), 1)

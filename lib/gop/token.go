@@ -10,8 +10,6 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
-
-	"github.com/ysmood/got/lib/utils"
 )
 
 // LongStringLen is the length of that will be treated as long string
@@ -290,7 +288,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 		ts = append(ts, typeName(v.Type().String()))
 		keys := v.MapKeys()
 		sort.Slice(keys, func(i, j int) bool {
-			return utils.Compare(keys[i], keys[j]) < 0
+			return compare(keys[i].Interface(), keys[j].Interface()) < 0
 		})
 		if len(keys) > 1 {
 			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(keys))})

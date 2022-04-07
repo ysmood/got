@@ -1,16 +1,17 @@
 package utils
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/ysmood/got/lib/gop"
 )
 
 var float64Type = reflect.TypeOf(0.0)
 
-// Compare returns the float value of x minus y
-func Compare(x, y interface{}) float64 {
+// SmartCompare returns the float value of x minus y
+func SmartCompare(x, y interface{}) float64 {
 	if reflect.DeepEqual(x, y) {
 		return 0
 	}
@@ -30,8 +31,10 @@ func Compare(x, y interface{}) float64 {
 		}
 	}
 
-	sa := fmt.Sprintf("%#v", x)
-	sb := fmt.Sprintf("%#v", y)
+	return Compare(x, y)
+}
 
-	return float64(strings.Compare(sa, sb))
+// Compare returns the float value of x minus y
+func Compare(x, y interface{}) float64 {
+	return float64(strings.Compare(gop.Plain(x), gop.Plain(y)))
 }

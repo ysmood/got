@@ -42,7 +42,7 @@ func (as Assertions) Must() Assertions {
 // For strict value and type comparison use Assertions.Equal .
 func (as Assertions) Eq(x, y interface{}) {
 	as.Helper()
-	if utils.Compare(x, y) == 0 {
+	if utils.SmartCompare(x, y) == 0 {
 		return
 	}
 	as.err(AssertionEq, x, y)
@@ -51,7 +51,7 @@ func (as Assertions) Eq(x, y interface{}) {
 // Neq asserts that x not equals y even when converted to the same type.
 func (as Assertions) Neq(x, y interface{}) {
 	as.Helper()
-	if utils.Compare(x, y) != 0 {
+	if utils.SmartCompare(x, y) != 0 {
 		return
 	}
 
@@ -66,7 +66,7 @@ func (as Assertions) Neq(x, y interface{}) {
 // For loose type comparison use Assertions.Eq, such as compare float 1.0 and integer 1 .
 func (as Assertions) Equal(x, y interface{}) {
 	as.Helper()
-	if reflect.DeepEqual(x, y) {
+	if utils.Compare(x, y) == 0 {
 		return
 	}
 	as.err(AssertionEq, x, y)
@@ -75,7 +75,7 @@ func (as Assertions) Equal(x, y interface{}) {
 // Gt asserts that x is greater than y.
 func (as Assertions) Gt(x, y interface{}) {
 	as.Helper()
-	if utils.Compare(x, y) > 0 {
+	if utils.SmartCompare(x, y) > 0 {
 		return
 	}
 	as.err(AssertionGt, x, y)
@@ -84,7 +84,7 @@ func (as Assertions) Gt(x, y interface{}) {
 // Gte asserts that x is greater than or equal to y.
 func (as Assertions) Gte(x, y interface{}) {
 	as.Helper()
-	if utils.Compare(x, y) >= 0 {
+	if utils.SmartCompare(x, y) >= 0 {
 		return
 	}
 	as.err(AssertionGte, x, y)
@@ -93,7 +93,7 @@ func (as Assertions) Gte(x, y interface{}) {
 // Lt asserts that x is less than y.
 func (as Assertions) Lt(x, y interface{}) {
 	as.Helper()
-	if utils.Compare(x, y) < 0 {
+	if utils.SmartCompare(x, y) < 0 {
 		return
 	}
 	as.err(AssertionLt, x, y)
@@ -102,7 +102,7 @@ func (as Assertions) Lt(x, y interface{}) {
 // Lte asserts that x is less than or equal to b.
 func (as Assertions) Lte(x, y interface{}) {
 	as.Helper()
-	if utils.Compare(x, y) <= 0 {
+	if utils.SmartCompare(x, y) <= 0 {
 		return
 	}
 	as.err(AssertionLte, x, y)
@@ -111,7 +111,7 @@ func (as Assertions) Lte(x, y interface{}) {
 // InDelta asserts that x and y are within the delta of each other.
 func (as Assertions) InDelta(x, y interface{}, delta float64) {
 	as.Helper()
-	if math.Abs(utils.Compare(x, y)) <= delta {
+	if math.Abs(utils.SmartCompare(x, y)) <= delta {
 		return
 	}
 	as.err(AssertionInDelta, x, y, delta)
@@ -215,14 +215,14 @@ func (as Assertions) Has(container, item interface{}) {
 	switch cv.Kind() {
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < cv.Len(); i++ {
-			if utils.Compare(cv.Index(i).Interface(), item) == 0 {
+			if utils.SmartCompare(cv.Index(i).Interface(), item) == 0 {
 				return
 			}
 		}
 	case reflect.Map:
 		keys := cv.MapKeys()
 		for _, k := range keys {
-			if utils.Compare(cv.MapIndex(k).Interface(), item) == 0 {
+			if utils.SmartCompare(cv.MapIndex(k).Interface(), item) == 0 {
 				return
 			}
 		}
