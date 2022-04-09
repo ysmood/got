@@ -70,7 +70,7 @@ func TokenizeText(x, y string) []*Token {
 			ts = append(ts,
 				&Token{LineNum, fmt.Sprintf(xNum, i+1)},
 				&Token{DelSymbol, "- "},
-				&Token{DelLine, string(xls[i].(*Line).str)},
+				&Token{DelLine, xls[i].(*Line).str},
 				&Token{Newline, "\n"})
 			i++
 		} else if j < len(yls) && (k == len(s) || !equal(yls[j], s[k])) {
@@ -79,7 +79,7 @@ func TokenizeText(x, y string) []*Token {
 			ts = append(ts,
 				&Token{LineNum, fmt.Sprintf(yNum, j+1)},
 				&Token{AddSymbol, "+ "},
-				&Token{AddLine, string(yls[j].(*Line).str)},
+				&Token{AddLine, yls[j].(*Line).str},
 				&Token{Newline, "\n"})
 			j++
 		} else {
@@ -88,7 +88,7 @@ func TokenizeText(x, y string) []*Token {
 			ts = append(ts,
 				&Token{LineNum, fmt.Sprintf(sNum, i+1, j+1)},
 				&Token{SameSymbol, "  "},
-				&Token{SameLine, string(s[k].(*Line).str) + "\n"})
+				&Token{SameLine, s[k].(*Line).str + "\n"})
 			i, j, k = i+1, j+1, k+1
 		}
 	}

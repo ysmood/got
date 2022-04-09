@@ -52,7 +52,7 @@ var _ Comparable = &Line{}
 // Line of a string for fast comparison.
 type Line struct {
 	hash []byte
-	str  []byte
+	str  string
 }
 
 // NewLine from bytes
@@ -61,7 +61,7 @@ func NewLine(b []byte) *Line {
 	sum := md5.Sum(b)
 	return &Line{
 		hash: sum[:],
-		str:  b,
+		str:  string(b),
 	}
 }
 
@@ -92,7 +92,7 @@ func NewText(s string) Text {
 func (s Text) String() string {
 	out := []string{}
 	for _, c := range s {
-		out = append(out, string(c.(*Line).str))
+		out = append(out, c.(*Line).str)
 	}
 	return strings.Join(out, "\n")
 }
