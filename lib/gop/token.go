@@ -156,7 +156,7 @@ func (p path) tokens() []*Token {
 	sn := map[uintptr]path{}
 	ts := []*Token{}
 	for i, seg := range p {
-		ts = append(ts, tokenize(sn, p, reflect.ValueOf(seg))...)
+		ts = append(ts, tokenize(sn, []interface{}{}, reflect.ValueOf(seg))...)
 		if i < len(p)-1 {
 			ts = append(ts, &Token{InlineComma, ","})
 		}
