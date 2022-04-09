@@ -1,4 +1,4 @@
-gop.Arr/* len=36 cap=36 */{
+gop.Arr/* len=37 cap=37 */{
     nil,
     gop.Arr/* len=4 cap=4 */{
         true,
@@ -18,8 +18,9 @@ gop.Arr/* len=36 cap=36 */{
         2,
         0,
     },
-    make(chan int)/* {{.chan}} */,
-    make(chan string, 3)/* {{.chan3}} */,
+    make(chan int)/* {{.ch1}} */,
+    make(chan string, 3)/* {{.ch2}} */,
+    make(chan struct {})/* {{.ch3}} */,
     (func(string) int)(nil)/* {{.fn}} */,
     map[interface {}]interface {}/* len=2 */{
         "a": 1,

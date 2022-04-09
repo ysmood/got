@@ -211,7 +211,7 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 	case reflect.Chan:
 		if v.Cap() == 0 {
 			return []*Token{{Func, "make"}, {ParenOpen, "("},
-				{Chan, "chan"}, typeName(v.Type().Elem().Name()), {ParenClose, ")"},
+				{Chan, "chan"}, typeName(v.Type().Elem().String()), {ParenClose, ")"},
 				{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
 		}
 		return []*Token{{Func, "make"}, {ParenOpen, "("}, {Chan, "chan"},

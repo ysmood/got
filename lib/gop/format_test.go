@@ -22,8 +22,9 @@ func TestTokenize(t *testing.T) {
 	ref := "test"
 	timeStamp, _ := time.Parse(time.RFC3339Nano, "2021-08-28T08:36:36.807908+08:00")
 	fn := func(string) int { return 10 }
-	ch := make(chan int)
-	ch3 := make(chan string, 3)
+	ch1 := make(chan int)
+	ch2 := make(chan string, 3)
+	ch3 := make(chan struct{})
 
 	v := []interface{}{
 		nil,
@@ -32,7 +33,8 @@ func TestTokenize(t *testing.T) {
 		float64(100.121111133),
 		complex64(1 + 2i), complex128(1 + 2i),
 		[3]int{1, 2},
-		ch,
+		ch1,
+		ch2,
 		ch3,
 		fn,
 		map[interface{}]interface{}{
@@ -74,10 +76,11 @@ func TestTokenize(t *testing.T) {
 	tpl := template.New("")
 	g.E(tpl.Parse(g.Read(g.Open(false, "fixtures/expected.tmpl")).String()))
 	g.E(tpl.Execute(expected, gop.Obj{
-		"chan":  fmt.Sprintf("0x%x", reflect.ValueOf(ch).Pointer()),
-		"chan3": fmt.Sprintf("0x%x", reflect.ValueOf(ch3).Pointer()),
-		"fn":    fmt.Sprintf("0x%x", reflect.ValueOf(fn).Pointer()),
-		"ptr":   fmt.Sprintf("%v", &ref),
+		"ch1": fmt.Sprintf("0x%x", reflect.ValueOf(ch1).Pointer()),
+		"ch2": fmt.Sprintf("0x%x", reflect.ValueOf(ch2).Pointer()),
+		"ch3": fmt.Sprintf("0x%x", reflect.ValueOf(ch3).Pointer()),
+		"fn":  fmt.Sprintf("0x%x", reflect.ValueOf(fn).Pointer()),
+		"ptr": fmt.Sprintf("%v", &ref),
 	}))
 
 	g.Nil(parser.ParseExpr(out))
