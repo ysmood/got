@@ -49,24 +49,45 @@ func TestDisconnectedChunks(t *testing.T) {
 		strings.ReplaceAll("x b c d f g h i x k l m n", " ", "\n"),
 	)
 
+	lines := diff.ParseTokenLines(ts)
+	lines = diff.Narrow(1, lines)
+	ts = diff.SpreadTokenLines(lines)
+
 	df := diff.Format(ts, diff.NoTheme)
 
 	g.Eq(df, ""+
+		"@@ diff chunk @@\n"+
 		"01    - a\n"+
 		"   01 + x\n"+
 		"02 02   b\n"+
-		"03 03   c\n"+
-		"04 04   d\n"+
-		"05 05   f\n"+
-		"06 06   g\n"+
-		"07 07   h\n"+
+		"\n"+
+		"@@ diff chunk @@\n"+
 		"08 08   i\n"+
 		"09    - j\n"+
 		"   09 + x\n"+
 		"10 10   k\n"+
-		"11 11   l\n"+
-		"12 12   m\n"+
-		"13 13   n\n"+
+		"\n"+
+		"")
+}
+
+func TestChunks0(t *testing.T) {
+	g := setup(t)
+	ts := diff.TokenizeText(
+		strings.ReplaceAll("a b c", " ", "\n"),
+		strings.ReplaceAll("a x c", " ", "\n"),
+	)
+
+	lines := diff.ParseTokenLines(ts)
+	lines = diff.Narrow(-1, lines)
+	ts = diff.SpreadTokenLines(lines)
+
+	df := diff.Format(ts, diff.NoTheme)
+
+	g.Eq(df, ""+
+		"@@ diff chunk @@\n"+
+		"2   - b\n"+
+		"  2 + x\n"+
+		"\n"+
 		"")
 }
 
@@ -84,21 +105,29 @@ func TestNoDifference(t *testing.T) {
 
 func TestTwoLines(t *testing.T) {
 	g := setup(t)
-	x, y := diff.TokenizeLine("abc", "acx")
 
-	g.Eq(x, []*diff.Token{
-		{Type: diff.SameWords, Literal: "a"},
-		{Type: diff.DelWords, Literal: "b"},
-		{Type: diff.SameWords, Literal: "c"},
-	})
-	g.Eq(y, []*diff.Token{
-		{Type: diff.SameWords, Literal: "a"},
-		{Type: diff.SameWords, Literal: "c"},
-		{Type: diff.AddWords, Literal: "x"},
-	})
+	x, y := diff.TokenizeLine("abcdfghijklmn", "xxbcdfghixklmn")
+
+	format := func(ts []*diff.Token) string {
+		out := ""
+		for _, t := range ts {
+			switch t.Type {
+			case diff.DelWords:
+				out += "-" + t.Literal
+			case diff.AddWords:
+				out += "+" + t.Literal
+			default:
+				out += "." + t.Literal
+			}
+		}
+		return out
+	}
+
+	g.Eq(format(x), "-a.b.c.d.f.g.h.i-j.k.l.m.n")
+	g.Eq(format(y), "+x+x.b.c.d.f.g.h.i+x.k.l.m.n")
 }
 
 func TestColor(t *testing.T) {
 	g := setup(t)
-	g.Eq(diff.Diff("a", "b"), "1   \x1b[41m- \x1b[0m\x1b[41ma\x1b[0m\n  1 \x1b[42m+ \x1b[0m\x1b[42mb\x1b[0m\n")
+	g.Eq(diff.Diff("abc", "axc"), "\x1b[45m@@ diff chunk @@\x1b[0m\n\x1b[41m1   -\x1b[0m a\x1b[41mb\x1b[0mc\n\x1b[42m  1 +\x1b[0m a\x1b[42mx\x1b[0mc\n\n")
 }

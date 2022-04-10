@@ -59,13 +59,24 @@ const (
 	None Color = -1
 )
 
+var regNewline = regexp.MustCompile(`\r?\n`)
+
 // ColorStr string
 func ColorStr(c Color, s string) string {
 	if NoColor || c == None || !SupportsColor {
 		return s
 	}
 
-	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", c, s)
+	newline := regNewline.FindString(s)
+
+	lines := regNewline.Split(s, -1)
+	out := []string{}
+
+	for _, l := range lines {
+		out = append(out, fmt.Sprintf("\x1b[%dm%s\x1b[0m", c, l))
+	}
+
+	return strings.Join(out, newline)
 }
 
 // SupportsColor returns true if current shell supports ANSI color

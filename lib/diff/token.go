@@ -9,11 +9,10 @@ import (
 type Type int
 
 const (
-	// LineNum type
-	LineNum Type = iota
-
 	// Newline type
-	Newline
+	Newline Type = iota
+	// Space type
+	Space
 
 	// ChunkStart type
 	ChunkStart
@@ -61,39 +60,30 @@ func TokenizeText(x, y string) []*Token {
 	ts := []*Token{}
 
 	xNum, yNum, sNum := numFormat(xls, yls)
-	chunkStarted := false
 
 	for i, j, k := 0, 0, 0; i < len(xls) || j < len(yls); {
 		if i < len(xls) && (k == len(s) || !equal(xls[i], s[k])) {
-			ts, chunkStarted = tokenizeChunk(true, chunkStarted, ts)
-
 			ts = append(ts,
-				&Token{LineNum, fmt.Sprintf(xNum, i+1)},
-				&Token{DelSymbol, "- "},
+				&Token{DelSymbol, fmt.Sprintf(xNum, i+1) + "-"},
+				&Token{Space, " "},
 				&Token{DelLine, xls[i].(*Line).str},
 				&Token{Newline, "\n"})
 			i++
 		} else if j < len(yls) && (k == len(s) || !equal(yls[j], s[k])) {
-			ts, chunkStarted = tokenizeChunk(true, chunkStarted, ts)
-
 			ts = append(ts,
-				&Token{LineNum, fmt.Sprintf(yNum, j+1)},
-				&Token{AddSymbol, "+ "},
+				&Token{AddSymbol, fmt.Sprintf(yNum, j+1) + "+"},
+				&Token{Space, " "},
 				&Token{AddLine, yls[j].(*Line).str},
 				&Token{Newline, "\n"})
 			j++
 		} else {
-			ts, chunkStarted = tokenizeChunk(false, chunkStarted, ts)
-
 			ts = append(ts,
-				&Token{LineNum, fmt.Sprintf(sNum, i+1, j+1)},
-				&Token{SameSymbol, "  "},
+				&Token{SameSymbol, fmt.Sprintf(sNum, i+1, j+1) + " "},
+				&Token{Space, " "},
 				&Token{SameLine, s[k].(*Line).str + "\n"})
 			i, j, k = i+1, j+1, k+1
 		}
 	}
-
-	ts, _ = tokenizeChunk(false, chunkStarted, ts)
 
 	return ts
 }
@@ -106,36 +96,23 @@ func TokenizeLine(x, y string) ([]*Token, []*Token) {
 	s := LCS(xs, ys)
 
 	xTokens := []*Token{}
-	for i, j := 0, 0; i < len(xs); i++ {
-		if j < len(s) && equal(xs[i], s[j]) {
-			xTokens = append(xTokens, &Token{SameWords, string(s[j].(Char))})
-			j++
-		} else {
-			xTokens = append(xTokens, &Token{DelWords, string(xs[i].(Char))})
-		}
-	}
-
 	yTokens := []*Token{}
-	for i, j := 0, 0; i < len(ys); i++ {
-		if j < len(s) && equal(ys[i], s[j]) {
-			yTokens = append(yTokens, &Token{SameWords, string(s[j].(Char))})
+
+	for i, j, k := 0, 0, 0; i < len(xs) || j < len(ys); {
+		if i < len(xs) && (k == len(s) || !equal(xs[i], s[k])) {
+			xTokens = append(xTokens, &Token{DelWords, string(xs[i].(Char))})
+			i++
+		} else if j < len(ys) && (k == len(s) || !equal(ys[j], s[k])) {
+			yTokens = append(yTokens, &Token{AddWords, string(ys[j].(Char))})
 			j++
 		} else {
-			yTokens = append(yTokens, &Token{AddWords, string(ys[i].(Char))})
+			xTokens = append(xTokens, &Token{SameWords, string(s[k].(Char))})
+			yTokens = append(yTokens, &Token{SameWords, string(s[k].(Char))})
+			i, j, k = i+1, j+1, k+1
 		}
 	}
 
 	return xTokens, yTokens
-}
-
-func tokenizeChunk(start bool, started bool, ts []*Token) ([]*Token, bool) {
-	if start && !started {
-		return append(ts, &Token{ChunkStart, ""}), true
-	}
-	if !start && started {
-		return append(ts, &Token{ChunkEnd, ""}), false
-	}
-	return ts, started
 }
 
 func numFormat(x, y []Comparable) (string, string, string) {

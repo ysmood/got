@@ -113,8 +113,7 @@ got_test.data/* len=2 */{
 got_test.data/* len=2 */{
     A: 1,
     S: "b",
-}
-`)
+}`)
 
 	as.Eq(true, "a&")
 	m.check(`true ⦗not ==⦘ "a&"`)
@@ -137,8 +136,7 @@ got_test.data/* len=2 */{
 
 []int/* len=1 cap=1 */{
     2,
-}
-`)
+}`)
 
 	as.Neq(1, 1)
 	m.check("1 ⦗==⦘ 1")
@@ -213,8 +211,7 @@ got_test.data/* len=2 */{
 
  ⦗should be⦘ 
 
-nil
-`)
+nil`)
 
 	as.Is(1, 2.2)
 	m.check("1 ⦗should be kind of⦘ float64(2.2)")
@@ -228,8 +225,7 @@ nil
 
 &errors.errorString{
     s: "b",
-}
-`)
+}`)
 	as.Is(nil, errors.New("a"))
 	m.check(`
 nil
@@ -238,8 +234,7 @@ nil
 
 &errors.errorString{
     s: "a",
-}
-`)
+}`)
 	as.Is(errors.New("a"), nil)
 	m.check(`
 &errors.errorString{
@@ -248,8 +243,7 @@ nil
 
  ⦗should be kind of⦘ 
 
-nil
-`)
+nil`)
 
 	{
 		count := as.Count(2)
@@ -292,6 +286,7 @@ func TestCustomAssertionError(t *testing.T) {
     3,
 }
 
+@@ diff chunk @@
 1 1   []int/* len=2 cap=2 */{
 2 2       1,
 3   -     2,
@@ -317,7 +312,6 @@ func TestCustomAssertionError(t *testing.T) {
 2   -     1,
   2 +     2,
 3 3   }
-
 `)
 
 	g.ErrorHandler = got.AssertionErrorReport(func(c *got.AssertionCtx) string {

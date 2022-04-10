@@ -239,7 +239,7 @@ func (ae *defaultAssertionError) Report(ac *AssertionCtx) string {
 
 func j(args ...string) string {
 	if hasNewline(args...) {
-		return "\n" + strings.Join(args, "\n\n") + "\n"
+		return "\n" + strings.Join(args, "\n\n")
 	}
 	return strings.Join(args, "")
 }
