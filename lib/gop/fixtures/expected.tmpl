@@ -23,8 +23,8 @@ gop.Arr/* len=37 cap=37 */{
     make(chan struct {})/* {{.ch3}} */,
     (func(string) int)(nil)/* {{.fn}} */,
     map[interface {}]interface {}/* len=2 */{
+        `"test"`: 10,
         "a": 1,
-        "test": 10,
     },
     unsafe.Pointer(uintptr({{.ptr}})),
     struct { Int int; str string; M map[int]int }/* len=3 */{
@@ -69,8 +69,8 @@ test`,
     gop.Duration("1h0m0s"),
     gop.JSONStr(gop.Obj{
         "a": float64(1),
-    }, "{\"a\": 1}"),
+    }, `{"a": 1}`),
     gop.JSONBytes(gop.Obj{
         "a": float64(1),
-    }, "{\"a\": 1}"),
+    }, `{"a": 1}`),
 }

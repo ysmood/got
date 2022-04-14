@@ -38,8 +38,8 @@ func TestTokenize(t *testing.T) {
 		ch3,
 		fn,
 		map[interface{}]interface{}{
-			"test": 10,
-			"a":    1,
+			`"test"`: 10,
+			"a":      1,
 		},
 		unsafe.Pointer(&ref),
 		struct {

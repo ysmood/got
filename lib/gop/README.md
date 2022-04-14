@@ -58,7 +58,7 @@ gop.Obj/* len=10 */{
     "func": (func(int) int)(nil)/* 0x10e36c0 */,
     "json": gop.JSONStr(gop.Obj{
         "a": float64(1),
-    }, "{\"a\"   : 1}"),
+    }, `{"a"   : 1}`),
     "lines": `multiline string
 line two`/* len=25 */,
     "number": 1+1i,

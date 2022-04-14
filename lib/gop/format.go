@@ -124,7 +124,7 @@ func oneOf(t Type, list ...Type) bool {
 //     "line one \n" +
 //     "	 line two"
 func readableStr(depth int, s string) string {
-	if ((len(s) > LongStringLen) || strings.Contains(s, "\n")) && !strings.Contains(s, "`") {
+	if ((len(s) > LongStringLen) || strings.Contains(s, "\n") || strings.Contains(s, `"`)) && !strings.Contains(s, "`") {
 		return "`" + s + "`"
 	}
 
