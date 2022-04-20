@@ -15,8 +15,11 @@ var Stdout io.Writer = os.Stdout
 
 const indentUnit = "    "
 
-// DefaultTheme colors for Sprint
-var DefaultTheme = func(t Type) Color {
+// Theme to color values
+type Theme func(t Type) Style
+
+// ThemeDefault colors for Sprint
+var ThemeDefault = func(t Type) Style {
 	switch t {
 	case TypeName:
 		return Cyan
@@ -30,21 +33,21 @@ var DefaultTheme = func(t Type) Color {
 		return Magenta
 	case Comment:
 		return White
-	case Nil:
+	case Nil, Error:
 		return Red
 	default:
 		return None
 	}
 }
 
-// NoTheme colors for Sprint
-var NoTheme = func(t Type) Color {
+// ThemeNone colors for Sprint
+var ThemeNone = func(t Type) Style {
 	return None
 }
 
 // F is a shortcut for Format with color
 func F(v interface{}) string {
-	return Format(Tokenize(v), nil)
+	return Format(Tokenize(v), ThemeDefault)
 }
 
 // P pretty print the values
@@ -58,7 +61,7 @@ func P(values ...interface{}) error {
 	fn := runtime.FuncForPC(pc).Name()
 	cwd, _ := os.Getwd()
 	file, _ = filepath.Rel(cwd, file)
-	tpl := ColorStr(DefaultTheme(Comment), "// %s %s:%d (%s)\n")
+	tpl := Stylize(ThemeDefault(Comment), "// %s %s:%d (%s)\n")
 	_, _ = fmt.Fprintf(Stdout, tpl, time.Now().Format(time.RFC3339Nano), file, line, fn)
 
 	_, err := fmt.Fprintln(Stdout, list...)
@@ -67,15 +70,11 @@ func P(values ...interface{}) error {
 
 // Plain is a shortcut for Format with plain color
 func Plain(v interface{}) string {
-	return Format(Tokenize(v), NoTheme)
+	return Format(Tokenize(v), ThemeNone)
 }
 
 // Format a list of tokens
-func Format(ts []*Token, theme func(Type) Color) string {
-	if theme == nil {
-		theme = DefaultTheme
-	}
-
+func Format(ts []*Token, theme Theme) string {
 	out := ""
 	depth := 0
 	for i, t := range ts {
@@ -90,19 +89,19 @@ func Format(ts []*Token, theme func(Type) Color) string {
 
 		switch t.Type {
 		case SliceOpen, MapOpen, StructOpen:
-			out += ColorStr(color, t.Literal) + "\n"
+			out += Stylize(color, t.Literal) + "\n"
 		case SliceItem, MapKey, StructKey:
 			out += strings.Repeat(indentUnit, depth)
 		case Colon, InlineComma, Chan:
-			out += ColorStr(color, t.Literal) + " "
+			out += Stylize(color, t.Literal) + " "
 		case Comma:
-			out += ColorStr(color, t.Literal) + "\n"
+			out += Stylize(color, t.Literal) + "\n"
 		case SliceClose, MapClose, StructClose:
-			out += strings.Repeat(indentUnit, depth) + ColorStr(color, t.Literal)
+			out += strings.Repeat(indentUnit, depth) + Stylize(color, t.Literal)
 		case String:
-			out += ColorStr(color, readableStr(depth, t.Literal))
+			out += Stylize(color, readableStr(depth, t.Literal))
 		default:
-			out += ColorStr(color, t.Literal)
+			out += Stylize(color, t.Literal)
 		}
 	}
 

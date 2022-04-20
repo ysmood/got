@@ -91,36 +91,32 @@ type defaultAssertionError struct {
 }
 
 // NewDefaultAssertionError handler
-func NewDefaultAssertionError(enableColor, enableDiff bool) AssertionError {
+func NewDefaultAssertionError(theme gop.Theme, diffTheme diff.Theme) AssertionError {
 	f := func(v interface{}) string {
-		if enableColor {
-			return gop.F(v)
-		}
-		return gop.Plain(v)
+		return gop.Format(gop.Tokenize(v), theme)
 	}
 
 	k := func(s string) string {
 		s = " ⦗" + s + "⦘ "
-		if enableColor {
-			return gop.ColorStr(gop.Red, s)
-		}
-		return s
+		return gop.Stylize(theme(gop.Error), s)
 	}
 
 	fns := map[AssertionErrType]func(details ...interface{}) string{
 		AssertionEq: func(details ...interface{}) string {
 			x := f(details[0])
 			y := f(details[1])
-			if enableDiff && hasNewline(x, y) {
-				df := ""
-				if !enableColor {
-					df = diff.Format(diff.TokenizeText(x, y), diff.NoTheme)
-				} else {
-					df = diff.Diff(x, y)
-				}
+
+			if diffTheme == nil {
+				return j(x, k("not =="), y)
+			}
+
+			if hasNewline(x, y) {
+				df := diff.Format(diff.Tokenize(x, y), diffTheme)
 				return j(x, k("not =="), y, df)
 			}
-			return j(x, k("not =="), y)
+
+			dx, dy := diff.TokenizeLine(x, y)
+			return diff.Format(dx, diffTheme) + k("not ==") + diff.Format(dy, diffTheme)
 		},
 		AssertionNeqSame: func(details ...interface{}) string {
 			x := f(details[0])

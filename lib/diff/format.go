@@ -4,8 +4,11 @@ import (
 	"github.com/ysmood/got/lib/gop"
 )
 
-// DefaultTheme colors for Sprint
-var DefaultTheme = func(t Type) gop.Color {
+// Theme for diff
+type Theme func(t Type) gop.Style
+
+// ThemeDefault colors for Sprint
+var ThemeDefault = func(t Type) gop.Style {
 	switch t {
 	case AddSymbol, AddWords:
 		return gop.BgGreen
@@ -17,31 +20,35 @@ var DefaultTheme = func(t Type) gop.Color {
 	return gop.None
 }
 
-// NoTheme colors for Sprint
-var NoTheme = func(t Type) gop.Color {
+// ThemeNone colors for Sprint
+var ThemeNone = func(t Type) gop.Style {
 	return gop.None
 }
 
 // Diff x and y into a human readable string.
 func Diff(x, y string) string {
+	return Format(Tokenize(x, y), ThemeDefault)
+}
+
+// Tokenize x and y into diff tokens with diff words and narrow chunks.
+func Tokenize(x, y string) []*Token {
 	ts := TokenizeText(x, y)
 	lines := ParseTokenLines(ts)
 	lines = Narrow(3, lines)
 	ChunkWords(lines)
-
-	return Format(SpreadTokenLines(lines), DefaultTheme)
+	return SpreadTokenLines(lines)
 }
 
 // Format tokens into a human readable string
-func Format(ts []*Token, theme func(Type) gop.Color) string {
+func Format(ts []*Token, theme func(Type) gop.Style) string {
 	out := ""
 
 	for _, t := range ts {
 		s := t.Literal
-		out += gop.ColorStr(theme(t.Type), s)
+		out += gop.Stylize(theme(t.Type), s)
 	}
 
-	return out
+	return gop.FixNestedStyle(out)
 }
 
 // Narrow the context around each diff section to n lines.
@@ -96,10 +103,7 @@ func ChunkWords(lines []*TokenLine) {
 			d := delLines[i]
 			a := addLines[i]
 
-			dts, ats := TokenizeLine(
-				gop.StripColor(d.Tokens[2].Literal),
-				gop.StripColor(a.Tokens[2].Literal),
-			)
+			dts, ats := TokenizeLine(d.Tokens[2].Literal, a.Tokens[2].Literal)
 			d.Tokens = append(d.Tokens[0:2], append(dts, d.Tokens[3:]...)...)
 			a.Tokens = append(a.Tokens[0:2], append(ats, a.Tokens[3:]...)...)
 		}

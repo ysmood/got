@@ -17,6 +17,15 @@ import (
 	"github.com/ysmood/got/lib/gop"
 )
 
+func TestStyle(t *testing.T) {
+	g := got.T(t)
+	s := gop.Style{Set: "<s>", Unset: "</s>"}
+
+	g.Eq(gop.Stylize(s, "test"), "<s>test</s>")
+	g.Eq(gop.Stylize(s, ""), "<s></s>")
+	g.Eq(gop.Stylize(gop.None, ""), "")
+}
+
 func TestTokenize(t *testing.T) {
 	g := got.New(t)
 	ref := "test"
@@ -69,23 +78,28 @@ func TestTokenize(t *testing.T) {
 		[]byte(`{"a": 1}`),
 	}
 
-	out := gop.StripColor(gop.F(v))
+	check := func(out, tpl string) {
+		expected := bytes.NewBuffer(nil)
 
-	expected := bytes.NewBuffer(nil)
+		t := template.New("")
+		g.E(t.Parse(g.Read(g.Open(false, tpl)).String()))
+		g.E(t.Execute(expected, gop.Obj{
+			"ch1": fmt.Sprintf("0x%x", reflect.ValueOf(ch1).Pointer()),
+			"ch2": fmt.Sprintf("0x%x", reflect.ValueOf(ch2).Pointer()),
+			"ch3": fmt.Sprintf("0x%x", reflect.ValueOf(ch3).Pointer()),
+			"fn":  fmt.Sprintf("0x%x", reflect.ValueOf(fn).Pointer()),
+			"ptr": fmt.Sprintf("%v", &ref),
+		}))
 
-	tpl := template.New("")
-	g.E(tpl.Parse(g.Read(g.Open(false, "fixtures/expected.tmpl")).String()))
-	g.E(tpl.Execute(expected, gop.Obj{
-		"ch1": fmt.Sprintf("0x%x", reflect.ValueOf(ch1).Pointer()),
-		"ch2": fmt.Sprintf("0x%x", reflect.ValueOf(ch2).Pointer()),
-		"ch3": fmt.Sprintf("0x%x", reflect.ValueOf(ch3).Pointer()),
-		"fn":  fmt.Sprintf("0x%x", reflect.ValueOf(fn).Pointer()),
-		"ptr": fmt.Sprintf("%v", &ref),
-	}))
+		g.Eq(out, expected.String())
+	}
 
+	out := gop.StripANSI(gop.F(v))
 	g.Nil(parser.ParseExpr(out))
+	check(out, "fixtures/expected.tmpl")
 
-	g.Eq(out, expected.String())
+	out = gop.VisualizeANSI(gop.F(v))
+	check(out, "fixtures/expected_with_color.tmpl")
 }
 
 type A struct {
@@ -104,7 +118,7 @@ func TestCircularRef(t *testing.T) {
 	b := B{"test", &a}
 	a.B = &b
 
-	g.Eq(gop.StripColor(gop.F(a)), ""+
+	g.Eq(gop.StripANSI(gop.F(a)), ""+
 		"gop_test.A/* len=2 */{\n"+
 		"    Int: 10,\n"+
 		"    B: &gop_test.B/* len=2 */{\n"+
@@ -124,7 +138,7 @@ func TestCircularMap(t *testing.T) {
 
 	ts := gop.Tokenize(a)
 
-	g.Eq(gop.Format(ts, gop.NoTheme), ""+
+	g.Eq(gop.Format(ts, gop.ThemeNone), ""+
 		"map[int]interface {}{\n"+
 		"    0: gop.Circular().(map[int]interface {}),\n"+
 		"}")
@@ -138,7 +152,7 @@ func TestCircularSlice(t *testing.T) {
 
 	ts := gop.Tokenize(a)
 
-	g.Eq(gop.Format(ts, gop.NoTheme), ""+
+	g.Eq(gop.Format(ts, gop.ThemeNone), ""+
 		"[][]interface {}/* len=2 cap=2 */{\n"+
 		"    gop.Arr/* len=1 cap=1 */{\n"+
 		"        gop.Arr/* len=1 cap=1 */{\n"+
@@ -186,4 +200,21 @@ func TestGetPrivateFieldErr(t *testing.T) {
 	g.Panic(func() {
 		gop.GetPrivateFieldByName(reflect.ValueOf(1), "test")
 	})
+}
+
+func TestFixNestedStyle(t *testing.T) {
+	g := got.New(t)
+
+	s := " 0 " + gop.Stylize(gop.Red, " 1 "+
+		gop.Stylize(gop.Blue, " 2 "+
+			gop.Stylize(gop.Cyan, " 3 ")+
+			" 4 ")+
+		" 5 ") + " 6 "
+	out := gop.VisualizeANSI(gop.FixNestedStyle(s))
+	g.Eq(out, ` 0 <31> 1 <39><34> 2 <39><36> 3 <39><34> 4 <39><31> 5 <39> 6 `)
+}
+
+func TestStripANSI(t *testing.T) {
+	g := got.New(t)
+	g.Eq(gop.StripANSI(gop.Stylize(gop.Red, "test")), "test")
 }

@@ -67,6 +67,11 @@ func (m *mock) cleanup() {
 }
 
 func (m *mock) check(expected string) {
+	m.t.Helper()
+	m.checkWithStyle(expected, false)
+}
+
+func (m *mock) checkWithStyle(expected string, visualizeStyle bool) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -76,7 +81,13 @@ func (m *mock) check(expected string) {
 		m.t.Error("should fail")
 	}
 
-	msg := gop.StripColor(m.msg)
+	msg := ""
+	if visualizeStyle {
+		msg = gop.VisualizeANSI(m.msg)
+	} else {
+		msg = gop.StripANSI(m.msg)
+	}
+
 	if msg != expected {
 		m.t.Errorf("\n\n[[[msg]]]\n\n%s\n\n[[[doesn't equal]]]\n\n%s\n\n", msg, expected)
 	}

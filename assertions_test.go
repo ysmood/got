@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ysmood/got"
+	"github.com/ysmood/got/lib/gop"
 )
 
 func TestAssertion(t *testing.T) {
@@ -91,7 +92,7 @@ func TestAssertion(t *testing.T) {
 func TestAssertionErr(t *testing.T) {
 	m := &mock{t: t}
 	as := got.New(m)
-	as.Assertions.ErrorHandler = got.NewDefaultAssertionError(false, false)
+	as.Assertions.ErrorHandler = got.NewDefaultAssertionError(gop.ThemeNone, nil)
 
 	type data struct {
 		A int
@@ -268,52 +269,41 @@ nil`)
 	}
 }
 
-func TestCustomAssertionError(t *testing.T) {
+func TestAssertionColor(t *testing.T) {
 	m := &mock{t: t}
 
 	g := got.New(m)
 	g.Eq([]int{1, 2}, []int{1, 3})
-	m.check(`
-[]int/* len=2 cap=2 */{
-    1,
-    2,
+	m.checkWithStyle(`
+<36>[]int<39><37>/* len=2 cap=2 */<39>{
+    <32>1<39>,
+    <32>2<39>,
 }
 
- ⦗not ==⦘ 
+<31> ⦗not ==⦘ <39>
 
-[]int/* len=2 cap=2 */{
-    1,
-    3,
+<36>[]int<39><37>/* len=2 cap=2 */<39>{
+    <32>1<39>,
+    <32>3<39>,
 }
 
-@@ diff chunk @@
-1 1   []int/* len=2 cap=2 */{
-2 2       1,
-3   -     2,
-  3 +     3,
+<45>@@ diff chunk @@<49>
+1 1   <36>[]int<39><37>/* len=2 cap=2 */<39>{
+2 2       <32>1<39>,
+<41>3   -<49>     <32><39><41>2<49><32><39>,
+<42>  3 +<49>     <32><39><42>3<49><32><39>,
 4 4   }
 
-`)
+`, true)
 
-	g.ErrorHandler = got.NewDefaultAssertionError(false, true)
-	g.Eq([]int{1}, []int{2})
-	m.check(`
-[]int/* len=1 cap=1 */{
-    1,
+	g.Eq("abc", "axc")
+	m.checkWithStyle(`<33>"a<39><41>b<49><33>c"<39><31> ⦗not ==⦘ <39><33>"a<39><42>x<49><33>c"<39>`, true)
 }
 
- ⦗not ==⦘ 
+func TestCustomAssertionError(t *testing.T) {
+	m := &mock{t: t}
 
-[]int/* len=1 cap=1 */{
-    2,
-}
-
-1 1   []int/* len=1 cap=1 */{
-2   -     1,
-  2 +     2,
-3 3   }
-`)
-
+	g := got.New(m)
 	g.ErrorHandler = got.AssertionErrorReport(func(c *got.AssertionCtx) string {
 		if c.Type == got.AssertionEq {
 			return "custom eq"

@@ -42,6 +42,8 @@ const (
 	Chan
 	// Func type
 	Func
+	// Error type
+	Error
 
 	// Comment type
 	Comment

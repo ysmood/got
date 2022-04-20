@@ -6,6 +6,9 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/ysmood/got/lib/diff"
+	"github.com/ysmood/got/lib/gop"
 )
 
 // Testable interface. Usually, you use *testing.T as it.
@@ -46,9 +49,10 @@ func T(t Testable) G {
 
 // New G instance
 func New(t Testable) G {
+	eh := NewDefaultAssertionError(gop.ThemeDefault, diff.ThemeDefault)
 	return G{
 		t,
-		Assertions{Testable: t, ErrorHandler: NewDefaultAssertionError(true, true)},
+		Assertions{Testable: t, ErrorHandler: eh},
 		Utils{t},
 	}
 }

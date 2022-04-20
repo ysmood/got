@@ -6,11 +6,24 @@ import (
 
 	"github.com/ysmood/got"
 	"github.com/ysmood/got/lib/diff"
+	"github.com/ysmood/got/lib/gop"
 )
 
 var setup = got.Setup(func(g got.G) {
-	g.ErrorHandler = got.NewDefaultAssertionError(false, false)
+	g.ErrorHandler = got.NewDefaultAssertionError(nil, nil)
 })
+
+func TestDiff(t *testing.T) {
+	g := setup(t)
+
+	out := gop.StripANSI(diff.Diff("abc", "axc"))
+
+	g.Eq(out, `@@ diff chunk @@
+1   - abc
+  1 + axc
+
+`)
+}
 
 func TestFormat(t *testing.T) {
 	g := setup(t)
@@ -19,7 +32,7 @@ func TestFormat(t *testing.T) {
 		strings.ReplaceAll("a b c d e f g i j k r x y z", " ", "\n"),
 	)
 
-	df := diff.Format(ts, diff.NoTheme)
+	df := diff.Format(ts, diff.ThemeNone)
 
 	g.Eq(df, ""+
 		"01 01   a\n"+
@@ -53,7 +66,7 @@ func TestDisconnectedChunks(t *testing.T) {
 	lines = diff.Narrow(1, lines)
 	ts = diff.SpreadTokenLines(lines)
 
-	df := diff.Format(ts, diff.NoTheme)
+	df := diff.Format(ts, diff.ThemeNone)
 
 	g.Eq(df, ""+
 		"@@ diff chunk @@\n"+
@@ -81,7 +94,7 @@ func TestChunks0(t *testing.T) {
 	lines = diff.Narrow(-1, lines)
 	ts = diff.SpreadTokenLines(lines)
 
-	df := diff.Format(ts, diff.NoTheme)
+	df := diff.Format(ts, diff.ThemeNone)
 
 	g.Eq(df, ""+
 		"@@ diff chunk @@\n"+
@@ -95,7 +108,7 @@ func TestNoDifference(t *testing.T) {
 	g := setup(t)
 	ts := diff.TokenizeText("a", "b")
 
-	df := diff.Format(ts, diff.NoTheme)
+	df := diff.Format(ts, diff.ThemeNone)
 
 	g.Eq(df, ""+
 		"1   - a\n"+
@@ -129,5 +142,12 @@ func TestTwoLines(t *testing.T) {
 
 func TestColor(t *testing.T) {
 	g := setup(t)
-	g.Eq(diff.Diff("abc", "axc"), "\x1b[45m@@ diff chunk @@\x1b[0m\n\x1b[41m1   -\x1b[0m a\x1b[41mb\x1b[0mc\n\x1b[42m  1 +\x1b[0m a\x1b[42mx\x1b[0mc\n\n")
+
+	out := diff.Diff("abc", "axc")
+
+	g.Eq(gop.VisualizeANSI(out), `<45>@@ diff chunk @@<49>
+<41>1   -<49> a<41>b<49>c
+<42>  1 +<49> a<42>x<49>c
+
+`)
 }
