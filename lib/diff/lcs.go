@@ -8,25 +8,25 @@ import (
 // The base algorithm we use is here: https://en.wikipedia.org/wiki/Longest_common_subsequence_problem#LCS_function_defined.
 // TODO: implement Patience Diff http://alfedenzo.livejournal.com/170301.html
 func LCS(x, y []Comparable) []Comparable {
-	var search func(i, j int) []Comparable
-	mem := map[[2]int][]Comparable{}
+	var search func(xi, xj, yi, yj int) []Comparable
+	mem := map[[4]int][]Comparable{}
 
-	search = func(i, j int) []Comparable {
-		k := [2]int{i, j}
+	search = func(xi, xj, yi, yj int) []Comparable {
+		k := [4]int{xi, xj, yi, yj}
 		var lcs []Comparable
 		var has bool
 		if lcs, has = mem[k]; has {
 			return lcs
 		}
 
-		var p, s []Comparable
-
-		if i == 0 || j == 0 {
+		if (xj-xi)*(yj-yi) == 0 {
 			lcs = []Comparable{}
-		} else if x, y, p, s = reduce(x[:i], y[:j]); len(p) > 0 || len(s) > 0 {
-			lcs = append(append(p, search(len(x), len(y))...), s...)
+		} else if l, r := Common(x[xi:xj], y[yi:yj]); l+r > 0 {
+			lcs = append([]Comparable{}, x[xi:xi+l]...)
+			lcs = append(lcs, search(xi+l, xj-r, yi+l, yj-r)...)
+			lcs = append(lcs, x[xj-r:xj]...)
 		} else {
-			left, right := search(i, j-1), search(i-1, j)
+			left, right := search(xi, xj, yi, yj-1), search(xi, xj-1, yi, yj)
 			if len(left) > len(right) {
 				lcs = left
 			} else {
@@ -38,40 +38,38 @@ func LCS(x, y []Comparable) []Comparable {
 		return lcs
 	}
 
-	return search(len(x), len(y))
+	return search(0, len(x), 0, len(y))
 }
 
-// If the beginning and ending are equal they must be in the LCS.
+// Common returns the common prefix and suffix between x and y.
 // This function scales down the problem via the first property:
 // https://en.wikipedia.org/wiki/Longest_common_subsequence_problem#First_property
-func reduce(x, y []Comparable) (xs, ys, prefix, suffix []Comparable) {
-	prefix, suffix = []Comparable{}, []Comparable{}
-	for i := 0; i < len(x); i++ {
-		if equal(x[i], y[i]) {
-			prefix = append(prefix, x[i])
-		} else {
+func Common(x, y []Comparable) (left, right int) {
+	l := min(len(x), len(y))
+	for ; left < l; left++ {
+		if !equal(x[left], y[left]) {
 			break
 		}
 	}
 
-	x, y = x[len(prefix):], y[len(prefix):]
-
-	for i, j := len(x)-1, len(y)-1; i >= 0 && j >= 0; {
-		if equal(x[i], y[j]) {
-			suffix = append([]Comparable{x[i]}, suffix...)
-		} else {
+	lx, ly := len(x), len(y)
+	l = min(lx-left, ly-left)
+	for ; right < l; right++ {
+		if !equal(x[lx-right-1], y[ly-right-1]) {
 			break
 		}
-
-		i--
-		j--
 	}
-
-	xs, ys = x[:len(x)-len(suffix)], y[:len(y)-len(suffix)]
 
 	return
 }
 
 func equal(x, y Comparable) bool {
 	return bytes.Equal(x.Hash(), y.Hash())
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
 }
