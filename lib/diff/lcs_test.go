@@ -1,17 +1,40 @@
 package diff_test
 
 import (
+	"bytes"
+	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ysmood/got/lib/diff"
 )
+
+func TestReduce(t *testing.T) {
+	eq := func(x, y string, e string) {
+		t.Helper()
+
+		out := diff.NewString(x).Reduce(diff.NewString(y)).String()
+		if out != e {
+			t.Error(out, "!=", e)
+		}
+	}
+
+	eq("", "", "")
+	eq("", "a", "")
+	eq("a", "", "")
+	eq("abc", "abc", "abc")
+	eq("abc", "acb", "abc")
+	eq("abc", "acbc", "abc")
+	eq("abc", "xxx", "")
+	eq("ac", "bc", "c")
+}
 
 func TestCommon(t *testing.T) {
 	eq := func(x, y string, el, er int) {
 		t.Helper()
 
-		l, r := diff.Common(diff.NewString(x), diff.NewString(y))
+		l, r := diff.NewString(x).Common(diff.NewString(y))
 
 		if l != el || r != er {
 			t.Error(l, r, "!=", el, er)
@@ -32,8 +55,10 @@ func TestLCSString(t *testing.T) {
 	eq := func(x, y, expected string) {
 		t.Helper()
 
-		lcs := diff.LCS(diff.NewString(x), diff.NewString(y))
-		out := diff.String(lcs).String()
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		lcs := diff.NewString(x).LCS(ctx, diff.NewString(y))
+		out := lcs.String()
 
 		if out != expected {
 			t.Error(out, "!=", expected)
@@ -47,6 +72,18 @@ func TestLCSString(t *testing.T) {
 	eq("ac", "bc", "c")
 	eq("gac", "agcat", "ga")
 	eq("agcat", "gac", "ac")
+
+	x := bytes.Repeat([]byte("x"), 10000)
+	y := bytes.Repeat([]byte("y"), 10000)
+	eq(string(x), string(y), "")
+
+	x[len(x)/2] = byte('a')
+	y[len(y)/2] = byte('a')
+	eq(string(x), string(y), "a")
+
+	x[len(x)/2] = byte('y')
+	y[len(y)/2] = byte('x')
+	eq(string(x), string(y), "yx")
 }
 
 func TestText(t *testing.T) {
@@ -66,8 +103,8 @@ func TestLCSText(t *testing.T) {
 		y = strings.Join(strings.Split(y, ""), "\n")
 		expected = strings.Join(strings.Split(expected, ""), "\n")
 
-		lcs := diff.LCS(diff.NewText(x), diff.NewText(y))
-		g.Eq(diff.Text(lcs).String(), expected)
+		lcs := diff.NewText(x).LCS(context.Background(), diff.NewText(y))
+		g.Eq(lcs.String(), expected)
 	}
 
 	eq("", "", "")

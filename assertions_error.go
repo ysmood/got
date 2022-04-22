@@ -1,7 +1,9 @@
 package got
 
 import (
+	"context"
 	"strings"
+	"time"
 
 	"github.com/ysmood/got/lib/diff"
 	"github.com/ysmood/got/lib/gop"
@@ -103,6 +105,9 @@ func NewDefaultAssertionError(theme gop.Theme, diffTheme diff.Theme) AssertionEr
 
 	fns := map[AssertionErrType]func(details ...interface{}) string{
 		AssertionEq: func(details ...interface{}) string {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+
 			x := f(details[0])
 			y := f(details[1])
 
@@ -111,11 +116,11 @@ func NewDefaultAssertionError(theme gop.Theme, diffTheme diff.Theme) AssertionEr
 			}
 
 			if hasNewline(x, y) {
-				df := diff.Format(diff.Tokenize(x, y), diffTheme)
+				df := diff.Format(diff.Tokenize(ctx, x, y), diffTheme)
 				return j(x, k("not =="), y, df)
 			}
 
-			dx, dy := diff.TokenizeLine(x, y)
+			dx, dy := diff.TokenizeLine(ctx, x, y)
 			return diff.Format(dx, diffTheme) + k("not ==") + diff.Format(dy, diffTheme)
 		},
 		AssertionNeqSame: func(details ...interface{}) string {

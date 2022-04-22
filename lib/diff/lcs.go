@@ -1,28 +1,30 @@
 package diff
 
-import (
-	"bytes"
-)
+import "context"
 
-// LCS extends the standard lcs algorithm with dynamic programming and recursive common-lines reduction.
+// LCS extends the standard lcs algorithm with dynamic programming and recursive line-reduction.
 // The base algorithm we use is here: https://en.wikipedia.org/wiki/Longest_common_subsequence_problem#LCS_function_defined.
 // TODO: implement Patience Diff http://alfedenzo.livejournal.com/170301.html
-func LCS(x, y []Comparable) []Comparable {
-	var search func(xi, xj, yi, yj int) []Comparable
-	mem := map[[4]int][]Comparable{}
+func (x Comparables) LCS(ctx context.Context, y Comparables) Comparables {
+	var search func(xi, xj, yi, yj int) Comparables
+	mem := map[[4]int]Comparables{}
 
-	search = func(xi, xj, yi, yj int) []Comparable {
+	search = func(xi, xj, yi, yj int) Comparables {
+		if ctx.Err() != nil {
+			return Comparables{}
+		}
+
 		k := [4]int{xi, xj, yi, yj}
-		var lcs []Comparable
+		var lcs Comparables
 		var has bool
 		if lcs, has = mem[k]; has {
 			return lcs
 		}
 
 		if (xj-xi)*(yj-yi) == 0 {
-			lcs = []Comparable{}
-		} else if l, r := Common(x[xi:xj], y[yi:yj]); l+r > 0 {
-			lcs = append([]Comparable{}, x[xi:xi+l]...)
+			lcs = Comparables{}
+		} else if l, r := x[xi:xj].Common(y[yi:yj]); l+r > 0 {
+			lcs = append(Comparables{}, x[xi:xi+l]...)
 			lcs = append(lcs, search(xi+l, xj-r, yi+l, yj-r)...)
 			lcs = append(lcs, x[xj-r:xj]...)
 		} else {
@@ -38,16 +40,19 @@ func LCS(x, y []Comparable) []Comparable {
 		return lcs
 	}
 
+	x = x.Reduce(y)
+	y = y.Reduce(x)
+
 	return search(0, len(x), 0, len(y))
 }
 
 // Common returns the common prefix and suffix between x and y.
 // This function scales down the problem via the first property:
 // https://en.wikipedia.org/wiki/Longest_common_subsequence_problem#First_property
-func Common(x, y []Comparable) (left, right int) {
+func (x Comparables) Common(y Comparables) (left, right int) {
 	l := min(len(x), len(y))
 	for ; left < l; left++ {
-		if !equal(x[left], y[left]) {
+		if neq(x[left], y[left]) {
 			break
 		}
 	}
@@ -55,7 +60,7 @@ func Common(x, y []Comparable) (left, right int) {
 	lx, ly := len(x), len(y)
 	l = min(lx-left, ly-left)
 	for ; right < l; right++ {
-		if !equal(x[lx-right-1], y[ly-right-1]) {
+		if neq(x[lx-right-1], y[ly-right-1]) {
 			break
 		}
 	}
@@ -63,13 +68,23 @@ func Common(x, y []Comparable) (left, right int) {
 	return
 }
 
-func equal(x, y Comparable) bool {
-	return bytes.Equal(x.Hash(), y.Hash())
+// Reduce Comparables from x that doesn't exist in y
+func (x Comparables) Reduce(y Comparables) Comparables {
+	rest := Comparables{}
+	h := y.Histogram()
+	for _, c := range x {
+		if _, has := h[c.Hash()]; has {
+			rest = append(rest, c)
+		}
+	}
+	return rest
 }
 
-func min(x, y int) int {
-	if x < y {
-		return x
+// Histogram of each Comparable
+func (x Comparables) Histogram() map[string]int {
+	his := map[string]int{}
+	for _, c := range x {
+		his[c.Hash()]++
 	}
-	return y
+	return his
 }

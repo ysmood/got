@@ -28,6 +28,7 @@ func TestDiff(t *testing.T) {
 func TestFormat(t *testing.T) {
 	g := setup(t)
 	ts := diff.TokenizeText(
+		g.Context(),
 		strings.ReplaceAll("a b c d f g h h j q z", " ", "\n"),
 		strings.ReplaceAll("a b c d e f g i j k r x y z", " ", "\n"),
 	)
@@ -58,6 +59,7 @@ func TestFormat(t *testing.T) {
 func TestDisconnectedChunks(t *testing.T) {
 	g := setup(t)
 	ts := diff.TokenizeText(
+		g.Context(),
 		strings.ReplaceAll("a b c d f g h i j k l m n", " ", "\n"),
 		strings.ReplaceAll("x b c d f g h i x k l m n", " ", "\n"),
 	)
@@ -86,6 +88,7 @@ func TestDisconnectedChunks(t *testing.T) {
 func TestChunks0(t *testing.T) {
 	g := setup(t)
 	ts := diff.TokenizeText(
+		g.Context(),
 		strings.ReplaceAll("a b c", " ", "\n"),
 		strings.ReplaceAll("a x c", " ", "\n"),
 	)
@@ -106,7 +109,7 @@ func TestChunks0(t *testing.T) {
 
 func TestNoDifference(t *testing.T) {
 	g := setup(t)
-	ts := diff.TokenizeText("a", "b")
+	ts := diff.TokenizeText(g.Context(), "a", "b")
 
 	df := diff.Format(ts, diff.ThemeNone)
 
@@ -119,7 +122,7 @@ func TestNoDifference(t *testing.T) {
 func TestTwoLines(t *testing.T) {
 	g := setup(t)
 
-	x, y := diff.TokenizeLine("abcdfghijklmn", "xxbcdfghixklmn")
+	x, y := diff.TokenizeLine(g.Context(), "abcdfghijklmn", "xxbcdfghixklmn")
 
 	format := func(ts []*diff.Token) string {
 		out := ""

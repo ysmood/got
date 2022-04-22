@@ -5,76 +5,71 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/binary"
-	"strings"
 )
+
+// Comparables list
+type Comparables []Comparable
 
 // Comparable interface
 type Comparable interface {
-	// Hash for comparison
-	Hash() []byte
+	// Hash for fast comparison
+	Hash() string
+	// String returns the full content
+	String() string
 }
-
-var _ Comparable = Char(0)
 
 // Char is a rune
-type Char rune
+type Char string
 
 // Hash interface
-func (c Char) Hash() []byte {
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b[:], uint32(c))
-	return b
+func (c Char) Hash() string {
+	return string(c)
 }
 
-// String of Char list
-type String []Comparable
+// String interface
+func (c Char) String() string {
+	return string(c)
+}
 
 // NewString from string
-func NewString(s string) String {
+func NewString(s string) Comparables {
 	cs := make([]Comparable, len(s))
 	for i, c := range s {
+		hash := make([]byte, 4)
+		binary.BigEndian.PutUint32(hash[:], uint32(c))
 		cs[i] = Char(c)
 	}
 	return cs
 }
 
-// String interface
-func (s String) String() string {
-	out := ""
-	for _, c := range s {
-		out += string(c.(Char))
-	}
-	return out
-}
-
-var _ Comparable = &Line{}
-
 // Line of a string for fast comparison.
 type Line struct {
-	hash []byte
 	str  string
+	hash string
 }
 
 // NewLine from bytes
-func NewLine(b []byte) *Line {
+func NewLine(b []byte) Line {
 	// For testing, md5 should be sufficient
 	sum := md5.Sum(b)
-	return &Line{
-		hash: sum[:],
+	return Line{
+		hash: string(sum[:]),
 		str:  string(b),
 	}
 }
 
 // Hash interface
-func (c *Line) Hash() []byte {
+func (c Line) Hash() string {
 	return c.hash
 }
 
-// Text of Char list
-type Text []Comparable
+// String interface
+func (c Line) String() string {
+	return c.str
+}
 
 // NewText from string. It will split the s via newlines.
-func NewText(s string) Text {
+func NewText(s string) Comparables {
 	sc := bufio.NewScanner(bytes.NewBufferString(s))
 	cs := []Comparable{}
 	for sc.Scan() {
@@ -86,13 +81,4 @@ func NewText(s string) Text {
 	}
 
 	return cs
-}
-
-// String interface
-func (s Text) String() string {
-	out := []string{}
-	for _, c := range s {
-		out = append(out, c.(*Line).str)
-	}
-	return strings.Join(out, "\n")
 }

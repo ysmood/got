@@ -1,6 +1,9 @@
 package diff
 
 import (
+	"context"
+	"time"
+
 	"github.com/ysmood/got/lib/gop"
 )
 
@@ -27,15 +30,17 @@ var ThemeNone = func(t Type) gop.Style {
 
 // Diff x and y into a human readable string.
 func Diff(x, y string) string {
-	return Format(Tokenize(x, y), ThemeDefault)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	return Format(Tokenize(ctx, x, y), ThemeDefault)
 }
 
 // Tokenize x and y into diff tokens with diff words and narrow chunks.
-func Tokenize(x, y string) []*Token {
-	ts := TokenizeText(x, y)
+func Tokenize(ctx context.Context, x, y string) []*Token {
+	ts := TokenizeText(ctx, x, y)
 	lines := ParseTokenLines(ts)
 	lines = Narrow(3, lines)
-	ChunkWords(lines)
+	ChunkWords(ctx, lines)
 	return SpreadTokenLines(lines)
 }
 
@@ -90,7 +95,7 @@ func Narrow(n int, lines []*TokenLine) []*TokenLine {
 }
 
 // ChunkWords with words
-func ChunkWords(lines []*TokenLine) {
+func ChunkWords(ctx context.Context, lines []*TokenLine) {
 	delLines := []*TokenLine{}
 	addLines := []*TokenLine{}
 
@@ -103,7 +108,7 @@ func ChunkWords(lines []*TokenLine) {
 			d := delLines[i]
 			a := addLines[i]
 
-			dts, ats := TokenizeLine(d.Tokens[2].Literal, a.Tokens[2].Literal)
+			dts, ats := TokenizeLine(ctx, d.Tokens[2].Literal, a.Tokens[2].Literal)
 			d.Tokens = append(d.Tokens[0:2], append(dts, d.Tokens[3:]...)...)
 			a.Tokens = append(a.Tokens[0:2], append(ats, a.Tokens[3:]...)...)
 		}
