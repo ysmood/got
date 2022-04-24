@@ -16,33 +16,35 @@ var Stdout io.Writer = os.Stdout
 const indentUnit = "    "
 
 // Theme to color values
-type Theme func(t Type) Style
+type Theme func(t Type) []Style
 
 // ThemeDefault colors for Sprint
-var ThemeDefault = func(t Type) Style {
+var ThemeDefault = func(t Type) []Style {
 	switch t {
 	case TypeName:
-		return Cyan
+		return []Style{Cyan}
 	case Bool, Chan:
-		return Blue
+		return []Style{Blue}
 	case Rune, Byte, String:
-		return Yellow
+		return []Style{Yellow}
 	case Number:
-		return Green
+		return []Style{Green}
 	case Func:
-		return Magenta
+		return []Style{Magenta}
 	case Comment:
-		return White
-	case Nil, Error:
-		return Red
+		return []Style{White}
+	case Nil:
+		return []Style{Red}
+	case Error:
+		return []Style{Underline, Red}
 	default:
-		return None
+		return []Style{None}
 	}
 }
 
 // ThemeNone colors for Sprint
-var ThemeNone = func(t Type) Style {
-	return None
+var ThemeNone = func(t Type) []Style {
+	return []Style{None}
 }
 
 // F is a shortcut for Format with color
@@ -61,7 +63,7 @@ func P(values ...interface{}) error {
 	fn := runtime.FuncForPC(pc).Name()
 	cwd, _ := os.Getwd()
 	file, _ = filepath.Rel(cwd, file)
-	tpl := Stylize(ThemeDefault(Comment), "// %s %s:%d (%s)\n")
+	tpl := Stylize("// %s %s:%d (%s)\n", ThemeDefault(Comment))
 	_, _ = fmt.Fprintf(Stdout, tpl, time.Now().Format(time.RFC3339Nano), file, line, fn)
 
 	_, err := fmt.Fprintln(Stdout, list...)
@@ -85,23 +87,23 @@ func Format(ts []*Token, theme Theme) string {
 			depth--
 		}
 
-		color := theme(t.Type)
+		styles := theme(t.Type)
 
 		switch t.Type {
 		case SliceOpen, MapOpen, StructOpen:
-			out += Stylize(color, t.Literal) + "\n"
+			out += Stylize(t.Literal, styles) + "\n"
 		case SliceItem, MapKey, StructKey:
 			out += strings.Repeat(indentUnit, depth)
 		case Colon, InlineComma, Chan:
-			out += Stylize(color, t.Literal) + " "
+			out += Stylize(t.Literal, styles) + " "
 		case Comma:
-			out += Stylize(color, t.Literal) + "\n"
+			out += Stylize(t.Literal, styles) + "\n"
 		case SliceClose, MapClose, StructClose:
-			out += strings.Repeat(indentUnit, depth) + Stylize(color, t.Literal)
+			out += strings.Repeat(indentUnit, depth) + Stylize(t.Literal, styles)
 		case String:
-			out += Stylize(color, readableStr(depth, t.Literal))
+			out += Stylize(readableStr(depth, t.Literal), styles)
 		default:
-			out += Stylize(color, t.Literal)
+			out += Stylize(t.Literal, styles)
 		}
 	}
 

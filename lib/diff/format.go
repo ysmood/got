@@ -8,24 +8,24 @@ import (
 )
 
 // Theme for diff
-type Theme func(t Type) gop.Style
+type Theme func(t Type) []gop.Style
 
 // ThemeDefault colors for Sprint
-var ThemeDefault = func(t Type) gop.Style {
+var ThemeDefault = func(t Type) []gop.Style {
 	switch t {
 	case AddSymbol, AddWords:
-		return gop.BgGreen
+		return []gop.Style{gop.BgGreen}
 	case DelSymbol, DelWords:
-		return gop.BgRed
+		return []gop.Style{gop.BgRed}
 	case ChunkStart:
-		return gop.BgMagenta
+		return []gop.Style{gop.BgMagenta}
 	}
-	return gop.None
+	return []gop.Style{gop.None}
 }
 
 // ThemeNone colors for Sprint
-var ThemeNone = func(t Type) gop.Style {
-	return gop.None
+var ThemeNone = func(t Type) []gop.Style {
+	return []gop.Style{gop.None}
 }
 
 // Diff x and y into a human readable string.
@@ -45,12 +45,12 @@ func Tokenize(ctx context.Context, x, y string) []*Token {
 }
 
 // Format tokens into a human readable string
-func Format(ts []*Token, theme func(Type) gop.Style) string {
+func Format(ts []*Token, theme Theme) string {
 	out := ""
 
 	for _, t := range ts {
 		s := t.Literal
-		out += gop.Stylize(theme(t.Type), s)
+		out += gop.Stylize(s, theme(t.Type))
 	}
 
 	return gop.FixNestedStyle(out)

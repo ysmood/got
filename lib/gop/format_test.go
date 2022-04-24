@@ -21,13 +21,13 @@ func TestStyle(t *testing.T) {
 	g := got.T(t)
 	s := gop.Style{Set: "<s>", Unset: "</s>"}
 
-	g.Eq(gop.Stylize(s, "test"), "<s>test</s>")
-	g.Eq(gop.Stylize(s, ""), "<s></s>")
-	g.Eq(gop.Stylize(gop.None, ""), "")
+	g.Eq(gop.S("test", s), "<s>test</s>")
+	g.Eq(gop.S("", s), "<s></s>")
+	g.Eq(gop.S("", gop.None), "")
 }
 
 func TestTokenize(t *testing.T) {
-	g := got.New(t)
+	g := got.T(t)
 	ref := "test"
 	timeStamp, _ := time.Parse(time.RFC3339Nano, "2021-08-28T08:36:36.807908+08:00")
 	fn := func(string) int { return 10 }
@@ -113,7 +113,7 @@ type B struct {
 }
 
 func TestCircularRef(t *testing.T) {
-	g := got.New(t)
+	g := got.T(t)
 	a := A{Int: 10}
 	b := B{"test", &a}
 	a.B = &b
@@ -132,7 +132,7 @@ func TestCircularRef(t *testing.T) {
 }
 
 func TestCircularMap(t *testing.T) {
-	g := got.New(t)
+	g := got.T(t)
 	a := map[int]interface{}{}
 	a[0] = a
 
@@ -164,7 +164,7 @@ func TestCircularSlice(t *testing.T) {
 }
 
 func TestPlain(t *testing.T) {
-	g := got.New(t)
+	g := got.T(t)
 	g.Eq(gop.Plain(10), "10")
 }
 
@@ -175,7 +175,7 @@ func TestP(t *testing.T) {
 }
 
 func TestConvertors(t *testing.T) {
-	g := got.New(t)
+	g := got.T(t)
 	g.Nil(gop.Circular(""))
 
 	s := g.RandStr(8)
@@ -193,7 +193,7 @@ func TestConvertors(t *testing.T) {
 }
 
 func TestGetPrivateFieldErr(t *testing.T) {
-	g := got.New(t)
+	g := got.T(t)
 	g.Panic(func() {
 		gop.GetPrivateField(reflect.ValueOf(1), 0)
 	})
@@ -203,18 +203,23 @@ func TestGetPrivateFieldErr(t *testing.T) {
 }
 
 func TestFixNestedStyle(t *testing.T) {
-	g := got.New(t)
+	g := got.T(t)
 
-	s := " 0 " + gop.Stylize(gop.Red, " 1 "+
-		gop.Stylize(gop.Blue, " 2 "+
-			gop.Stylize(gop.Cyan, " 3 ")+
-			" 4 ")+
-		" 5 ") + " 6 "
+	s := " 0 " + gop.S(" 1 "+
+		gop.S(" 2 "+
+			gop.S(" 3 ", gop.Cyan)+
+			" 4 ", gop.Blue)+
+		" 5 ", gop.Red) + " 6 "
 	out := gop.VisualizeANSI(gop.FixNestedStyle(s))
 	g.Eq(out, ` 0 <31> 1 <39><34> 2 <39><36> 3 <39><34> 4 <39><31> 5 <39> 6 `)
 }
 
 func TestStripANSI(t *testing.T) {
-	g := got.New(t)
-	g.Eq(gop.StripANSI(gop.Stylize(gop.Red, "test")), "test")
+	g := got.T(t)
+	g.Eq(gop.StripANSI(gop.S("test", gop.Red)), "test")
+}
+
+func TestTheme(t *testing.T) {
+	g := got.T(t)
+	g.Eq(gop.ThemeDefault(gop.Error), []gop.Style{gop.Underline, gop.Red})
 }

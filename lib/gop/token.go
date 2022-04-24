@@ -222,7 +222,7 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 			{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
 
 	case reflect.Func:
-		return []*Token{{ParenOpen, "("}, {Func, v.Type().String()},
+		return []*Token{{ParenOpen, "("}, {TypeName, v.Type().String()},
 			{ParenClose, ")"}, {ParenOpen, "("}, {Nil, "nil"}, {ParenClose, ")"},
 			{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
 

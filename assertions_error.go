@@ -99,8 +99,7 @@ func NewDefaultAssertionError(theme gop.Theme, diffTheme diff.Theme) AssertionEr
 	}
 
 	k := func(s string) string {
-		s = " ⦗" + s + "⦘ "
-		return gop.Stylize(theme(gop.Error), s)
+		return " " + gop.Stylize("⦗"+s+"⦘", theme(gop.Error)) + " "
 	}
 
 	fns := map[AssertionErrType]func(details ...interface{}) string{

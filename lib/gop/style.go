@@ -89,8 +89,20 @@ var styleMap = map[string]Style{
 
 var regNewline = regexp.MustCompile(`\r?\n`)
 
+// S is the shortcut for Stylize
+func S(str string, styles ...Style) string {
+	return Stylize(str, styles)
+}
+
 // Stylize string
-func Stylize(s Style, str string) string {
+func Stylize(str string, styles []Style) string {
+	for _, s := range styles {
+		str = stylize(s, str)
+	}
+	return str
+}
+
+func stylize(s Style, str string) string {
 	if NoStyle || s == None {
 		return str
 	}

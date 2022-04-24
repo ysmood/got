@@ -280,7 +280,7 @@ func TestAssertionColor(t *testing.T) {
     <32>2<39>,
 }
 
-<31> ⦗not ==⦘ <39>
+ <31><4>⦗not ==⦘<24><39> 
 
 <36>[]int<39><37>/* len=2 cap=2 */<39>{
     <32>1<39>,
@@ -297,7 +297,7 @@ func TestAssertionColor(t *testing.T) {
 `, true)
 
 	g.Eq("abc", "axc")
-	m.checkWithStyle(`<33>"a<39><41>b<49><33>c"<39><31> ⦗not ==⦘ <39><33>"a<39><42>x<49><33>c"<39>`, true)
+	m.checkWithStyle(`<33>"a<39><41>b<49><33>c"<39> <31><4>⦗not ==⦘<24><39> <33>"a<39><42>x<49><33>c"<39>`, true)
 }
 
 func TestCustomAssertionError(t *testing.T) {
