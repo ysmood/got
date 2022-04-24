@@ -51,18 +51,12 @@ func (x Comparables) LCS(ctx context.Context, y Comparables) Comparables {
 // https://en.wikipedia.org/wiki/Longest_common_subsequence_problem#First_property
 func (x Comparables) Common(y Comparables) (left, right int) {
 	l := min(len(x), len(y))
-	for ; left < l; left++ {
-		if neq(x[left], y[left]) {
-			break
-		}
+	for ; left < l && eq(x[left], y[left]); left++ {
 	}
 
 	lx, ly := len(x), len(y)
 	l = min(lx-left, ly-left)
-	for ; right < l; right++ {
-		if neq(x[lx-right-1], y[ly-right-1]) {
-			break
-		}
+	for ; right < l && eq(x[lx-right-1], y[ly-right-1]); right++ {
 	}
 
 	return

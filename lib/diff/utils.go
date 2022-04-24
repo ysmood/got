@@ -6,6 +6,10 @@ func neq(x, y Comparable) bool {
 	return x.Hash() != y.Hash()
 }
 
+func eq(x, y Comparable) bool {
+	return x.Hash() == y.Hash()
+}
+
 func min(x, y int) int {
 	if x < y {
 		return x

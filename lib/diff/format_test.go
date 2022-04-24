@@ -122,8 +122,6 @@ func TestNoDifference(t *testing.T) {
 func TestTwoLines(t *testing.T) {
 	g := setup(t)
 
-	x, y := diff.TokenizeLine(g.Context(), "abcdfghijklmn", "xxbcdfghixklmn")
-
 	format := func(ts []*diff.Token) string {
 		out := ""
 		for _, t := range ts {
@@ -133,14 +131,45 @@ func TestTwoLines(t *testing.T) {
 			case diff.AddWords:
 				out += "+" + t.Literal
 			default:
-				out += "." + t.Literal
+				out += " " + t.Literal
 			}
 		}
 		return out
 	}
 
-	g.Eq(format(x), "-a.b.c.d.f.g.h.i-j.k.l.m.n")
-	g.Eq(format(y), "+x+x.b.c.d.f.g.h.i+x.k.l.m.n")
+	check := func(x, y, ex, ey string) {
+		t.Helper()
+
+		tx, ty := diff.TokenizeLine(g.Context(),
+			strings.ReplaceAll(x, " ", ""),
+			strings.ReplaceAll(y, " ", ""))
+		dx, dy := format(tx), format(ty)
+
+		if dx != ex || dy != ey {
+			t.Error("\n", dx, "\n", dy, "\n!=\n", ex, "\n", ey)
+		}
+	}
+
+	check(
+		" a b c d f g h i j k l m n",
+		" x x b c d f g h i x k l m n",
+		"-a b c d f g h i-j k l m n",
+		"+x+x b c d f g h i+x k l m n",
+	)
+
+	check(
+		" 4 9 0 4 5 0 8 8 5 3",
+		" 4 9 0 5 4 3 7 5 2",
+		" 4 9 0 4 5-0-8-8-5-3",
+		" 4 9 0+5 4+3+7 5+2",
+	)
+
+	check(
+		" 4 9 0 4 5 0 8",
+		" 4 9 0 5 4 3 7",
+		" 4 9 0 4-5-0-8",
+		" 4 9 0+5 4+3+7",
+	)
 }
 
 func TestColor(t *testing.T) {
