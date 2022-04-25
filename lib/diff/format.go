@@ -39,7 +39,7 @@ func Diff(x, y string) string {
 func Tokenize(ctx context.Context, x, y string) []*Token {
 	ts := TokenizeText(ctx, x, y)
 	lines := ParseTokenLines(ts)
-	lines = Narrow(3, lines)
+	lines = Narrow(1, lines)
 	ChunkWords(ctx, lines)
 	return SpreadTokenLines(lines)
 }
