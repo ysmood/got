@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/md5"
-	"encoding/binary"
 )
 
 // Comparables list
@@ -35,8 +34,6 @@ func (c Char) String() string {
 func NewString(s string) Comparables {
 	cs := make([]Comparable, len(s))
 	for i, c := range s {
-		hash := make([]byte, 4)
-		binary.BigEndian.PutUint32(hash[:], uint32(c))
 		cs[i] = Char(c)
 	}
 	return cs
