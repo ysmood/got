@@ -262,19 +262,21 @@ func (as Assertions) E(args ...interface{}) {
 }
 
 // Panic executes fn and asserts that fn panics
-func (as Assertions) Panic(fn func()) {
+func (as Assertions) Panic(fn func()) (val interface{}) {
 	as.Helper()
 
 	defer func() {
 		as.Helper()
 
-		val := recover()
+		val = recover()
 		if val == nil {
 			as.err(AssertionPanic, fn)
 		}
 	}()
 
 	fn()
+
+	return
 }
 
 // Is asserts that x is kind of y, it uses reflect.Kind to compare.

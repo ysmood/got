@@ -38,3 +38,27 @@ func SmartCompare(x, y interface{}) float64 {
 func Compare(x, y interface{}) float64 {
 	return float64(strings.Compare(gop.Plain(x), gop.Plain(y)))
 }
+
+// MethodType of target method
+func MethodType(target interface{}, method string) reflect.Type {
+	targetVal := reflect.ValueOf(target)
+	return targetVal.MethodByName(method).Type()
+}
+
+// ToInterfaces convertor
+func ToInterfaces(vs []reflect.Value) []interface{} {
+	out := []interface{}{}
+	for _, v := range vs {
+		out = append(out, v.Interface())
+	}
+	return out
+}
+
+// ToValues convertor
+func ToValues(vs []interface{}) []reflect.Value {
+	out := []reflect.Value{}
+	for _, v := range vs {
+		out = append(out, reflect.ValueOf(v))
+	}
+	return out
+}
