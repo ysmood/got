@@ -36,3 +36,10 @@ func TestSplit(t *testing.T) {
 	check(gop.S("test", gop.Red),
 		gop.Red.Set, "test", gop.Red.Unset)
 }
+
+func TestNewWords(t *testing.T) {
+	g := got.T(t)
+
+	words := diff.NewWords([]string{gop.Red.Set})
+	g.Eq(words[0].Hash(), "")
+}
