@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/md5"
-	"unicode"
+	"regexp"
+
+	"github.com/ysmood/got/lib/gop"
 )
 
 // Comparables list
@@ -19,25 +21,31 @@ type Comparable interface {
 }
 
 // Word block
-type Word string
+type Word struct {
+	str  string
+	hash string
+}
 
 // Hash interface
-func (c Word) Hash() string {
-	return string(c)
+func (w Word) Hash() string {
+	return w.hash
 }
 
 // String interface
-func (c Word) String() string {
-	return string(c)
+func (w Word) String() string {
+	return w.str
 }
 
-// NewString from string
-func NewString(s string) Comparables {
-	runes := []rune(s)
-	words := SplitSentence(runes)
+// NewWords from string
+func NewWords(split func(string) []string, s string) Comparables {
+	words := split(s)
 	cs := make([]Comparable, len(words))
 	for i, word := range words {
-		cs[i] = Word(word)
+		if gop.RegANSI.MatchString(word) {
+			cs[i] = Word{word, ""}
+		} else {
+			cs[i] = Word{word, word}
+		}
 	}
 	return cs
 }
@@ -52,10 +60,7 @@ type Line struct {
 func NewLine(b []byte) Line {
 	// For testing, md5 should be sufficient
 	sum := md5.Sum(b)
-	return Line{
-		hash: string(sum[:]),
-		str:  string(b),
-	}
+	return Line{string(b), string(sum[:])}
 }
 
 // Hash interface
@@ -83,51 +88,31 @@ func NewText(s string) Comparables {
 	return cs
 }
 
-// Split sentence into words, for word-wise comparing.
-// Any kind of splitter or non-English character is kept alone.
-func SplitSentence(sentence []rune) []string {
-	words := make([]string, 0)
-	var prev []rune
-	for _, r := range sentence {
-		if notPartOfWord(r) {
-			if len(prev) > 0 {
-				words = safelyAppendWord(words, string(prev))
-				prev = make([]rune, 0)
-			}
-			words = append(words, string(r))
-		} else {
-			prev = append(prev, r)
-		}
-	}
-	if len(prev) > 0 {
-		words = safelyAppendWord(words, string(prev))
-	}
-	return words
-}
+// RegWord to match a word
+var regWord = regexp.MustCompile(`(?s)` + // enable . to match newline
+	`[[:alpha:]]{1,12}` + // match alphabets, length limit is 12
+	`|[[:digit:]]{1,3}` + // match digits, length limit is 3
+	`|` + gop.RegANSI.String() + // match terminal color escape sequences
+	`|.` + // match others as single-char words
+	``)
 
-const MaxWordLen = 20
+// RegRune to match a rune
+var regRune = regexp.MustCompile(`(?s)` + // enable . to match newline
+	gop.RegANSI.String() + // match terminal color escape sequences
+	`|.` + // match others as single-char words
+	``)
 
-// try not append very long word
-func safelyAppendWord(words []string, w string) []string {
-	if len(w) <= MaxWordLen {
-		return append(words, w)
-	}
-	parts := (len(w) + MaxWordLen - 1) / MaxWordLen
-	for i := 0; i < (parts - 1); i++ {
-		words = append(words, w[:MaxWordLen])
-		w = w[MaxWordLen:]
-	}
-	if len(w) > 0 {
-		words = append(words, w)
-	}
-	return words
-}
+// SplitKey for context
+var SplitKey = struct{}{}
 
-// We assume that only alphabetic letters and digits can form word.
-func notPartOfWord(r rune) bool {
-	return !(inAlphabet(r) || unicode.IsDigit(r))
-}
+// Split a line into words
+func Split(s string) []string {
+	var reg *regexp.Regexp
+	if len(gop.StripANSI(s)) <= 100 {
+		reg = regRune
+	} else {
+		reg = regWord
+	}
 
-func inAlphabet(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
+	return reg.FindAllString(s, -1)
 }

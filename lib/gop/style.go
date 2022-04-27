@@ -128,17 +128,17 @@ var NoStyle = func() bool {
 	return noColor || n == 0
 }()
 
-// regANSI token
-var regANSI = regexp.MustCompile("\u001B\\[(\\d+)m")
+// RegANSI token
+var RegANSI = regexp.MustCompile(`\x1b\[(\d+)m`)
 
 // StripANSI tokens
 func StripANSI(str string) string {
-	return regANSI.ReplaceAllString(str, "")
+	return RegANSI.ReplaceAllString(str, "")
 }
 
 // VisualizeANSI tokens
 func VisualizeANSI(str string) string {
-	return regANSI.ReplaceAllString(str, "<$1>")
+	return RegANSI.ReplaceAllString(str, "<$1>")
 }
 
 // FixNestedStyle like
@@ -153,7 +153,7 @@ func FixNestedStyle(s string) string {
 	r := 0
 
 	for i < len(s) {
-		loc := regANSI.FindStringIndex(s[i:])
+		loc := RegANSI.FindStringIndex(s[i:])
 		if loc == nil {
 			break
 		}

@@ -1,6 +1,7 @@
 package diff_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -12,6 +13,8 @@ import (
 var setup = got.Setup(func(g got.G) {
 	g.ErrorHandler = got.NewDefaultAssertionError(nil, nil)
 })
+
+func split(s string) []string { return strings.Split(s, "") }
 
 func TestDiff(t *testing.T) {
 	g := setup(t)
@@ -182,4 +185,12 @@ func TestColor(t *testing.T) {
 <42>  1 +<49> a<42>x<49>c
 
 `)
+}
+
+func TestCustomSplit(t *testing.T) {
+	g := setup(t)
+
+	ctx := context.WithValue(g.Context(), diff.SplitKey, split)
+
+	g.Eq(diff.TokenizeLine(ctx, "abc", "abc"))
 }

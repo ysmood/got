@@ -1,6 +1,8 @@
 package diff
 
-import "strings"
+import (
+	"strings"
+)
 
 func neq(x, y Comparable) bool {
 	return x.Hash() != y.Hash()

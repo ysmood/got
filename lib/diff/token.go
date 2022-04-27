@@ -92,8 +92,14 @@ func TokenizeText(ctx context.Context, x, y string) []*Token {
 
 // TokenizeLine two different lines
 func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
-	xs := NewString(x)
-	ys := NewString(y)
+	split := Split
+	val := ctx.Value(SplitKey)
+	if val != nil {
+		split = val.(func(string) []string)
+	}
+
+	xs := NewWords(split, x)
+	ys := NewWords(split, y)
 
 	s := xs.LCS(ctx, ys)
 

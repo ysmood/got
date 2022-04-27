@@ -40,7 +40,7 @@ func Tokenize(ctx context.Context, x, y string) []*Token {
 	ts := TokenizeText(ctx, x, y)
 	lines := ParseTokenLines(ts)
 	lines = Narrow(1, lines)
-	ChunkWords(ctx, lines)
+	Words(ctx, lines)
 	return SpreadTokenLines(lines)
 }
 
@@ -94,8 +94,8 @@ func Narrow(n int, lines []*TokenLine) []*TokenLine {
 	return out
 }
 
-// ChunkWords with words
-func ChunkWords(ctx context.Context, lines []*TokenLine) {
+// Words diff
+func Words(ctx context.Context, lines []*TokenLine) {
 	delLines := []*TokenLine{}
 	addLines := []*TokenLine{}
 
