@@ -105,8 +105,8 @@ func Tokenize(v interface{}) []*Token {
 // Any type
 type Any interface{}
 
-// Obj type
-type Obj map[string]Any
+// Val type
+type Val map[string]Any
 
 // Arr type
 type Arr []Any
@@ -501,7 +501,7 @@ func tokenizeJSON(v reflect.Value) ([]*Token, bool) {
 func typeName(t string) *Token {
 	switch t {
 	case "map[string]interface {}":
-		return &Token{TypeName, "gop.Obj"}
+		return &Token{TypeName, "gop.Val"}
 	case "[]interface {}":
 		return &Token{TypeName, "gop.Arr"}
 	default:

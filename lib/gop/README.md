@@ -51,12 +51,12 @@ The output will be something like:
 
 ```go
 // 2022-04-07T00:16:25.460227+08:00 example/main.go:26 (main.main)
-gop.Obj/* len=10 */{
+gop.Val/* len=10 */{
     "bool": true,
     "bytes": []byte("abc"),
     "chan": make(chan int, 1)/* 0xc00016e000 */,
     "func": (func(int) int)(nil)/* 0x10e36c0 */,
-    "json": gop.JSONStr(gop.Obj{
+    "json": gop.JSONStr(gop.Val{
         "a": float64(1),
     }, `{"a"   : 1}`),
     "lines": `multiline string

@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"go/parser"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"reflect"
 	"testing"
 	"text/template"
@@ -78,12 +78,12 @@ func TestTokenize(t *testing.T) {
 		[]byte(`{"a": 1}`),
 	}
 
-	check := func(out, tpl string) {
+	check := func(out string, tpl ...string) {
 		expected := bytes.NewBuffer(nil)
 
 		t := template.New("")
-		g.E(t.Parse(g.Read(g.Open(false, tpl)).String()))
-		g.E(t.Execute(expected, gop.Obj{
+		g.E(t.Parse(g.Read(g.Open(false, tpl...)).String()))
+		g.E(t.Execute(expected, gop.Val{
 			"ch1": fmt.Sprintf("0x%x", reflect.ValueOf(ch1).Pointer()),
 			"ch2": fmt.Sprintf("0x%x", reflect.ValueOf(ch2).Pointer()),
 			"ch3": fmt.Sprintf("0x%x", reflect.ValueOf(ch3).Pointer()),
@@ -95,11 +95,22 @@ func TestTokenize(t *testing.T) {
 	}
 
 	out := gop.StripANSI(gop.F(v))
-	g.Nil(parser.ParseExpr(out))
-	check(out, "fixtures/expected.tmpl")
+
+	{
+		code := fmt.Sprintf(g.Read(g.Open(false, "fixtures", "compile_check.go.tmpl")).String(), out)
+		f := g.Open(true, "tmp", g.RandStr(8), "main.go")
+		g.Cleanup(func() { _ = os.Remove(f.Name()) })
+		g.Write(code)(f)
+		b, err := exec.Command("go", "run", f.Name()).CombinedOutput()
+		if err != nil {
+			g.Error(string(b))
+		}
+	}
+
+	check(out, "fixtures", "expected.tmpl")
 
 	out = gop.VisualizeANSI(gop.F(v))
-	check(out, "fixtures/expected_with_color.tmpl")
+	check(out, "fixtures", "expected_with_color.tmpl")
 }
 
 type A struct {

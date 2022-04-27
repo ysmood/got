@@ -67,10 +67,10 @@ test`,
     gop.Ptr([]byte("\x01\x02")).(*[]uint8),
     gop.Time(`2021-08-28T08:36:36.807908+08:00`, 63765707796),
     gop.Duration("1h0m0s"),
-    gop.JSONStr(gop.Obj{
+    gop.JSONStr(gop.Val{
         "a": float64(1),
     }, `{"a": 1}`),
-    gop.JSONBytes(gop.Obj{
+    gop.JSONBytes(gop.Val{
         "a": float64(1),
     }, `{"a": 1}`),
 }
