@@ -172,6 +172,10 @@ func (sn seen) circular(p path, v reflect.Value) []*Token {
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Map, reflect.Slice:
 		ptr := v.Pointer()
+		if ptr == 0 {
+			return nil
+		}
+
 		if p, has := sn[ptr]; has {
 			ts := []*Token{{Func, "gop.Circular"}, {ParenOpen, "("}}
 			ts = append(ts, p.tokens()...)

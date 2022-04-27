@@ -142,6 +142,21 @@ func TestCircularRef(t *testing.T) {
 		"}")
 }
 
+func TestCircularNilRef(t *testing.T) {
+	arr := []A{{}, {}}
+
+	got.T(t).Eq(gop.StripANSI(gop.F(arr)), `[]gop_test.A/* len=2 cap=2 */{
+    gop_test.A/* len=2 */{
+        Int: 0,
+        B: (*gop_test.B)(nil),
+    },
+    gop_test.A/* len=2 */{
+        Int: 0,
+        B: (*gop_test.B)(nil),
+    },
+}`)
+}
+
 func TestCircularMap(t *testing.T) {
 	g := got.T(t)
 	a := map[int]interface{}{}
