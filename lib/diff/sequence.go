@@ -37,8 +37,7 @@ func (w Word) String() string {
 }
 
 // NewWords from string
-func NewWords(split func(string) []string, s string) Comparables {
-	words := split(s)
+func NewWords(words []string) Comparables {
 	cs := make([]Comparable, len(words))
 	for i, word := range words {
 		if gop.RegANSI.MatchString(word) {

@@ -98,8 +98,8 @@ func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
 		split = val.(func(string) []string)
 	}
 
-	xs := NewWords(split, x)
-	ys := NewWords(split, y)
+	xs := NewWords(split(x))
+	ys := NewWords(split(y))
 
 	s := xs.LCS(ctx, ys)
 

@@ -14,7 +14,7 @@ func TestReduce(t *testing.T) {
 	eq := func(x, y string, e string) {
 		t.Helper()
 
-		out := diff.NewWords(diff.Split, x).Reduce(diff.NewWords(diff.Split, y)).String()
+		out := diff.NewWords(diff.Split(x)).Reduce(diff.NewWords(diff.Split(y))).String()
 		if out != e {
 			t.Error(out, "!=", e)
 		}
@@ -34,7 +34,7 @@ func TestCommon(t *testing.T) {
 	eq := func(x, y string, el, er int) {
 		t.Helper()
 
-		l, r := diff.NewWords(diff.Split, x).Common(diff.NewWords(diff.Split, y))
+		l, r := diff.NewWords(diff.Split(x)).Common(diff.NewWords(diff.Split(y)))
 
 		if l != el || r != er {
 			t.Error(l, r, "!=", el, er)
@@ -57,7 +57,7 @@ func TestLCSString(t *testing.T) {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		lcs := diff.NewWords(split, x).LCS(ctx, diff.NewWords(split, y))
+		lcs := diff.NewWords(split(x)).LCS(ctx, diff.NewWords(split(y)))
 		out := lcs.String()
 
 		if out != expected {

@@ -9,17 +9,13 @@ import (
 	"github.com/ysmood/got/lib/gop"
 )
 
-func TestNewString(t *testing.T) {
+func TestSplit(t *testing.T) {
 	g := got.T(t)
 
 	check := func(in string, expect ...string) {
 		g.Helper()
-		out := []string{}
-		in = strings.Repeat("\t", 100) + in
-		for _, w := range diff.NewWords(diff.Split, in) {
-			out = append(out, w.String())
-		}
-		g.Eq(out[100:], expect)
+		out := diff.Split(strings.Repeat("\t", 100) + in)[100:]
+		g.Eq(out, expect)
 	}
 
 	check("find a place to eat 热干面",
