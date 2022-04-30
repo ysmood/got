@@ -13,12 +13,16 @@ type Theme func(t Type) []gop.Style
 // ThemeDefault colors for Sprint
 var ThemeDefault = func(t Type) []gop.Style {
 	switch t {
-	case AddSymbol, AddWords:
-		return []gop.Style{gop.BgGreen}
-	case DelSymbol, DelWords:
-		return []gop.Style{gop.BgRed}
+	case AddSymbol:
+		return []gop.Style{gop.Green}
+	case DelSymbol:
+		return []gop.Style{gop.Red}
+	case AddWords:
+		return []gop.Style{gop.Black, gop.BgGreen}
+	case DelWords:
+		return []gop.Style{gop.Black, gop.BgRed}
 	case ChunkStart:
-		return []gop.Style{gop.BgMagenta}
+		return []gop.Style{gop.Black, gop.BgMagenta}
 	}
 	return []gop.Style{gop.None}
 }

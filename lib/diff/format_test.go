@@ -180,9 +180,9 @@ func TestColor(t *testing.T) {
 
 	out := diff.Diff("abc", "axc")
 
-	g.Eq(gop.VisualizeANSI(out), `<45>@@ diff chunk @@<49>
-<41>1   -<49> a<41>b<49>c
-<42>  1 +<49> a<42>x<49>c
+	g.Eq(gop.VisualizeANSI(out), `<45><30>@@ diff chunk @@<39><49>
+<31>1   -<39> a<41><30>b<39><49>c
+<32>  1 +<39> a<42><30>x<39><49>c
 
 `)
 }

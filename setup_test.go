@@ -68,10 +68,10 @@ func (m *mock) cleanup() {
 
 func (m *mock) check(expected string) {
 	m.t.Helper()
-	m.checkWithStyle(expected, false)
+	m.checkWithStyle(false, expected)
 }
 
-func (m *mock) checkWithStyle(expected string, visualizeStyle bool) {
+func (m *mock) checkWithStyle(visualizeStyle bool, expected string) {
 	m.Lock()
 	defer m.Unlock()
 
