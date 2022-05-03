@@ -231,13 +231,16 @@ func TestGetPrivateFieldErr(t *testing.T) {
 func TestFixNestedStyle(t *testing.T) {
 	g := got.T(t)
 
-	s := " 0 " + gop.S(" 1 "+
+	s := gop.S(" 0 "+gop.S(" 1 "+
 		gop.S(" 2 "+
 			gop.S(" 3 ", gop.Cyan)+
 			" 4 ", gop.Blue)+
-		" 5 ", gop.Red) + " 6 "
+		" 5 ", gop.Red)+" 6 ", gop.BgRed)
+	fmt.Println(gop.VisualizeANSI(s))
 	out := gop.VisualizeANSI(gop.FixNestedStyle(s))
-	g.Eq(out, ` 0 <31> 1 <39><34> 2 <39><36> 3 <39><34> 4 <39><31> 5 <39> 6 `)
+	g.Eq(out, `<41> 0 <31> 1 <39><34> 2 <39><36> 3 <39><34> 4 <39><31> 5 <39> 6 <49>`)
+
+	gop.FixNestedStyle("test")
 }
 
 func TestStripANSI(t *testing.T) {
