@@ -131,12 +131,12 @@ func VisualizeANSI(str string) string {
 }
 
 // FixNestedStyle like
-//     <red>1<blue>2<cyan>3</cyan>4</blue>5</red>
+//     <d><a>1<b>2<c>3</>4</>5</></d>
 // into
-//     <red>1</red><blue>2</blue><cyan>3</cyan><blue>4</blue><red>5</red>
+//     <d><a>1</><b>2</><c>3</><b>4</><a>5</></d>
 func FixNestedStyle(s string) string {
 	out := ""
-	stack := []string{}
+	stacks := map[string][]string{}
 	i := 0
 	l := 0
 	r := 0
@@ -152,25 +152,43 @@ func FixNestedStyle(s string) string {
 
 		out += s[i:l]
 
+		unset := styleSetMap[token].Unset
+
+		if unset == "" {
+			unset = token
+		}
+
+		if _, has := stacks[unset]; !has {
+			stacks[unset] = []string{}
+		}
+
+		stack := stacks[unset]
 		if len(stack) == 0 {
 			stack = append(stack, token)
 			out += token
-		} else if token == styleMap[stack[len(stack)-1]].Unset {
-			out += token
-			stack = stack[:len(stack)-1]
-			if len(stack) > 0 {
-				out += stack[len(stack)-1]
-			}
 		} else {
-			out += styleMap[stack[len(stack)-1]].Unset
-			stack = append(stack, token)
-			out += token
+			if token == styleSetMap[last(stack)].Unset {
+				out += token
+				stack = stack[:len(stack)-1]
+				if len(stack) > 0 {
+					out += last(stack)
+				}
+			} else {
+				out += styleSetMap[last(stack)].Unset
+				stack = append(stack, token)
+				out += token
+			}
 		}
+		stacks[unset] = stack
 
 		i = r
 	}
 
 	return out + s[i:]
+}
+
+func last(list []string) string {
+	return list[len(list)-1]
 }
 
 var styleSetMap = map[string]Style{}
