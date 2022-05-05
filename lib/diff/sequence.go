@@ -9,79 +9,57 @@ import (
 	"github.com/ysmood/got/lib/gop"
 )
 
-// Comparables list
-type Comparables []Comparable
+// Sequence list
+type Sequence []Comparable
 
 // Comparable interface
 type Comparable interface {
-	// Hash for fast comparison
+	// Hash for comparison
 	Hash() string
 	// String returns the full content
 	String() string
 }
 
-// Word block
-type Word struct {
-	str  string
+// Element of a line or a word
+type Element struct {
 	hash string
+	str  string
 }
 
-// Hash interface
-func (w Word) Hash() string {
-	return w.hash
+// Hash for comparison
+func (e *Element) Hash() string {
+	return e.hash
 }
 
-// String interface
-func (w Word) String() string {
-	return w.str
+// String returns the full content
+func (e *Element) String() string {
+	return e.str
 }
 
 // NewWords from string
-func NewWords(words []string) Comparables {
+func NewWords(words []string) Sequence {
 	cs := make([]Comparable, len(words))
 	for i, word := range words {
 		if gop.RegANSI.MatchString(word) {
-			cs[i] = Word{word, ""}
+			cs[i] = &Element{"", word}
 		} else {
-			cs[i] = Word{word, word}
+			cs[i] = &Element{word, word}
 		}
 	}
 	return cs
 }
 
-// Line of a string for fast comparison.
-type Line struct {
-	str  string
-	hash string
-}
-
-// NewLine from bytes
-func NewLine(b []byte) Line {
-	// For testing, md5 should be sufficient
-	sum := md5.Sum(b)
-	return Line{string(b), string(sum[:])}
-}
-
-// Hash interface
-func (c Line) Hash() string {
-	return c.hash
-}
-
-// String interface
-func (c Line) String() string {
-	return c.str
-}
-
 // NewText from string. It will split the s via newlines.
-func NewText(s string) Comparables {
+func NewText(s string) Sequence {
 	sc := bufio.NewScanner(bytes.NewBufferString(s))
 	cs := []Comparable{}
-	for sc.Scan() {
-		cs = append(cs, NewLine(sc.Bytes()))
+	for i := 0; sc.Scan(); i++ {
+		sum := md5.Sum(sc.Bytes())
+		cs = append(cs, &Element{string(sum[:]), sc.Text()})
 	}
 
 	if len(s) > 0 && s[len(s)-1] == '\n' {
-		cs = append(cs, NewLine([]byte{}))
+		cs = append(cs, &Element{"", ""})
 	}
 
 	return cs

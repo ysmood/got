@@ -123,7 +123,7 @@ func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
 	return xTokens, yTokens
 }
 
-func numFormat(x, y []Comparable) (string, string, string) {
+func numFormat(x, y Sequence) (string, string, string) {
 	xl := len(fmt.Sprintf("%d", len(x)))
 	yl := len(fmt.Sprintf("%d", len(y)))
 

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ysmood/got"
 	"github.com/ysmood/got/lib/diff"
 )
 
@@ -55,7 +56,7 @@ func TestLCSString(t *testing.T) {
 	eq := func(x, y, expected string) {
 		t.Helper()
 
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		lcs := diff.NewWords(split(x)).LCS(ctx, diff.NewWords(split(y)))
 		out := lcs.String()
@@ -73,8 +74,8 @@ func TestLCSString(t *testing.T) {
 	eq("gac", "agcat", "ga")
 	eq("agcat", "gac", "ac")
 
-	x := bytes.Repeat([]byte("x"), 10000)
-	y := bytes.Repeat([]byte("y"), 10000)
+	x := bytes.Repeat([]byte("x"), 100000)
+	y := bytes.Repeat([]byte("y"), 100000)
 	eq(string(x), string(y), "")
 
 	x[len(x)/2] = byte('a')
@@ -83,7 +84,7 @@ func TestLCSString(t *testing.T) {
 
 	x[len(x)/2] = byte('y')
 	y[len(y)/2] = byte('x')
-	eq(string(x), string(y), "yx")
+	eq(string(x), string(y), "xy")
 }
 
 func TestText(t *testing.T) {
@@ -111,4 +112,28 @@ func TestLCSText(t *testing.T) {
 	eq("abc", "acb", "ab")
 	eq("abc", "acbc", "abc")
 	eq("abc", "xxx", "")
+}
+
+func TestIsIn(t *testing.T) {
+	g := got.T(t)
+
+	y := diff.NewWords(split("abc"))
+
+	g.True(diff.NewWords(split("ab")).IsSubsequenceOf(y))
+	g.True(diff.NewWords(split("ac")).IsSubsequenceOf(y))
+	g.True(diff.NewWords(split("bc")).IsSubsequenceOf(y))
+	g.False(diff.NewWords(split("cb")).IsSubsequenceOf(y))
+	g.False(diff.NewWords(split("ba")).IsSubsequenceOf(y))
+	g.False(diff.NewWords(split("ca")).IsSubsequenceOf(y))
+}
+
+func TestLIS(t *testing.T) {
+	g := got.T(t)
+
+	g.Eq(diff.LIS([]int{}), []int{})
+	g.Eq(diff.LIS([]int{1}), []int{1})
+	g.Eq(diff.LIS([]int{2, 1}), []int{1})
+	g.Eq(diff.LIS([]int{2, 3, 2}), []int{2, 3})
+	g.Eq(diff.LIS([]int{1, 2, 3}), []int{1, 2, 3})
+	g.Eq(diff.LIS([]int{1, 2, 1, 2, 3}), []int{1, 2, 3})
 }
