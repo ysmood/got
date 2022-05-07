@@ -18,9 +18,9 @@ var ThemeDefault = func(t Type) []gop.Style {
 	case DelSymbol:
 		return []gop.Style{gop.Red}
 	case AddWords:
-		return []gop.Style{gop.Black, gop.BgGreen}
+		return []gop.Style{gop.Green}
 	case DelWords:
-		return []gop.Style{gop.Black, gop.BgRed}
+		return []gop.Style{gop.Red}
 	case ChunkStart:
 		return []gop.Style{gop.Black, gop.BgMagenta}
 	}
@@ -57,7 +57,7 @@ func Format(ts []*Token, theme Theme) string {
 		out += gop.Stylize(s, theme(t.Type))
 	}
 
-	return gop.FixNestedStyle(out)
+	return out
 }
 
 // Narrow the context around each diff section to n lines.

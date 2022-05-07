@@ -6,7 +6,6 @@ import (
 
 	"github.com/ysmood/got"
 	"github.com/ysmood/got/lib/diff"
-	"github.com/ysmood/got/lib/gop"
 )
 
 func TestSplit(t *testing.T) {
@@ -32,14 +31,4 @@ func TestSplit(t *testing.T) {
 
 	check("WordVeryVeryVeryVeryVeryVeryVerylong",
 		"WordVeryVery", "VeryVeryVery", "VeryVerylong")
-
-	check(gop.S("test", gop.Red),
-		gop.Red.Set, "test", gop.Red.Unset)
-}
-
-func TestNewWords(t *testing.T) {
-	g := got.T(t)
-
-	words := diff.NewWords([]string{gop.Red.Set})
-	g.Eq(words[0].Hash(), "")
 }

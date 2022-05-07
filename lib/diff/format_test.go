@@ -128,13 +128,14 @@ func TestTwoLines(t *testing.T) {
 	format := func(ts []*diff.Token) string {
 		out := ""
 		for _, t := range ts {
+			txt := strings.TrimSpace(strings.ReplaceAll(t.Literal, "", " "))
 			switch t.Type {
 			case diff.DelWords:
-				out += "-" + t.Literal
+				out += "-" + txt
 			case diff.AddWords:
-				out += "+" + t.Literal
+				out += "+" + txt
 			default:
-				out += " " + t.Literal
+				out += "=" + txt
 			}
 		}
 		return out
@@ -156,22 +157,22 @@ func TestTwoLines(t *testing.T) {
 	check(
 		" a b c d f g h i j k l m n",
 		" x x b c d f g h i x k l m n",
-		"-a b c d f g h i-j k l m n",
-		"+x+x b c d f g h i+x k l m n",
+		"-a=b c d f g h i-j=k l m n",
+		"+x x=b c d f g h i+x=k l m n",
 	)
 
 	check(
 		" 4 9 0 4 5 0 8 8 5 3",
 		" 4 9 0 5 4 3 7 5 2",
-		" 4 9 0 4 5-0-8-8-5-3",
-		" 4 9 0+5 4+3+7 5+2",
+		"=4 9 0 4 5-0 8 8 5 3",
+		"=4 9 0+5=4+3 7=5+2",
 	)
 
 	check(
 		" 4 9 0 4 5 0 8",
 		" 4 9 0 5 4 3 7",
-		" 4 9 0 4-5-0-8",
-		" 4 9 0+5 4+3+7",
+		"=4 9 0 4-5 0 8",
+		"=4 9 0+5=4+3 7",
 	)
 }
 
@@ -181,8 +182,8 @@ func TestColor(t *testing.T) {
 	out := diff.Diff("abc", "axc")
 
 	g.Eq(gop.VisualizeANSI(out), `<45><30>@@ diff chunk @@<39><49>
-<31>1   -<39> a<41><30>b<39><49>c
-<32>  1 +<39> a<42><30>x<39><49>c
+<31>1   -<39> a<31>b<39>c
+<32>  1 +<39> a<32>x<39>c
 
 `)
 }

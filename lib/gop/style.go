@@ -122,18 +122,19 @@ func StripANSI(str string) string {
 	return RegANSI.ReplaceAllString(str, "")
 }
 
+var regNum = regexp.MustCompile(`\d+`)
+
 // VisualizeANSI tokens
 func VisualizeANSI(str string) string {
-	reg := regexp.MustCompile(`\d+`)
 	return RegANSI.ReplaceAllStringFunc(str, func(s string) string {
-		return "<" + reg.FindString(s) + ">"
+		return "<" + regNum.FindString(s) + ">"
 	})
 }
 
 // FixNestedStyle like
-//     <d><a>1<b>2<c>3</>4</>5</></d>
+//     <d><a>1<b>2<c>3</d></>4</>5</>
 // into
-//     <d><a>1</><b>2</><c>3</><b>4</><a>5</></d>
+//     <d><a>1</><b>2</><c>3</d></><b>4</><a>5</>
 func FixNestedStyle(s string) string {
 	out := ""
 	stacks := map[string][]string{}
@@ -152,7 +153,7 @@ func FixNestedStyle(s string) string {
 
 		out += s[i:l]
 
-		unset := styleSetMap[token].Unset
+		unset := GetStyle(token).Unset
 
 		if unset == "" {
 			unset = token
@@ -167,14 +168,14 @@ func FixNestedStyle(s string) string {
 			stack = append(stack, token)
 			out += token
 		} else {
-			if token == styleSetMap[last(stack)].Unset {
+			if token == GetStyle(last(stack)).Unset {
 				out += token
 				stack = stack[:len(stack)-1]
 				if len(stack) > 0 {
 					out += last(stack)
 				}
 			} else {
-				out += styleSetMap[last(stack)].Unset
+				out += GetStyle(last(stack)).Unset
 				stack = append(stack, token)
 				out += token
 			}
@@ -185,6 +186,11 @@ func FixNestedStyle(s string) string {
 	}
 
 	return out + s[i:]
+}
+
+// GetStyle from available styles
+func GetStyle(s string) Style {
+	return styleSetMap[s]
 }
 
 func last(list []string) string {

@@ -115,11 +115,11 @@ func NewDefaultAssertionError(theme gop.Theme, diffTheme diff.Theme) AssertionEr
 			}
 
 			if hasNewline(x, y) {
-				df := diff.Format(diff.Tokenize(ctx, x, y), diffTheme)
+				df := diff.Format(diff.Tokenize(ctx, gop.StripANSI(x), gop.StripANSI(y)), diffTheme)
 				return j(x, k("not =="), y, df)
 			}
 
-			dx, dy := diff.TokenizeLine(ctx, x, y)
+			dx, dy := diff.TokenizeLine(ctx, gop.StripANSI(x), gop.StripANSI(y))
 			return diff.Format(dx, diffTheme) + k("not ==") + diff.Format(dy, diffTheme)
 		},
 		AssertionNeqSame: func(details ...interface{}) string {
