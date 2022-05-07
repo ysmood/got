@@ -5,54 +5,51 @@ import (
 )
 
 // LCS between x and y.
-// This implementation converts the LCS problem into LIS sub problems.
+// This implementation converts the LCS problem into LIS sub problems without recursion.
+// The memory complexity is O(x.Occurrence(y)).
+// The time complexicy is O(x.Occurrence(y).Complexity()).
+// The time complexicy is similar with Myer's diff algorithm, but with more modulized steps, which allows further optimization easier.
 // https://en.wikipedia.org/wiki/Longest_common_subsequence_problem
 func (x Sequence) LCS(ctx context.Context, y Sequence) Sequence {
 	left, right := x.Common(y)
 	l, r, x, y := x[:left], x[len(x)-right:], x[left:len(x)-right], y[left:len(y)-right]
 
-	return append(append(Sequence{}, l...), append(x.findLCS(ctx, y), r...)...)
+	return append(append(Sequence{}, l...), append(x.lcs(ctx, y), r...)...)
 }
 
-func (x Sequence) findLCS(ctx context.Context, y Sequence) Sequence {
+func (x Sequence) lcs(ctx context.Context, y Sequence) Sequence {
 	x = x.Reduce(y)
 	y = y.Reduce(x)
-	m := x.Occurrence(y)
 
-	l := len(m)
-	s := make([]int, l)
-	p := make([]int, l)
-	var longest []int
-	for l > 0 && ctx.Err() == nil {
-		for i := 0; i < l; i++ {
-			s[i] = m[i][p[i]]
-		}
+	o := x.Occurrence(y)
+	p := make([]int, len(o))
+	n := o.Complexity()
 
-		lis := LIS(s)
-		if len(lis) > len(longest) {
-			longest = lis
-		}
+	lis := NewLIS(len(o), func(i int) int {
+		return o[i][p[i]]
+	})
 
-		p[0]++
-		for i := 0; i < l; i++ {
-			if p[i] < len(m[i]) {
-				break
-			} else {
-				p[i] = 0
-				if i+1 == l {
-					goto end
-				}
-				p[i+1]++
-			}
+	var longest int
+	var longestI int
+	for i := 0; i < n && ctx.Err() == nil; i++ {
+		o.Permutate(p, i)
+
+		l := lis.Length()
+		if l > longest {
+			longestI = i
+			longest = l
 		}
 	}
 
-end:
+	p = make([]int, len(o))
+	o.Permutate(p, longestI)
+	s := lis.Get()
 
-	lcs := make(Sequence, len(longest))
-	for i, index := range longest {
-		lcs[i] = x[index]
+	lcs := make(Sequence, longest)
+	for i := 0; i < longest; i++ {
+		lcs[i] = x[s[i]]
 	}
+
 	return lcs
 }
 
@@ -117,9 +114,33 @@ func (x Sequence) IsSubsequenceOf(y Sequence) bool {
 	return true
 }
 
-// Occurrence returns the position of each element of x in y.
-func (x Sequence) Occurrence(y Sequence) [][]int {
-	m := make([][]int, len(y))
+// Occurrence histogram
+type Occurrence [][]int
+
+// Complexity to find the LCS in m
+func (o Occurrence) Complexity() int {
+	if len(o) == 0 {
+		return 0
+	}
+
+	n := 1
+	for _, i := range o {
+		n *= len(i)
+	}
+	return n
+}
+
+// Permutate p with i
+func (o Occurrence) Permutate(p []int, i int) {
+	for j := 0; i > 0; j++ {
+		p[j] = i % len(o[j])
+		i = i / len(o[j])
+	}
+}
+
+// Occurrence returns the position of each element of y in x.
+func (x Sequence) Occurrence(y Sequence) Occurrence {
+	m := make(Occurrence, len(y))
 	h := x.Histogram()
 
 	for i, c := range y {
@@ -131,50 +152,59 @@ func (x Sequence) Occurrence(y Sequence) [][]int {
 	return m
 }
 
-// LIS returns the longest increasing subsequence of s.
-// https://en.wikipedia.org/wiki/Longest_increasing_subsequence
-func LIS(x []int) []int {
-	p := make([]int, len(x))
-	m := make([]int, len(x)+1)
+// LIS https://en.wikipedia.org/wiki/Longest_increasing_subsequence
+type LIS struct {
+	p   []int
+	m   []int
+	len int
+	x   func(int) int
+}
 
+// NewLIS helper
+func NewLIS(len int, x func(int) int) *LIS {
+	return &LIS{
+		p:   make([]int, len),
+		m:   make([]int, len+1),
+		len: len,
+		x:   x,
+	}
+}
+
+// Length of LIS
+func (lis *LIS) Length() int {
 	l := 0
-	for i := range x {
-		// Binary search for the largest positive j ≤ L
-		// such that X[M[j]] < X[i]
+	for i := 0; i < lis.len; i++ {
 		lo := 1
 		hi := l + 1
 		for lo < hi {
 			mid := lo + (hi-lo)/2
-			if x[m[mid]] < x[i] {
+			if lis.x(lis.m[mid]) < lis.x(i) {
 				lo = mid + 1
 			} else {
 				hi = mid
 			}
 		}
 
-		// After searching, lo is 1 greater than the
-		// length of the longest prefix of X[i]
 		newL := lo
 
-		// The predecessor of X[i] is the last index of
-		// the subsequence of length newL-1
-		p[i] = m[newL-1]
-		m[newL] = i
+		lis.p[i] = lis.m[newL-1]
+		lis.m[newL] = i
 
 		if newL > l {
-			// If we found a subsequence longer than any we've
-			// found yet, update L
 			l = newL
 		}
 	}
+	return l
+}
 
-	// Reconstruct the longest increasing subsequence
+// Get the LIS
+func (lis *LIS) Get() []int {
+	l := lis.Length()
 	s := make([]int, l)
-	k := m[l]
+	k := lis.m[l]
 	for i := l - 1; i >= 0; i-- {
-		s[i] = x[k]
-		k = p[k]
+		s[i] = lis.x(k)
+		k = lis.p[k]
 	}
-
 	return s
 }

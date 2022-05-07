@@ -126,14 +126,3 @@ func TestIsIn(t *testing.T) {
 	g.False(diff.NewWords(split("ba")).IsSubsequenceOf(y))
 	g.False(diff.NewWords(split("ca")).IsSubsequenceOf(y))
 }
-
-func TestLIS(t *testing.T) {
-	g := got.T(t)
-
-	g.Eq(diff.LIS([]int{}), []int{})
-	g.Eq(diff.LIS([]int{1}), []int{1})
-	g.Eq(diff.LIS([]int{2, 1}), []int{1})
-	g.Eq(diff.LIS([]int{2, 3, 2}), []int{2, 3})
-	g.Eq(diff.LIS([]int{1, 2, 3}), []int{1, 2, 3})
-	g.Eq(diff.LIS([]int{1, 2, 1, 2, 3}), []int{1, 2, 3})
-}
