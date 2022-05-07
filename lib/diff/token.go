@@ -106,6 +106,15 @@ func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
 	xTokens := []*Token{}
 	yTokens := []*Token{}
 
+	merge := func(ts []*Token) []*Token {
+		last := len(ts) - 1
+		if last > 0 && ts[last].Type == ts[last-1].Type {
+			ts[last-1].Literal += ts[last].Literal
+			ts = ts[:last]
+		}
+		return ts
+	}
+
 	for i, j, k := 0, 0, 0; i < len(xs) || j < len(ys); {
 		if i < len(xs) && (k == len(s) || neq(xs[i], s[k])) {
 			xTokens = append(xTokens, &Token{DelWords, xs[i].String()})
@@ -118,6 +127,9 @@ func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
 			yTokens = append(yTokens, &Token{SameWords, s[k].String()})
 			i, j, k = i+1, j+1, k+1
 		}
+
+		xTokens = merge(xTokens)
+		yTokens = merge(yTokens)
 	}
 
 	return xTokens, yTokens
