@@ -239,6 +239,9 @@ func (ae *defaultAssertionError) Report(ac *AssertionCtx) string {
 
 func j(args ...string) string {
 	if hasNewline(args...) {
+		for i := 0; i < len(args); i++ {
+			args[i] = strings.Trim(args[i], " ")
+		}
 		return "\n" + strings.Join(args, "\n\n")
 	}
 	return strings.Join(args, "")

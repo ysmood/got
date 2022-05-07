@@ -109,7 +109,7 @@ got_test.data/* len=2 */{
     S: "a",
 }
 
- ⦗not ==⦘ 
+⦗not ==⦘
 
 got_test.data/* len=2 */{
     A: 1,
@@ -133,7 +133,7 @@ got_test.data/* len=2 */{
     1,
 }
 
- ⦗not ==⦘ 
+⦗not ==⦘
 
 []int/* len=1 cap=1 */{
     2,
@@ -204,13 +204,13 @@ got_test.data/* len=2 */{
 		as.E(1, errors.New("E"))
 	}()
 	m.check(`
- ⦗last argument⦘ 
+⦗last argument⦘
 
 &errors.errorString{
     s: "E",
 }
 
- ⦗should be⦘ 
+⦗should be⦘
 
 nil`)
 
@@ -222,7 +222,7 @@ nil`)
     s: "a",
 }
 
- ⦗should in chain of⦘ 
+⦗should in chain of⦘
 
 &errors.errorString{
     s: "b",
@@ -231,7 +231,7 @@ nil`)
 	m.check(`
 nil
 
- ⦗should be kind of⦘ 
+⦗should be kind of⦘
 
 &errors.errorString{
     s: "a",
@@ -242,7 +242,7 @@ nil
     s: "a",
 }
 
- ⦗should be kind of⦘ 
+⦗should be kind of⦘
 
 nil`)
 
@@ -280,7 +280,7 @@ func TestAssertionColor(t *testing.T) {
     <32>2<39>,
 }
 
- <31><4>⦗not ==⦘<24><39> 
+<31><4>⦗not ==⦘<24><39>
 
 <36>[]int<39><37>/* len=2 cap=2 */<39>{
     <32>1<39>,
