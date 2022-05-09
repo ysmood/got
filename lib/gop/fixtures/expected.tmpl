@@ -1,6 +1,6 @@
-gop.Arr/* len=37 cap=37 */{
+[]interface {}/* len=37 cap=37 */{
     nil,
-    gop.Arr/* len=4 cap=4 */{
+    []interface {}/* len=4 cap=4 */{
         true,
         false,
         uintptr(23),
@@ -67,10 +67,10 @@ test`,
     gop.Ptr([]byte("\x01\x02")).(*[]uint8),
     gop.Time(`2021-08-28T08:36:36.807908+08:00`, 63765707796),
     gop.Duration("1h0m0s"),
-    gop.JSONStr(gop.Val{
+    gop.JSONStr(map[string]interface {}{
         "a": float64(1),
     }, `{"a": 1}`),
-    gop.JSONBytes(gop.Val{
+    gop.JSONBytes(map[string]interface {}{
         "a": float64(1),
     }, `{"a": 1}`),
 }

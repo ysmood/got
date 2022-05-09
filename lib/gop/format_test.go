@@ -83,7 +83,7 @@ func TestTokenize(t *testing.T) {
 
 		t := template.New("")
 		g.E(t.Parse(g.Read(g.Open(false, tpl...)).String()))
-		g.E(t.Execute(expected, gop.Val{
+		g.E(t.Execute(expected, map[string]interface{}{
 			"ch1": fmt.Sprintf("0x%x", reflect.ValueOf(ch1).Pointer()),
 			"ch2": fmt.Sprintf("0x%x", reflect.ValueOf(ch2).Pointer()),
 			"ch3": fmt.Sprintf("0x%x", reflect.ValueOf(ch3).Pointer()),
@@ -180,12 +180,12 @@ func TestCircularSlice(t *testing.T) {
 
 	g.Eq(gop.Format(ts, gop.ThemeNone), ""+
 		"[][]interface {}/* len=2 cap=2 */{\n"+
-		"    gop.Arr/* len=1 cap=1 */{\n"+
-		"        gop.Arr/* len=1 cap=1 */{\n"+
-		"            gop.Circular(0, 0).(gop.Arr),\n"+
+		"    []interface {}/* len=1 cap=1 */{\n"+
+		"        []interface {}/* len=1 cap=1 */{\n"+
+		"            gop.Circular(0, 0).([]interface {}),\n"+
 		"        },\n"+
 		"    },\n"+
-		"    gop.Circular(0, 0).(gop.Arr),\n"+
+		"    gop.Circular(0, 0).([]interface {}),\n"+
 		"}")
 }
 

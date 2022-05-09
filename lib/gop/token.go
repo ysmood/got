@@ -102,15 +102,6 @@ func Tokenize(v interface{}) []*Token {
 	return tokenize(seen{}, []interface{}{}, reflect.ValueOf(v))
 }
 
-// Any type
-type Any interface{}
-
-// Val type
-type Val map[string]Any
-
-// Arr type
-type Arr []Any
-
 // Ptr returns a pointer to v
 func Ptr(v interface{}) interface{} {
 	val := reflect.ValueOf(v)
@@ -503,12 +494,5 @@ func tokenizeJSON(v reflect.Value) ([]*Token, bool) {
 }
 
 func typeName(t string) *Token {
-	switch t {
-	case "map[string]interface {}":
-		return &Token{TypeName, "gop.Val"}
-	case "[]interface {}":
-		return &Token{TypeName, "gop.Arr"}
-	default:
-		return &Token{TypeName, t}
-	}
+	return &Token{TypeName, t}
 }
