@@ -243,10 +243,10 @@ func TestTypeName(t *testing.T) {
 	type c complex128
 	type b byte
 
-	g.Eq(gop.Plain(f(1)), "f(1.0)")
-	g.Eq(gop.Plain(i(1)), "i(1)")
-	g.Eq(gop.Plain(c(1)), "c(1+0i)")
-	g.Eq(gop.Plain(b('a')), "b(97)")
+	g.Eq(gop.Plain(f(1)), "gop_test.f(1.0)")
+	g.Eq(gop.Plain(i(1)), "gop_test.i(1)")
+	g.Eq(gop.Plain(c(1)), "gop_test.c(1+0i)")
+	g.Eq(gop.Plain(b('a')), "gop_test.b(97)")
 }
 
 func TestSliceCapNotEqual(t *testing.T) {
