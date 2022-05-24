@@ -3,7 +3,6 @@ package gop
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"sort"
 	"strconv"
@@ -210,24 +209,24 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 		if v.Cap() == 0 {
 			return []*Token{{Func, "make"}, {ParenOpen, "("},
 				{Chan, "chan"}, typeName(v.Type().Elem().String()), {ParenClose, ")"},
-				{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
+				{Comment, wrapComment(formatUintptr(v.Pointer()))}}
 		}
 		return []*Token{{Func, "make"}, {ParenOpen, "("}, {Chan, "chan"},
 			typeName(v.Type().Elem().Name()), {InlineComma, ","},
-			{Number, fmt.Sprintf("%d", v.Cap())}, {ParenClose, ")"},
-			{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
+			{Number, strconv.FormatInt(int64(v.Cap()), 10)}, {ParenClose, ")"},
+			{Comment, wrapComment(formatUintptr(v.Pointer()))}}
 
 	case reflect.Func:
 		return []*Token{{ParenOpen, "("}, {TypeName, v.Type().String()},
 			{ParenClose, ")"}, {ParenOpen, "("}, {Nil, "nil"}, {ParenClose, ")"},
-			{Comment, fmt.Sprintf("/* 0x%x */", v.Pointer())}}
+			{Comment, wrapComment(formatUintptr(v.Pointer()))}}
 
 	case reflect.Ptr:
 		return tokenizePtr(sn, p, v)
 
 	case reflect.UnsafePointer:
 		return []*Token{typeName("unsafe.Pointer"), {ParenOpen, "("}, typeName("uintptr"),
-			{ParenOpen, "("}, typeName(fmt.Sprintf("0x%x", v.Interface())), {ParenClose, ")"}, {ParenClose, ")"}}
+			{ParenOpen, "("}, {Number, formatUintptr(v.Pointer())}, {ParenClose, ")"}, {ParenClose, ")"}}
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
@@ -246,7 +245,7 @@ func tokenizeSpecial(v reflect.Value) ([]*Token, bool) {
 	if v.Kind() == reflect.Invalid {
 		return []*Token{{Nil, "nil"}}, true
 	} else if r, ok := v.Interface().(rune); ok && unicode.IsGraphic(r) {
-		return []*Token{tokenizeRune(&Token{Nil, ""}, r)}, true
+		return []*Token{{Rune, strconv.QuoteRune(r)}}, true
 	} else if b, ok := v.Interface().(byte); ok {
 		return tokenizeByte(&Token{Nil, ""}, b), true
 	} else if t, ok := v.Interface().(time.Time); ok {
@@ -270,7 +269,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 			ts = append(ts, typeName(v.Type().String()))
 		}
 		if v.Kind() == reflect.Slice {
-			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d cap=%d */", v.Len(), v.Cap())})
+			ts = append(ts, &Token{Comment, formatLenCap(v.Len(), v.Cap())})
 		}
 		ts = append(ts, &Token{SliceOpen, "{"})
 		for i := 0; i < v.Len(); i++ {
@@ -289,7 +288,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 			return compare(keys[i].Interface(), keys[j].Interface()) < 0
 		})
 		if len(keys) > 1 {
-			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(keys))})
+			ts = append(ts, &Token{Comment, formatLenCap(len(keys), -1)})
 		}
 		ts = append(ts, &Token{MapOpen, "{"})
 		for _, k := range keys {
@@ -307,7 +306,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 
 		ts = append(ts, typeName(t.String()))
 		if v.NumField() > 1 {
-			ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", v.NumField())})
+			ts = append(ts, &Token{Comment, formatLenCap(v.NumField(), -1)})
 		}
 		ts = append(ts, &Token{StructOpen, "{"})
 		for i := 0; i < v.NumField(); i++ {
@@ -383,18 +382,13 @@ func tokenizeNumber(v reflect.Value) []*Token {
 	return ts
 }
 
-func tokenizeRune(t *Token, r rune) *Token {
-	t.Type = Rune
-	t.Literal = fmt.Sprintf("'%s'", string(r))
-	return t
-}
-
 func tokenizeByte(t *Token, b byte) []*Token {
 	ts := []*Token{typeName("byte"), {ParenOpen, "("}}
-	if unicode.IsGraphic(rune(b)) {
-		ts = append(ts, &Token{Byte, fmt.Sprintf("'%s'", string(b))})
+	r := rune(b)
+	if unicode.IsGraphic(r) {
+		ts = append(ts, &Token{Byte, strconv.QuoteRune(r)})
 	} else {
-		ts = append(ts, &Token{Byte, fmt.Sprintf("0x%x", b)})
+		ts = append(ts, &Token{Byte, "0x" + strconv.FormatUint(uint64(b), 16)})
 	}
 	return append(ts, &Token{ParenClose, ")"})
 }
@@ -403,7 +397,7 @@ func tokenizeTime(t time.Time) []*Token {
 	ext := GetPrivateFieldByName(reflect.ValueOf(t), "ext").Int()
 	ts := []*Token{{Func, "gop.Time"}, {ParenOpen, "("}}
 	ts = append(ts, &Token{String, t.Format(time.RFC3339Nano)})
-	ts = append(ts, &Token{InlineComma, ","}, &Token{Number, fmt.Sprintf("%d", ext)}, &Token{ParenClose, ")"})
+	ts = append(ts, &Token{InlineComma, ","}, &Token{Number, strconv.FormatInt(ext, 10)}, &Token{ParenClose, ")"})
 	return ts
 }
 
@@ -419,7 +413,7 @@ func tokenizeString(v reflect.Value) []*Token {
 	s := v.String()
 	ts := []*Token{{String, s}}
 	if v.Len() >= LongStringLen {
-		ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(s))})
+		ts = append(ts, &Token{Comment, formatLenCap(len(s), -1)})
 	}
 	return ts
 }
@@ -438,7 +432,7 @@ func tokenizeBytes(data []byte) []*Token {
 		ts = append(ts, &Token{ParenClose, ")"})
 	}
 	if len(data) >= LongBytesLen {
-		ts = append(ts, &Token{Comment, fmt.Sprintf("/* len=%d */", len(data))})
+		ts = append(ts, &Token{Comment, formatLenCap(len(data), -1)})
 	}
 	return ts
 }

@@ -3,6 +3,7 @@ package gop
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"unsafe"
 )
@@ -35,4 +36,19 @@ func GetPrivateFieldByName(v reflect.Value, name string) reflect.Value {
 // compare returns the float value of x minus y
 func compare(x, y interface{}) int {
 	return strings.Compare(fmt.Sprintf("%#v", x), fmt.Sprintf("%#v", y))
+}
+
+func formatUintptr(p uintptr) string {
+	return "0x" + strconv.FormatUint(uint64(p), 16)
+}
+
+func wrapComment(s string) string {
+	return "/* " + s + " */"
+}
+
+func formatLenCap(l, c int) string {
+	if c >= 0 {
+		return fmt.Sprintf("/* len=%d cap=%d */", l, c)
+	}
+	return fmt.Sprintf("/* len=%d */", l)
 }
