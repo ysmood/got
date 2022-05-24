@@ -336,7 +336,11 @@ func tokenizeNumber(v reflect.Value) []*Token {
 	case reflect.Int:
 		t.Type = Number
 		t.Literal = strconv.FormatInt(v.Int(), 10)
-		ts = append(ts, t)
+		if v.Type().Name() != "int" {
+			ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("}, t, &Token{ParenClose, ")"})
+		} else {
+			ts = append(ts, t)
+		}
 
 	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("})
@@ -351,7 +355,7 @@ func tokenizeNumber(v reflect.Value) []*Token {
 		ts = append(ts, t, &Token{ParenClose, ")"})
 
 	case reflect.Float32:
-		ts = append(ts, typeName("float32"), &Token{ParenOpen, "("})
+		ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("})
 		t.Type = Number
 		t.Literal = strconv.FormatFloat(v.Float(), 'f', -1, 32)
 		ts = append(ts, t, &Token{ParenClose, ")"})
@@ -362,10 +366,14 @@ func tokenizeNumber(v reflect.Value) []*Token {
 		if !strings.Contains(t.Literal, ".") {
 			t.Literal += ".0"
 		}
-		ts = append(ts, t)
+		if v.Type().Name() != "float64" {
+			ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("}, t, &Token{ParenClose, ")"})
+		} else {
+			ts = append(ts, t)
+		}
 
 	case reflect.Complex64:
-		ts = append(ts, typeName("complex64"), &Token{ParenOpen, "("})
+		ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("})
 		t.Type = Number
 		t.Literal = strconv.FormatComplex(v.Complex(), 'f', -1, 64)
 		t.Literal = t.Literal[1 : len(t.Literal)-1]
@@ -375,7 +383,11 @@ func tokenizeNumber(v reflect.Value) []*Token {
 		t.Type = Number
 		t.Literal = strconv.FormatComplex(v.Complex(), 'f', -1, 128)
 		t.Literal = t.Literal[1 : len(t.Literal)-1]
-		ts = append(ts, t)
+		if v.Type().Name() != "complex128" {
+			ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("}, t, &Token{ParenClose, ")"})
+		} else {
+			ts = append(ts, t)
+		}
 
 	}
 

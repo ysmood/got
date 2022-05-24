@@ -230,17 +230,18 @@ func TestGetPrivateFieldErr(t *testing.T) {
 	})
 }
 
-type hasStringInterface float64
-
-// String interface
-func (s hasStringInterface) String() string {
-	return ""
-}
-
-func TestNumStringInterface(t *testing.T) {
+func TestTypeName(t *testing.T) {
 	g := got.T(t)
 
-	g.Eq(gop.Plain(hasStringInterface(1)), "1.0")
+	type f float64
+	type i int
+	type c complex128
+	type b byte
+
+	g.Eq(gop.Plain(f(1)), "f(1.0)")
+	g.Eq(gop.Plain(i(1)), "i(1)")
+	g.Eq(gop.Plain(c(1)), "c(1+0i)")
+	g.Eq(gop.Plain(b('a')), "b(97)")
 }
 
 func TestFixNestedStyle(t *testing.T) {
