@@ -100,7 +100,7 @@ func TestAssertionErr(t *testing.T) {
 	}
 
 	as.Desc("not %s", "equal").Eq(1, 2.0)
-	m.check("not equal\n1 ⦗not ==⦘ float64(2)")
+	m.check("not equal\n1 ⦗not ==⦘ 2.0")
 
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check(`
@@ -126,7 +126,7 @@ got_test.data/* len=2 */{
 	m.check(`1 ⦗not ==⦘ nil`)
 
 	as.Equal(1, 1.0)
-	m.check("1 ⦗not ==⦘ float64(1)")
+	m.check("1 ⦗not ==⦘ 1.0")
 	as.Equal([]int{1}, []int{2})
 	m.check(`
 []int/* len=1 cap=1 */{
@@ -142,7 +142,7 @@ got_test.data/* len=2 */{
 	as.Neq(1, 1)
 	m.check("1 ⦗==⦘ 1")
 	as.Neq(1.0, 1)
-	m.check("float64(1) ⦗==⦘ 1 ⦗when converted to the same type⦘ ")
+	m.check("1.0 ⦗==⦘ 1 ⦗when converted to the same type⦘ ")
 
 	as.Lt(1, 1)
 	m.check("1 ⦗not <⦘ 1")
@@ -155,7 +155,7 @@ got_test.data/* len=2 */{
 	m.check("1 ⦗not ≥⦘ 2")
 
 	as.InDelta(10, 20, 3)
-	m.check(" ⦗delta between⦘ 10 ⦗and⦘ 20 ⦗not ≤⦘ float64(3)")
+	m.check(" ⦗delta between⦘ 10 ⦗and⦘ 20 ⦗not ≤⦘ 3.0")
 
 	as.True(false)
 	m.check(" ⦗should be⦘ true")
@@ -215,7 +215,7 @@ got_test.data/* len=2 */{
 nil`)
 
 	as.Is(1, 2.2)
-	m.check("1 ⦗should be kind of⦘ float64(2.2)")
+	m.check("1 ⦗should be kind of⦘ 2.2")
 	as.Is(errors.New("a"), errors.New("b"))
 	m.check(`
 &errors.errorString{

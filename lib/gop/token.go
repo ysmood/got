@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -226,7 +227,7 @@ func tokenize(sn seen, p path, v reflect.Value) []*Token {
 
 	case reflect.UnsafePointer:
 		return []*Token{typeName("unsafe.Pointer"), {ParenOpen, "("}, typeName("uintptr"),
-			{ParenOpen, "("}, typeName(fmt.Sprintf("%v", v.Interface())), {ParenClose, ")"}, {ParenClose, ")"}}
+			{ParenOpen, "("}, typeName(fmt.Sprintf("0x%x", v.Interface())), {ParenClose, ")"}, {ParenClose, ")"}}
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
@@ -338,28 +339,45 @@ func tokenizeNumber(v reflect.Value) []*Token {
 		t.Literal = strconv.FormatInt(v.Int(), 10)
 		ts = append(ts, t)
 
-	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Float32, reflect.Float64,
-		reflect.Uintptr:
-
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("})
 		t.Type = Number
-		t.Literal = fmt.Sprintf("%v", v.Interface())
+		t.Literal = strconv.FormatInt(v.Int(), 10)
 		ts = append(ts, t, &Token{ParenClose, ")"})
 
-	case reflect.Complex64:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		ts = append(ts, typeName(v.Type().Name()), &Token{ParenOpen, "("})
 		t.Type = Number
-		t.Literal = fmt.Sprintf("%v", v.Interface())
+		t.Literal = strconv.FormatUint(v.Uint(), 10)
+		ts = append(ts, t, &Token{ParenClose, ")"})
+
+	case reflect.Float32:
+		ts = append(ts, typeName("float32"), &Token{ParenOpen, "("})
+		t.Type = Number
+		t.Literal = strconv.FormatFloat(v.Float(), 'f', -1, 32)
+		ts = append(ts, t, &Token{ParenClose, ")"})
+
+	case reflect.Float64:
+		t.Type = Number
+		t.Literal = strconv.FormatFloat(v.Float(), 'f', -1, 64)
+		if !strings.Contains(t.Literal, ".") {
+			t.Literal += ".0"
+		}
+		ts = append(ts, t)
+
+	case reflect.Complex64:
+		ts = append(ts, typeName("complex64"), &Token{ParenOpen, "("})
+		t.Type = Number
+		t.Literal = strconv.FormatComplex(v.Complex(), 'f', -1, 64)
 		t.Literal = t.Literal[1 : len(t.Literal)-1]
 		ts = append(ts, t, &Token{ParenClose, ")"})
 
 	case reflect.Complex128:
 		t.Type = Number
-		t.Literal = fmt.Sprintf("%v", v.Interface())
+		t.Literal = strconv.FormatComplex(v.Complex(), 'f', -1, 128)
 		t.Literal = t.Literal[1 : len(t.Literal)-1]
 		ts = append(ts, t)
+
 	}
 
 	return ts

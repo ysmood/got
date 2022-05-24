@@ -57,7 +57,7 @@ map[string]interface {}/* len=10 */{
     "chan": make(chan int, 1)/* 0xc000058070 */,
     "func": (func(int) int)(nil)/* 0x10e8d00 */,
     "json": gop.JSONStr(map[string]interface {}{
-        "a": float64(1),
+        "a": 1.0,
     }, `{"a"   : 1}`),
     "lines": `multiline string
 line two`/* len=25 */,

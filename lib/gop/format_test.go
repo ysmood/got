@@ -79,6 +79,8 @@ func TestTokenize(t *testing.T) {
 	}
 
 	check := func(out string, tpl ...string) {
+		g.Helper()
+
 		expected := bytes.NewBuffer(nil)
 
 		t := template.New("")
@@ -226,6 +228,19 @@ func TestGetPrivateFieldErr(t *testing.T) {
 	g.Panic(func() {
 		gop.GetPrivateFieldByName(reflect.ValueOf(1), "test")
 	})
+}
+
+type hasStringInterface float64
+
+// String interface
+func (s hasStringInterface) String() string {
+	return ""
+}
+
+func TestNumStringInterface(t *testing.T) {
+	g := got.T(t)
+
+	g.Eq(gop.Plain(hasStringInterface(1)), "1.0")
 }
 
 func TestFixNestedStyle(t *testing.T) {
