@@ -268,7 +268,7 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 		} else {
 			ts = append(ts, typeName(v.Type().String()))
 		}
-		if v.Kind() == reflect.Slice {
+		if v.Kind() == reflect.Slice && v.Cap() > 0 {
 			ts = append(ts, &Token{Comment, formatLenCap(v.Len(), v.Cap())})
 		}
 		ts = append(ts, &Token{SliceOpen, "{"})
@@ -305,9 +305,6 @@ func tokenizeCollection(sn seen, p path, v reflect.Value) []*Token {
 		t := v.Type()
 
 		ts = append(ts, typeName(t.String()))
-		if v.NumField() > 1 {
-			ts = append(ts, &Token{Comment, formatLenCap(v.NumField(), -1)})
-		}
 		ts = append(ts, &Token{StructOpen, "{"})
 		for i := 0; i < v.NumField(); i++ {
 			name := t.Field(i).Name

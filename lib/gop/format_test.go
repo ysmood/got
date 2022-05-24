@@ -14,6 +14,7 @@ import (
 	"unsafe"
 
 	"github.com/ysmood/got"
+	"github.com/ysmood/got/lib/diff"
 	"github.com/ysmood/got/lib/gop"
 )
 
@@ -37,6 +38,7 @@ func TestTokenize(t *testing.T) {
 
 	v := []interface{}{
 		nil,
+		[]int{},
 		[]interface{}{true, false, uintptr(0x17), float32(100.121111133)},
 		true, 10, int8(2), int32(100),
 		float64(100.121111133),
@@ -93,7 +95,10 @@ func TestTokenize(t *testing.T) {
 			"ptr": fmt.Sprintf("%v", &ref),
 		}))
 
-		g.Eq(out, expected.String())
+		if out != expected.String() {
+			g.Fail()
+			g.Log(diff.Diff(out, expected.String()))
+		}
 	}
 
 	out := gop.StripANSI(gop.F(v))
@@ -132,11 +137,11 @@ func TestCircularRef(t *testing.T) {
 	a.B = &b
 
 	g.Eq(gop.StripANSI(gop.F(a)), ""+
-		"gop_test.A/* len=2 */{\n"+
+		"gop_test.A{\n"+
 		"    Int: 10,\n"+
-		"    B: &gop_test.B/* len=2 */{\n"+
+		"    B: &gop_test.B{\n"+
 		"        s: \"test\",\n"+
-		"        a: &gop_test.A/* len=2 */{\n"+
+		"        a: &gop_test.A{\n"+
 		"            Int: 10,\n"+
 		"            B: gop.Circular(\"B\").(*gop_test.B),\n"+
 		"        },\n"+
@@ -148,11 +153,11 @@ func TestCircularNilRef(t *testing.T) {
 	arr := []A{{}, {}}
 
 	got.T(t).Eq(gop.StripANSI(gop.F(arr)), `[]gop_test.A/* len=2 cap=2 */{
-    gop_test.A/* len=2 */{
+    gop_test.A{
         Int: 0,
         B: (*gop_test.B)(nil),
     },
-    gop_test.A/* len=2 */{
+    gop_test.A{
         Int: 0,
         B: (*gop_test.B)(nil),
     },
@@ -242,6 +247,15 @@ func TestTypeName(t *testing.T) {
 	g.Eq(gop.Plain(i(1)), "i(1)")
 	g.Eq(gop.Plain(c(1)), "c(1+0i)")
 	g.Eq(gop.Plain(b('a')), "b(97)")
+}
+
+func TestSliceCapNotEqual(t *testing.T) {
+	g := got.T(t)
+
+	x := gop.Plain(make([]int, 3, 10))
+	y := gop.Plain(make([]int, 3))
+
+	g.Desc("we should show the diff of cap").Neq(x, y)
 }
 
 func TestFixNestedStyle(t *testing.T) {

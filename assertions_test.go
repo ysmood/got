@@ -104,14 +104,14 @@ func TestAssertionErr(t *testing.T) {
 
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check(`
-got_test.data/* len=2 */{
+got_test.data{
     A: 1,
     S: "a",
 }
 
 ⦗not ==⦘
 
-got_test.data/* len=2 */{
+got_test.data{
     A: 1,
     S: "b",
 }`)
