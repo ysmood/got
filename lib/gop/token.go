@@ -102,47 +102,6 @@ func Tokenize(v interface{}) []*Token {
 	return tokenize(seen{}, []interface{}{}, reflect.ValueOf(v))
 }
 
-// Ptr returns a pointer to v
-func Ptr(v interface{}) interface{} {
-	val := reflect.ValueOf(v)
-	ptr := reflect.New(val.Type())
-	ptr.Elem().Set(val)
-	return ptr.Interface()
-}
-
-// Circular reference of the path from the root
-func Circular(path ...interface{}) interface{} {
-	return nil
-}
-
-// Base64 returns the []byte that s represents
-func Base64(s string) []byte {
-	b, _ := base64.StdEncoding.DecodeString(s)
-	return b
-}
-
-// Time from parsing s
-func Time(s string, monotonic int) time.Time {
-	t, _ := time.Parse(time.RFC3339Nano, s)
-	return t
-}
-
-// Duration from parsing s
-func Duration(s string) time.Duration {
-	d, _ := time.ParseDuration(s)
-	return d
-}
-
-// JSONStr returns the raw
-func JSONStr(v interface{}, raw string) string {
-	return raw
-}
-
-// JSONBytes returns the raw as []byte
-func JSONBytes(v interface{}, raw string) []byte {
-	return []byte(raw)
-}
-
 type path []interface{}
 
 func (p path) tokens() []*Token {
@@ -405,7 +364,7 @@ func tokenizeByte(t *Token, b byte) []*Token {
 
 func tokenizeTime(t time.Time) []*Token {
 	ext := GetPrivateFieldByName(reflect.ValueOf(t), "ext").Int()
-	ts := []*Token{{Func, "gop.Time"}, {ParenOpen, "("}}
+	ts := []*Token{{Func, SymbolTime}, {ParenOpen, "("}}
 	ts = append(ts, &Token{String, t.Format(time.RFC3339Nano)})
 	ts = append(ts, &Token{InlineComma, ","}, &Token{Number, strconv.FormatInt(ext, 10)}, &Token{ParenClose, ")"})
 	return ts
@@ -413,7 +372,7 @@ func tokenizeTime(t time.Time) []*Token {
 
 func tokenizeDuration(d time.Duration) []*Token {
 	ts := []*Token{}
-	ts = append(ts, typeName("gop.Duration"), &Token{ParenOpen, "("})
+	ts = append(ts, typeName(SymbolDuration), &Token{ParenOpen, "("})
 	ts = append(ts, &Token{String, d.String()})
 	ts = append(ts, &Token{ParenClose, ")"})
 	return ts
@@ -437,7 +396,7 @@ func tokenizeBytes(data []byte) []*Token {
 		ts = append(ts, &Token{String, s})
 		ts = append(ts, &Token{ParenClose, ")"})
 	} else {
-		ts = append(ts, &Token{Func, "gop.Base64"}, &Token{ParenOpen, "("})
+		ts = append(ts, &Token{Func, SymbolBase64}, &Token{ParenOpen, "("})
 		ts = append(ts, &Token{String, base64.StdEncoding.EncodeToString(data)})
 		ts = append(ts, &Token{ParenClose, ")"})
 	}
@@ -469,7 +428,7 @@ func tokenizePtr(sn seen, p path, v reflect.Value) []*Token {
 	}
 
 	if fn {
-		ts = append(ts, &Token{Func, "gop.Ptr"}, &Token{ParenOpen, "("})
+		ts = append(ts, &Token{Func, SymbolPtr}, &Token{ParenOpen, "("})
 		ts = append(ts, tokenize(sn, p, v.Elem())...)
 		ts = append(ts, &Token{ParenClose, ")"}, &Token{Dot, "."}, &Token{ParenOpen, "("},
 			typeName(v.Type().String()), &Token{ParenClose, ")"})
@@ -491,14 +450,14 @@ func tokenizeJSON(v reflect.Value) ([]*Token, bool) {
 		if err != nil {
 			return nil, false
 		}
-		ts = append(ts, &Token{Func, "gop.JSONStr"})
+		ts = append(ts, &Token{Func, SymbolJSONStr})
 	} else if b, ok := v.Interface().([]byte); ok {
 		err := json.Unmarshal(b, &jv)
 		if err != nil {
 			return nil, false
 		}
 		s = string(b)
-		ts = append(ts, &Token{Func, "gop.JSONBytes"})
+		ts = append(ts, &Token{Func, SymbolJSONBytes})
 	}
 
 	_, isObj := jv.(map[string]interface{})
