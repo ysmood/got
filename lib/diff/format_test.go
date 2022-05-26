@@ -8,6 +8,7 @@ import (
 	"github.com/ysmood/got"
 	"github.com/ysmood/got/lib/diff"
 	"github.com/ysmood/got/lib/gop"
+	"github.com/ysmood/got/lib/lcs"
 )
 
 var setup = got.Setup(func(g got.G) {
@@ -191,7 +192,7 @@ func TestColor(t *testing.T) {
 func TestCustomSplit(t *testing.T) {
 	g := setup(t)
 
-	ctx := context.WithValue(g.Context(), diff.SplitKey, split)
+	ctx := context.WithValue(g.Context(), lcs.SplitKey, split)
 
 	g.Eq(diff.TokenizeLine(ctx, "abc", "abc"))
 }

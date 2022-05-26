@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/ysmood/got/lib/lcs"
 )
 
 // Type of token
@@ -54,10 +56,11 @@ type Token struct {
 
 // TokenizeText text block a and b into diff tokens.
 func TokenizeText(ctx context.Context, x, y string) []*Token {
-	xls := NewText(x) // x lines
-	yls := NewText(y) // y lines
+	xls := lcs.NewLines(x) // x lines
+	yls := lcs.NewLines(y) // y lines
 
-	s := xls.LCS(ctx, yls)
+	// TODO: We should use index to check equality, remove the usage of xs.Sub
+	s := xls.Sub(xls.YadLCS(ctx, yls))
 
 	ts := []*Token{}
 
@@ -92,16 +95,17 @@ func TokenizeText(ctx context.Context, x, y string) []*Token {
 
 // TokenizeLine two different lines
 func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
-	split := Split
-	val := ctx.Value(SplitKey)
+	split := lcs.Split
+	val := ctx.Value(lcs.SplitKey)
 	if val != nil {
 		split = val.(func(string) []string)
 	}
 
-	xs := NewWords(split(x))
-	ys := NewWords(split(y))
+	xs := lcs.NewWords(split(x))
+	ys := lcs.NewWords(split(y))
 
-	s := xs.LCS(ctx, ys)
+	// TODO: We should use index to check equality, remove the usage of xs.Sub
+	s := xs.Sub(xs.YadLCS(ctx, ys))
 
 	xTokens := []*Token{}
 	yTokens := []*Token{}
@@ -135,11 +139,15 @@ func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
 	return xTokens, yTokens
 }
 
-func numFormat(x, y Sequence) (string, string, string) {
+func numFormat(x, y lcs.Sequence) (string, string, string) {
 	xl := len(fmt.Sprintf("%d", len(x)))
 	yl := len(fmt.Sprintf("%d", len(y)))
 
 	return fmt.Sprintf("%%0%dd "+strings.Repeat(" ", yl+1), xl),
 		fmt.Sprintf(strings.Repeat(" ", xl)+" %%0%dd ", yl),
 		fmt.Sprintf("%%0%dd %%0%dd ", xl, yl)
+}
+
+func neq(x, y lcs.Comparable) bool {
+	return x.String() != y.String()
 }
