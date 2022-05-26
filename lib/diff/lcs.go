@@ -7,8 +7,8 @@ import (
 // LCS between x and y.
 // This implementation converts the LCS problem into LIS sub problems without recursion.
 // The memory complexity is O(x.Occurrence(y)).
-// The time complexicy is O(x.Occurrence(y).Complexity()).
-// The time complexicy is similar with Myer's diff algorithm, but with more modulized steps, which allows further optimization easier.
+// The time complexity is O(x.Occurrence(y).Complexity()).
+// The time complexity is similar with Myer's diff algorithm, but with more modularized steps, which allows further optimization easier.
 // https://en.wikipedia.org/wiki/Longest_common_subsequence_problem
 func (x Sequence) LCS(ctx context.Context, y Sequence) Sequence {
 	left, right := x.Common(y)
@@ -32,7 +32,7 @@ func (x Sequence) lcs(ctx context.Context, y Sequence) Sequence {
 	var longest int
 	var longestI int
 	for i := 0; i < n && ctx.Err() == nil; i++ {
-		o.Permutate(p, i)
+		o.Permute(p, i)
 
 		l := lis.Length()
 		if l > longest {
@@ -42,7 +42,7 @@ func (x Sequence) lcs(ctx context.Context, y Sequence) Sequence {
 	}
 
 	p = make([]int, len(o))
-	o.Permutate(p, longestI)
+	o.Permute(p, longestI)
 	s := lis.Get()
 
 	lcs := make(Sequence, longest)
@@ -130,8 +130,8 @@ func (o Occurrence) Complexity() int {
 	return n
 }
 
-// Permutate p with i
-func (o Occurrence) Permutate(p []int, i int) {
+// Permute p with i
+func (o Occurrence) Permute(p []int, i int) {
 	for j := 0; i > 0; j++ {
 		p[j] = i % len(o[j])
 		i = i / len(o[j])
