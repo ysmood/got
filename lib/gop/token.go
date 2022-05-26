@@ -105,7 +105,7 @@ func Tokenize(v interface{}) []*Token {
 type path []interface{}
 
 func (p path) tokens() []*Token {
-	sn := map[uintptr]path{}
+	sn := seen{}
 	ts := []*Token{}
 	for i, seg := range p {
 		ts = append(ts, tokenize(sn, []interface{}{}, reflect.ValueOf(seg))...)
@@ -114,6 +114,15 @@ func (p path) tokens() []*Token {
 		}
 	}
 	return ts
+}
+
+func (p path) has(prefix path) bool {
+	for i := range prefix {
+		if !reflect.DeepEqual(prefix[i], p[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 type seen map[uintptr]path
@@ -126,9 +135,9 @@ func (sn seen) circular(p path, v reflect.Value) []*Token {
 			return nil
 		}
 
-		if p, has := sn[ptr]; has {
-			ts := []*Token{{Func, "gop.Circular"}, {ParenOpen, "("}}
-			ts = append(ts, p.tokens()...)
+		if prev, has := sn[ptr]; has && p.has(prev) {
+			ts := []*Token{{Func, SymbolCircular}, {ParenOpen, "("}}
+			ts = append(ts, prev.tokens()...)
 			return append(ts, &Token{ParenClose, ")"}, &Token{Dot, "."},
 				&Token{ParenOpen, "("}, typeName(v.Type().String()), &Token{ParenClose, ")"})
 		}

@@ -120,6 +120,21 @@ func TestTokenize(t *testing.T) {
 	check(out, "fixtures", "expected_with_color.tmpl")
 }
 
+func TestRef(t *testing.T) {
+	g := got.T(t)
+	a := [2][]int{{1}}
+	a[1] = a[0]
+
+	g.Eq(gop.Plain(a), `[2][]int{
+    []int/* len=1 cap=1 */{
+        1,
+    },
+    []int/* len=1 cap=1 */{
+        1,
+    },
+}`)
+}
+
 type A struct {
 	Int int
 	B   *B
@@ -189,7 +204,9 @@ func TestCircularSlice(t *testing.T) {
             gop.Circular(0, 0).([]interface {}),
         },
     },
-    gop.Circular(0, 0).([]interface {}),
+    []interface {}/* len=1 cap=1 */{
+        gop.Circular(1).([]interface {}),
+    },
 }`)
 }
 
