@@ -87,6 +87,19 @@ func TestLCSString(t *testing.T) {
 	eq(string(x), string(y), "yx")
 }
 
+func TestLCSRandomString(t *testing.T) {
+	g := got.T(t)
+
+	x := g.ReadFile("fixtures/rand_x.txt").String()
+	y := g.ReadFile("fixtures/rand_y.txt").String()
+
+	res := diff.NewWords(split(x)).LCS(g.Context(), diff.NewWords(split(y)))
+	g.Eq(
+		res.String(),
+		g.ReadFile("fixtures/rand_lcs.txt").String(),
+	)
+}
+
 func TestText(t *testing.T) {
 	g := setup(t)
 	g.Len(diff.NewLines("a"), 1)
