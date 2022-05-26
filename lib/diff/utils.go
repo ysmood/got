@@ -39,3 +39,20 @@ func (x Sequence) String() string {
 	}
 	return strings.Join(out, "\n")
 }
+
+// BTreeFindGreater y in sorted that is greater than x
+func BTreeFindGreater(sorted []int, x int) (y int, found bool) {
+	i, j := 0, len(sorted)
+	for i < j {
+		h := int(uint(i+j) >> 1)
+		v := sorted[h]
+		if v <= x {
+			i = h + 1
+		} else {
+			y = v
+			found = true
+			j = h
+		}
+	}
+	return
+}

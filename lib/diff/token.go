@@ -54,8 +54,8 @@ type Token struct {
 
 // TokenizeText text block a and b into diff tokens.
 func TokenizeText(ctx context.Context, x, y string) []*Token {
-	xls := NewText(x) // x lines
-	yls := NewText(y) // y lines
+	xls := NewLines(x) // x lines
+	yls := NewLines(y) // y lines
 
 	s := xls.LCS(ctx, yls)
 

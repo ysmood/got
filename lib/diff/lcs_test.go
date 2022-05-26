@@ -67,12 +67,12 @@ func TestLCSString(t *testing.T) {
 	}
 
 	eq("", "", "")
-	eq("abc", "acb", "ab")
+	eq("abc", "acb", "ac")
 	eq("abc", "acbc", "abc")
 	eq("abc", "xxx", "")
 	eq("ac", "bc", "c")
-	eq("gac", "agcat", "ga")
-	eq("agcat", "gac", "ac")
+	eq("gac", "agcat", "gc")
+	eq("agcat", "gac", "ga")
 
 	x := bytes.Repeat([]byte("x"), 100000)
 	y := bytes.Repeat([]byte("y"), 100000)
@@ -84,15 +84,15 @@ func TestLCSString(t *testing.T) {
 
 	x[len(x)/2] = byte('y')
 	y[len(y)/2] = byte('x')
-	eq(string(x), string(y), "xy")
+	eq(string(x), string(y), "yx")
 }
 
 func TestText(t *testing.T) {
 	g := setup(t)
-	g.Len(diff.NewText("a"), 1)
-	g.Len(diff.NewText("a\n"), 2)
-	g.Len(diff.NewText("a\n\n"), 3)
-	g.Len(diff.NewText("\na"), 2)
+	g.Len(diff.NewLines("a"), 1)
+	g.Len(diff.NewLines("a\n"), 2)
+	g.Len(diff.NewLines("a\n\n"), 3)
+	g.Len(diff.NewLines("\na"), 2)
 }
 
 func TestLCSText(t *testing.T) {
@@ -104,12 +104,12 @@ func TestLCSText(t *testing.T) {
 		y = strings.Join(strings.Split(y, ""), "\n")
 		expected = strings.Join(strings.Split(expected, ""), "\n")
 
-		lcs := diff.NewText(x).LCS(context.Background(), diff.NewText(y))
+		lcs := diff.NewLines(x).LCS(context.Background(), diff.NewLines(y))
 		g.Eq(lcs.String(), expected)
 	}
 
 	eq("", "", "")
-	eq("abc", "acb", "ab")
+	eq("abc", "acb", "ac")
 	eq("abc", "acbc", "abc")
 	eq("abc", "xxx", "")
 }
@@ -125,4 +125,22 @@ func TestIsIn(t *testing.T) {
 	g.False(diff.NewWords(split("cb")).IsSubsequenceOf(y))
 	g.False(diff.NewWords(split("ba")).IsSubsequenceOf(y))
 	g.False(diff.NewWords(split("ca")).IsSubsequenceOf(y))
+}
+
+func TestBTreeFindGreater(t *testing.T) {
+	g := got.T(t)
+
+	check := func(x int, ey int, ef bool) {
+		g.Helper()
+
+		y, f := diff.BTreeFindGreater([]int{1, 3, 5, 7, 9, 11}, x)
+		g.Eq(y, ey)
+		g.Eq(f, ef)
+	}
+
+	check(4, 5, true)
+	check(5, 7, true)
+	check(1, 3, true)
+	check(8, 9, true)
+	check(11, 0, false)
 }

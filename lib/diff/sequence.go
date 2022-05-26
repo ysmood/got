@@ -3,7 +3,7 @@ package diff
 import (
 	"bufio"
 	"bytes"
-	"crypto/md5"
+	"hash/fnv"
 	"regexp"
 )
 
@@ -38,18 +38,25 @@ func (e *Element) String() string {
 func NewWords(words []string) Sequence {
 	cs := make([]Comparable, len(words))
 	for i, word := range words {
-		cs[i] = &Element{word, word}
+		hash := word
+		if len(word) > 8 {
+			h := fnv.New128()
+			_, _ = h.Write([]byte(word))
+			hash = string(h.Sum(nil))
+		}
+		cs[i] = &Element{hash, word}
 	}
 	return cs
 }
 
-// NewText from string. It will split the s via newlines.
-func NewText(s string) Sequence {
+// NewLines from string. It will split the s via newlines.
+func NewLines(s string) Sequence {
 	sc := bufio.NewScanner(bytes.NewBufferString(s))
 	cs := []Comparable{}
 	for i := 0; sc.Scan(); i++ {
-		sum := md5.Sum(sc.Bytes())
-		cs = append(cs, &Element{string(sum[:]), sc.Text()})
+		h := fnv.New128()
+		_, _ = h.Write(sc.Bytes())
+		cs = append(cs, &Element{string(h.Sum(nil)), sc.Text()})
 	}
 
 	if len(s) > 0 && s[len(s)-1] == '\n' {

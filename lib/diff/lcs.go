@@ -6,9 +6,9 @@ import (
 
 // LCS between x and y.
 // This implementation converts the LCS problem into LIS sub problems without recursion.
-// The memory complexity is O(x.Occurrence(y)).
-// The time complexity is O(x.Occurrence(y).Complexity()).
-// The time complexity is similar with Myer's diff algorithm, but with more modularized steps, which allows further optimization easier.
+// The memory complexity is O(x + y).
+// The time complexity is similar with Myer's diff algorithm, but with more modularized steps, which allows further optimization easier,
+// it doesn't use recursion, it's much easer to understand and implement.
 // https://en.wikipedia.org/wiki/Longest_common_subsequence_problem
 func (x Sequence) LCS(ctx context.Context, y Sequence) Sequence {
 	left, right := x.Common(y)
@@ -22,32 +22,35 @@ func (x Sequence) lcs(ctx context.Context, y Sequence) Sequence {
 	y = y.Reduce(x)
 
 	o := x.Occurrence(y)
-	p := make([]int, len(o))
-	n := o.Complexity()
+	lo := len(o)
 
-	lis := NewLIS(len(o), func(i int) int {
-		return o[i][p[i]]
-	})
+	var lis []int          // longest increasing subsequence
+	can := make([]int, lo) // candidate lis
 
-	var longest int
-	var longestI int
-	for i := 0; i < n && ctx.Err() == nil; i++ {
-		o.Permute(p, i)
+	for i := 0; lo-i > len(lis) && ctx.Err() == nil; i++ { // only when the rest are more than lis
+		l := 0
+		can[0] = o[i][0]
+		for j := i + 1; j < lo; j++ {
+			oj := o[j]
+			if gt, found := BTreeFindGreater(oj, can[l]); found {
+				l++
+				can[l] = gt
+				goto next
+			}
 
-		l := lis.Length()
-		if l > longest {
-			longestI = i
-			longest = l
+			break
+		next:
+		}
+
+		if l >= len(lis) {
+			lis = make([]int, l+1)
+			copy(lis, can[:l+1])
 		}
 	}
 
-	p = make([]int, len(o))
-	o.Permute(p, longestI)
-	s := lis.Get()
-
-	lcs := make(Sequence, longest)
-	for i := 0; i < longest; i++ {
-		lcs[i] = x[s[i]]
+	lcs := make(Sequence, len(lis))
+	for i, j := range lis {
+		lcs[i] = x[j]
 	}
 
 	return lcs
@@ -117,27 +120,6 @@ func (x Sequence) IsSubsequenceOf(y Sequence) bool {
 // Occurrence histogram
 type Occurrence [][]int
 
-// Complexity to find the LCS in m
-func (o Occurrence) Complexity() int {
-	if len(o) == 0 {
-		return 0
-	}
-
-	n := 1
-	for _, i := range o {
-		n *= len(i)
-	}
-	return n
-}
-
-// Permute p with i
-func (o Occurrence) Permute(p []int, i int) {
-	for j := 0; i > 0; j++ {
-		p[j] = i % len(o[j])
-		i = i / len(o[j])
-	}
-}
-
 // Occurrence returns the position of each element of y in x.
 func (x Sequence) Occurrence(y Sequence) Occurrence {
 	m := make(Occurrence, len(y))
@@ -150,61 +132,4 @@ func (x Sequence) Occurrence(y Sequence) Occurrence {
 	}
 
 	return m
-}
-
-// LIS https://en.wikipedia.org/wiki/Longest_increasing_subsequence
-type LIS struct {
-	p   []int
-	m   []int
-	len int
-	x   func(int) int
-}
-
-// NewLIS helper
-func NewLIS(len int, x func(int) int) *LIS {
-	return &LIS{
-		p:   make([]int, len),
-		m:   make([]int, len+1),
-		len: len,
-		x:   x,
-	}
-}
-
-// Length of LIS
-func (lis *LIS) Length() int {
-	l := 0
-	for i := 0; i < lis.len; i++ {
-		lo := 1
-		hi := l + 1
-		for lo < hi {
-			mid := lo + (hi-lo)/2
-			if lis.x(lis.m[mid]) < lis.x(i) {
-				lo = mid + 1
-			} else {
-				hi = mid
-			}
-		}
-
-		newL := lo
-
-		lis.p[i] = lis.m[newL-1]
-		lis.m[newL] = i
-
-		if newL > l {
-			l = newL
-		}
-	}
-	return l
-}
-
-// Get the LIS
-func (lis *LIS) Get() []int {
-	l := lis.Length()
-	s := make([]int, l)
-	k := lis.m[l]
-	for i := l - 1; i >= 0; i-- {
-		s[i] = lis.x(k)
-		k = lis.p[k]
-	}
-	return s
 }
