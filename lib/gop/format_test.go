@@ -136,17 +136,16 @@ func TestCircularRef(t *testing.T) {
 	b := B{"test", &a}
 	a.B = &b
 
-	g.Eq(gop.StripANSI(gop.F(a)), ""+
-		"gop_test.A{\n"+
-		"    Int: 10,\n"+
-		"    B: &gop_test.B{\n"+
-		"        s: \"test\",\n"+
-		"        a: &gop_test.A{\n"+
-		"            Int: 10,\n"+
-		"            B: gop.Circular(\"B\").(*gop_test.B),\n"+
-		"        },\n"+
-		"    },\n"+
-		"}")
+	g.Eq(gop.StripANSI(gop.F(a)), `gop_test.A{
+    Int: 10,
+    B: &gop_test.B{
+        s: "test",
+        a: &gop_test.A{
+            Int: 10,
+            B: gop.Circular("B").(*gop_test.B),
+        },
+    },
+}`)
 }
 
 func TestCircularNilRef(t *testing.T) {
@@ -171,10 +170,9 @@ func TestCircularMap(t *testing.T) {
 
 	ts := gop.Tokenize(a)
 
-	g.Eq(gop.Format(ts, gop.ThemeNone), ""+
-		"map[int]interface {}{\n"+
-		"    0: gop.Circular().(map[int]interface {}),\n"+
-		"}")
+	g.Eq(gop.Format(ts, gop.ThemeNone), `map[int]interface {}{
+    0: gop.Circular().(map[int]interface {}),
+}`)
 }
 
 func TestCircularSlice(t *testing.T) {
@@ -185,15 +183,14 @@ func TestCircularSlice(t *testing.T) {
 
 	ts := gop.Tokenize(a)
 
-	g.Eq(gop.Format(ts, gop.ThemeNone), ""+
-		"[][]interface {}/* len=2 cap=2 */{\n"+
-		"    []interface {}/* len=1 cap=1 */{\n"+
-		"        []interface {}/* len=1 cap=1 */{\n"+
-		"            gop.Circular(0, 0).([]interface {}),\n"+
-		"        },\n"+
-		"    },\n"+
-		"    gop.Circular(0, 0).([]interface {}),\n"+
-		"}")
+	g.Eq(gop.Format(ts, gop.ThemeNone), `[][]interface {}/* len=2 cap=2 */{
+    []interface {}/* len=1 cap=1 */{
+        []interface {}/* len=1 cap=1 */{
+            gop.Circular(0, 0).([]interface {}),
+        },
+    },
+    gop.Circular(0, 0).([]interface {}),
+}`)
 }
 
 func TestPlain(t *testing.T) {
