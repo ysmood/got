@@ -154,6 +154,11 @@ func (ut Utils) RandInt(min, max int) int {
 	return int(n.Int64()) + min
 }
 
+// ReadFile content
+func (ut Utils) ReadFile(path string) *bytes.Buffer {
+	return ut.Read(ut.Open(false, path))
+}
+
 // Open a file. Override it if create is true. Directories will be auto-created.
 // path will be joined with filepath.Join so that it's cross-platform
 func (ut Utils) Open(create bool, path ...string) (f *os.File) {

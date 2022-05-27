@@ -35,6 +35,8 @@ func TestHelper(t *testing.T) {
 	f = ut.Open(false, "tmp/test.txt")
 	ut.Eq(ut.JSON(f), 1)
 
+	ut.Eq(ut.ReadFile("tmp/test.txt").Len(), 2)
+
 	ut.Eq(ut.JSON([]byte("1")), 1)
 	ut.Eq(ut.JSON("true"), true)
 
