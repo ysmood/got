@@ -164,11 +164,10 @@ func (ut Utils) ReadFile(path string) *bytes.Buffer {
 func (ut Utils) Open(create bool, path ...string) (f *os.File) {
 	p := filepath.Join(path...)
 
-	dir := filepath.Dir(p)
-	_ = os.MkdirAll(dir, 0755)
-
 	var err error
 	if create {
+		dir := filepath.Dir(p)
+		_ = os.MkdirAll(dir, 0755)
 		f, err = os.Create(p)
 	} else {
 		f, err = os.Open(p)
