@@ -46,6 +46,20 @@ func (xs Sequence) Histogram() map[string][]int {
 	return h
 }
 
+// Occurrence returns the position of each element of y in x.
+func (xs Sequence) Occurrence(y Sequence) [][]int {
+	o := make([][]int, len(y))
+	h := xs.Histogram()
+
+	for i, c := range y {
+		if indexes, has := h[c.String()]; has {
+			o[i] = indexes
+		}
+	}
+
+	return o
+}
+
 // Comparable interface
 type Comparable interface {
 	// String for comparison, such as the hash

@@ -64,7 +64,7 @@ func TestLCS(t *testing.T) {
 		return string(b)
 	}
 
-	check(0, "", "")
+	check(0, "gfcgachc", "hcccehgf")
 
 	for i := 1; i < 1000; i++ {
 		check(i, randStr(), randStr())
@@ -97,6 +97,15 @@ func TestLCSLongContentSmallChange(t *testing.T) {
 	x[len(x)/2] = byte('y')
 	y[len(y)/2] = byte('x')
 	eq(string(x), string(y), "xy")
+}
+
+func TestRandom(t *testing.T) {
+	g := got.T(t)
+
+	xs := lcs.NewChars(g.ReadFile("../benchmark/fixtures/rand_x.txt").String())
+	ys := lcs.NewChars(g.ReadFile("../benchmark/fixtures/rand_y.txt").String())
+
+	g.Len(xs.YadLCS(g.Context(), ys), 390)
 }
 
 func TestContext(t *testing.T) {
