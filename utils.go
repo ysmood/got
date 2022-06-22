@@ -159,6 +159,11 @@ func (ut Utils) ReadFile(path string) *bytes.Buffer {
 	return ut.Read(ut.Open(false, path))
 }
 
+// WriteFile at path with content
+func (ut Utils) WriteFile(path string, content interface{}) {
+	ut.Write(content)(ut.Open(true, path))
+}
+
 // Open a file. Override it if create is true. Directories will be auto-created.
 // path will be joined with filepath.Join so that it's cross-platform
 func (ut Utils) Open(create bool, path ...string) (f *os.File) {
