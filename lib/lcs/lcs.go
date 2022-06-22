@@ -50,8 +50,8 @@ func (xs Sequence) YadLCS(ctx context.Context, ys Sequence) Indices {
 		}
 
 		from := len(r.list)
-		for i := len(xi) - 1; i >= 0; i-- {
-			from = r.add(from, xi[i], rest)
+		for _, i := range xi {
+			from = r.add(from, i, rest)
 		}
 
 		rest--

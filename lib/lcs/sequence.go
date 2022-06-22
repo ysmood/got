@@ -40,8 +40,8 @@ func (xs Sequence) IsSubsequenceOf(ys Sequence) bool {
 // Histogram of each Comparable
 func (xs Sequence) Histogram() map[string][]int {
 	h := map[string][]int{}
-	for i, c := range xs {
-		s := c.String()
+	for i := len(xs) - 1; i >= 0; i-- {
+		s := xs[i].String()
 		h[s] = append(h[s], i)
 	}
 	return h
