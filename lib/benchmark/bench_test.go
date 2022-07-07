@@ -13,7 +13,6 @@ var x = randStr(100)
 var y = randStr(100)
 
 func BenchmarkRandomYad(b *testing.B) {
-	lcs.Compress = false
 	c := context.Background()
 
 	xs := lcs.NewChars(x)

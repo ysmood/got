@@ -3,6 +3,7 @@ package lcs_test
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -38,7 +39,7 @@ func TestLCS(t *testing.T) {
 
 		xs, ys := lcs.NewChars(x), lcs.NewChars(y)
 
-		s := xs.Sub(xs.YadLCS(context.Background(), ys))
+		s := xs.Sub(xs.YadLCS(context.Background(), ys).Compress())
 		out := s.String()
 		expected := lcs.StandardLCS(xs, ys).String()
 
@@ -107,4 +108,22 @@ func TestContext(t *testing.T) {
 	c.Cancel()
 	l := lcs.NewChars("abc").YadLCS(c, lcs.NewChars("abc"))
 	g.Len(l, 0)
+}
+
+func TestLongRandom(t *testing.T) {
+	size := 10000
+	x := randStr(size)
+	y := randStr(size)
+
+	c := context.Background()
+
+	xs := lcs.NewChars(x)
+	ys := lcs.NewChars(y)
+	xs.YadLCS(c, ys)
+}
+
+func randStr(n int) string {
+	b := make([]byte, n)
+	_, _ = rand.Read(b)
+	return string(b)
 }
