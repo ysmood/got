@@ -95,13 +95,15 @@ func (r *result) add(from, x, rest int) int {
 	l := len(r.list)
 
 	next, n := r.find(from, x)
-	if n != nil && l-next < rest { // only when we have enough rest xs
-		if next == l {
-			r.list = append(r.list, r.new(x, n))
-		} else if x < r.list[next].x {
-			r.replace(next, x, n)
+	if n != nil {
+		if l-next < rest { // only when we have enough rest xs
+			if next == l {
+				r.list = append(r.list, r.new(x, n))
+			} else if x < r.list[next].x {
+				r.replace(next, x, n)
+			}
+			return next
 		}
-		return next
 	}
 
 	if l == 0 {
