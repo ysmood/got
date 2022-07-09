@@ -11,7 +11,6 @@ type Sequence []Comparable
 
 // Sub from p, it will automatically decompress the compressed p.
 func (xs Sequence) Sub(idx Indices) Sequence {
-	idx = idx.Decompress()
 	s := make(Sequence, len(idx))
 	for i, ix := range idx {
 		s[i] = xs[ix]

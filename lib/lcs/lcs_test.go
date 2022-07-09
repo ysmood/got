@@ -39,7 +39,7 @@ func TestLCS(t *testing.T) {
 
 		xs, ys := lcs.NewChars(x), lcs.NewChars(y)
 
-		s := xs.Sub(xs.YadLCS(context.Background(), ys).Compress())
+		s := xs.Sub(xs.YadLCS(context.Background(), ys))
 		out := s.String()
 		expected := lcs.StandardLCS(xs, ys).String()
 

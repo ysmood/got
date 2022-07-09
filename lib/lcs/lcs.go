@@ -4,6 +4,9 @@ import (
 	"context"
 )
 
+// Indices is the index list of items in xs that forms the LCS between xs and ys.
+type Indices []int
+
 // YadLCS returns the x index of each Comparable that are in the YadLCS between x and y.
 // The complexity is O(M * log(L)), M is the number of char matches between x and y, L is the length of LCS.
 // The worst memory complexity is O(M), but usually it's much less.
