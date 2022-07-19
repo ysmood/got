@@ -215,6 +215,18 @@ func TestPlain(t *testing.T) {
 	g.Eq(gop.Plain(10), "10")
 }
 
+func TestPlainMinify(t *testing.T) {
+	g := got.T(t)
+	a := map[int]interface{}{
+		1: "a",
+	}
+	b := map[int]interface{}{}
+	pa := gop.Plain(a)
+	pb := gop.Plain(b)
+	g.Eq(pa, "map[int]interface {}{\n    1: \"a\",\n}")
+	g.Eq(pb, "map[int]interface {}{}")
+}
+
 func TestP(t *testing.T) {
 	gop.Stdout = ioutil.Discard
 	_ = gop.P("test")
