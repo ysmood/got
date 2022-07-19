@@ -99,7 +99,12 @@ func Format(ts []*Token, theme Theme) string {
 		case Comma:
 			out += Stylize(t.Literal, styles) + "\n"
 		case SliceClose, MapClose, StructClose:
-			out += strings.Repeat(indentUnit, depth) + Stylize(t.Literal, styles)
+			if strings.HasSuffix(out, "{\n") {
+				out = out[:len(out)-1]
+				out += Stylize(t.Literal, styles)
+			} else {
+				out += strings.Repeat(indentUnit, depth) + Stylize(t.Literal, styles)
+			}
 		case String:
 			out += Stylize(readableStr(depth, t.Literal), styles)
 		default:
