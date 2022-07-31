@@ -121,7 +121,7 @@ func (r *result) add(from, x, rest int) int {
 	return 0
 }
 
-// binary search to find the largest r[i].x that is smaller than x
+// binary search to find the largest r.list[i].x that is smaller than x
 func (r *result) find(from, x int) (int, *node) {
 	var found *node
 	for i, j := 0, from; i < j; {
