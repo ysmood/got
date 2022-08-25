@@ -117,6 +117,10 @@ func (p path) tokens() []*Token {
 }
 
 func (p path) has(prefix path) bool {
+	if len(p) < len(prefix) {
+		return false
+	}
+
 	for i := range prefix {
 		if !reflect.DeepEqual(prefix[i], p[i]) {
 			return false
