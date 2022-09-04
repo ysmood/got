@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/ysmood/got/lib/benchmark/myers"
 	"github.com/ysmood/got/lib/lcs"
 )
 
@@ -32,6 +33,12 @@ func BenchmarkRandomGoogle(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		dmp.DiffMain(x, y, false)
+	}
+}
+
+func BenchmarkRandomMyers(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = myers.Diff(x, y)
 	}
 }
 
