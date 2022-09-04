@@ -1,3 +1,4 @@
+// Package lcs ...
 package lcs
 
 import (

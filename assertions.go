@@ -24,14 +24,14 @@ type Assertions struct {
 	desc string
 }
 
-// Desc returns a clone with the description for failure enabled
+// Desc returns a clone with the format description. The description will be printed before the error message.
 func (as Assertions) Desc(format string, args ...interface{}) Assertions {
 	n := as
 	n.desc = fmt.Sprintf(format, args...)
 	return n
 }
 
-// Must returns a clone with the FailNow enabled
+// Must returns a clone with the FailNow enabled. It will exit the current goroutine if the assertion fails.
 func (as Assertions) Must() Assertions {
 	n := as
 	n.must = true
@@ -40,6 +40,7 @@ func (as Assertions) Must() Assertions {
 
 // Eq asserts that x equals y when converted to the same type, such as compare float 1.0 and integer 1 .
 // For strict value and type comparison use Assertions.Equal .
+// For how comparison works, see utils.SmartCompare .
 func (as Assertions) Eq(x, y interface{}) {
 	as.Helper()
 	if utils.SmartCompare(x, y) == 0 {
@@ -49,6 +50,7 @@ func (as Assertions) Eq(x, y interface{}) {
 }
 
 // Neq asserts that x not equals y even when converted to the same type.
+// For how comparison works, see utils.SmartCompare .
 func (as Assertions) Neq(x, y interface{}) {
 	as.Helper()
 	if utils.SmartCompare(x, y) != 0 {
@@ -73,6 +75,7 @@ func (as Assertions) Equal(x, y interface{}) {
 }
 
 // Gt asserts that x is greater than y.
+// For how comparison works, see utils.SmartCompare .
 func (as Assertions) Gt(x, y interface{}) {
 	as.Helper()
 	if utils.SmartCompare(x, y) > 0 {
@@ -82,6 +85,7 @@ func (as Assertions) Gt(x, y interface{}) {
 }
 
 // Gte asserts that x is greater than or equal to y.
+// For how comparison works, see utils.SmartCompare .
 func (as Assertions) Gte(x, y interface{}) {
 	as.Helper()
 	if utils.SmartCompare(x, y) >= 0 {
@@ -91,6 +95,7 @@ func (as Assertions) Gte(x, y interface{}) {
 }
 
 // Lt asserts that x is less than y.
+// For how comparison works, see utils.SmartCompare .
 func (as Assertions) Lt(x, y interface{}) {
 	as.Helper()
 	if utils.SmartCompare(x, y) < 0 {
@@ -100,6 +105,7 @@ func (as Assertions) Lt(x, y interface{}) {
 }
 
 // Lte asserts that x is less than or equal to b.
+// For how comparison works, see utils.SmartCompare .
 func (as Assertions) Lte(x, y interface{}) {
 	as.Helper()
 	if utils.SmartCompare(x, y) <= 0 {
@@ -109,6 +115,7 @@ func (as Assertions) Lte(x, y interface{}) {
 }
 
 // InDelta asserts that x and y are within the delta of each other.
+// For how comparison works, see utils.SmartCompare .
 func (as Assertions) InDelta(x, y interface{}, delta float64) {
 	as.Helper()
 	if math.Abs(utils.SmartCompare(x, y)) <= delta {
@@ -201,7 +208,8 @@ func (as Assertions) Regex(pattern, str string) {
 }
 
 // Has asserts that container has item.
-// The container can be a string, []byte, slice, array, or map
+// The container can be a string, []byte, slice, array, or map.
+// For how comparison works, see utils.SmartCompare .
 func (as Assertions) Has(container, item interface{}) {
 	as.Helper()
 

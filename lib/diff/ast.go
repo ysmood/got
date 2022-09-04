@@ -1,3 +1,4 @@
+// Package diff ...
 package diff
 
 // TokenLine of tokens

@@ -11,7 +11,9 @@ import (
 )
 
 // EnsureCoverage via report file generated from, for example:
-//     go test -coverprofile=coverage.out
+//
+//	go test -coverprofile=coverage.out
+//
 // Return error if any file's coverage is less than min, min is a percentage value.
 func EnsureCoverage(path string, min float64) error {
 	tmp, _ := ioutil.TempFile("", "")

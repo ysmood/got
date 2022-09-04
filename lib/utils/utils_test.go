@@ -27,6 +27,7 @@ func TestSmartCompare(t *testing.T) {
 	}{
 		{1, 1, 0.0},
 		{1, 3.0, -2.0},
+		{1, "a", 1.0},
 		{"b", "a", 1.0},
 		{1, nil, -1.0},
 		{fn, fn, 0.0},

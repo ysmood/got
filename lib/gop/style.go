@@ -132,9 +132,12 @@ func VisualizeANSI(str string) string {
 }
 
 // FixNestedStyle like
-//     <d><a>1<b>2<c>3</d></>4</>5</>
+//
+//	<d><a>1<b>2<c>3</d></>4</>5</>
+//
 // into
-//     <d><a>1</><b>2</><c>3</d></><b>4</><a>5</>
+//
+//	<d><a>1</><b>2</><c>3</d></><b>4</><a>5</>
 func FixNestedStyle(s string) string {
 	out := ""
 	stacks := map[string][]string{}

@@ -14,11 +14,11 @@ type Skip struct{}
 // Each runs each exported method Fn on type Ctx as a subtest of t.
 // The iteratee can be a struct Ctx or:
 //
-//     iteratee(t Testable) (ctx Ctx)
+//	iteratee(t Testable) (ctx Ctx)
 //
 // Each Fn will be called like:
 //
-//      ctx.Fn()
+//	ctx.Fn()
 //
 // If iteratee is Ctx, its G field will be set to New(t) for each test.
 // Any Fn that has the same name with the embedded one will be ignored.

@@ -1,3 +1,4 @@
+// Package got is an enjoyable golang test framework.
 package got
 
 import (
@@ -60,7 +61,8 @@ func New(t Testable) G {
 // DefaultFlags will set the "go test" flag if not yet presented.
 // It must be executed in the init() function.
 // Such as the timeout:
-//     DefaultFlags("timeout=10s")
+//
+//	DefaultFlags("timeout=10s")
 func DefaultFlags(flags ...string) {
 	// remove default timeout from "go test"
 	filtered := []string{}

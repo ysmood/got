@@ -1,3 +1,4 @@
+// Package gop ...
 package gop
 
 import (
@@ -127,8 +128,9 @@ func oneOf(t Type, list ...Type) bool {
 // To make multi-line string block more human readable.
 // Split newline into two strings, convert "\t" into tab.
 // Such as foramt string: "line one \n\t line two" into:
-//     "line one \n" +
-//     "	 line two"
+//
+//	"line one \n" +
+//	"	 line two"
 func readableStr(depth int, s string) string {
 	if ((len(s) > LongStringLen) || strings.Contains(s, "\n") || strings.Contains(s, `"`)) && !strings.Contains(s, "`") {
 		return "`" + s + "`"
