@@ -6,9 +6,9 @@ goos: darwin
 goarch: amd64
 pkg: github.com/ysmood/got/lib/benchmark
 cpu: Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz
-BenchmarkRandomYad-8               44662             24634 ns/op           15147 B/op        234 allocs/op
-BenchmarkRandomGoogle-8            19030             57792 ns/op           42208 B/op        776 allocs/op
-BenchmarkRandomMyers-8             17997             66763 ns/op          379044 B/op        335 allocs/op
+BenchmarkRandomYad-8               52597             20401 ns/op           14931 B/op        213 allocs/op
+BenchmarkRandomGoogle-8            18609             63802 ns/op           44848 B/op        906 allocs/op
+BenchmarkRandomMyers-8             15781             75848 ns/op          411412 B/op        360 allocs/op
 PASS
 ok  	github.com/ysmood/got/lib/benchmark	3.886s
 ```

@@ -142,21 +142,15 @@ func (r *result) find(from, x int) (int, *node) {
 func (r *result) lcs() Indices {
 	l := len(r.list)
 
+	idx := make(Indices, l)
+
 	if l == 0 {
-		return Indices{}
+		return idx
 	}
 
-	// get the length of the indices
-	c := 0
-	last := r.list[l-1]
-	for p := last; p != nil; p = p.p {
-		c++
-	}
-
-	idx := make(Indices, c)
-	for p, i := last, c-1; p != nil; p = p.p {
-		idx[i] = p.x
-		i--
+	for p := r.list[l-1]; p != nil; p = p.p {
+		l--
+		idx[l] = p.x
 	}
 
 	return idx

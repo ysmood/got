@@ -3,6 +3,7 @@ package benchmark
 import (
 	"context"
 	"crypto/rand"
+	"strings"
 	"testing"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -29,16 +30,20 @@ func BenchmarkRandomYad(b *testing.B) {
 func BenchmarkRandomGoogle(b *testing.B) {
 	dmp := diffmatchpatch.New()
 
+	xs, ys := []rune(x), []rune(y)
+
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		dmp.DiffMain(x, y, false)
+		dmp.DiffMainRunes(xs, ys, false)
 	}
 }
 
 func BenchmarkRandomMyers(b *testing.B) {
+	xs, ys := split(x), split(y)
+
 	for i := 0; i < b.N; i++ {
-		_ = myers.Diff(x, y)
+		_ = myers.Diff(xs, ys)
 	}
 }
 
@@ -46,4 +51,8 @@ func randStr(n int) string {
 	b := make([]byte, n)
 	_, _ = rand.Read(b)
 	return string(b)
+}
+
+func split(text string) []string {
+	return strings.Split(text, "")
 }

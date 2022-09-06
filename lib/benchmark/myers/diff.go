@@ -5,10 +5,6 @@
 // Package myers implements the Myers diff algorithm.
 package myers
 
-import (
-	"strings"
-)
-
 // Sources:
 // https://blog.jcoglan.com/2017/02/17/the-myers-diff-algorithm-part-3/
 // https://www.codeproject.com/Articles/42279/%2FArticles%2F42279%2FInvestigating-Myers-diff-algorithm-Part-1-of-2
@@ -24,8 +20,8 @@ const (
 )
 
 // Diff ...
-func Diff(before, after string) []*Operation {
-	return operations(split(before), split(after))
+func Diff(before, after []string) []*Operation {
+	return operations(before, after)
 }
 
 // Operation ...
@@ -188,8 +184,4 @@ func shortestEditSequence(a, b []string) ([][]int, int) {
 		trace[d] = copyV
 	}
 	return nil, 0
-}
-
-func split(text string) []string {
-	return strings.Split(text, "")
 }
