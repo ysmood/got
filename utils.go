@@ -290,11 +290,17 @@ func (ut Utils) HandleHTTP(file string, value ...interface{}) func(http.Response
 // Serve http on a random port. The server will be auto-closed after the test.
 func (ut Utils) Serve() *Router {
 	ut.Helper()
+	return ut.ServeWith("tcp4", "127.0.0.1:0")
+}
+
+// ServeWith specified network and address
+func (ut Utils) ServeWith(network, address string) *Router {
+	ut.Helper()
 
 	mux := http.NewServeMux()
 	srv := &http.Server{Handler: mux}
 
-	l, err := net.Listen("tcp4", "127.0.0.1:0")
+	l, err := net.Listen(network, address)
 	ut.err(err)
 
 	ut.Cleanup(func() {
