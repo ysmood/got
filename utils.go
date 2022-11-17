@@ -33,55 +33,55 @@ type Utils struct {
 	Testable
 }
 
-// Fatal is the same as testing.common.Fatal
+// Fatal is the same as [testing.common.Fatal]
 func (ut Utils) Fatal(args ...interface{}) {
 	ut.Helper()
 	ut.Log(args...)
 	ut.FailNow()
 }
 
-// Fatalf is the same as testing.common.Fatalf
+// Fatalf is the same as [testing.common.Fatalf]
 func (ut Utils) Fatalf(format string, args ...interface{}) {
 	ut.Helper()
 	ut.Logf(format, args...)
 	ut.FailNow()
 }
 
-// Log is the same as testing.common.Log
+// Log is the same as [testing.common.Log]
 func (ut Utils) Log(args ...interface{}) {
 	ut.Helper()
 	ut.Logf("%s", fmt.Sprintln(args...))
 }
 
-// Error is the same as testing.common.Error
+// Error is the same as [testing.common.Error]
 func (ut Utils) Error(args ...interface{}) {
 	ut.Helper()
 	ut.Log(args...)
 	ut.Fail()
 }
 
-// Errorf is the same as testing.common.Errorf
+// Errorf is the same as [testing.common.Errorf]
 func (ut Utils) Errorf(format string, args ...interface{}) {
 	ut.Helper()
 	ut.Logf(format, args...)
 	ut.Fail()
 }
 
-// Skipf is the same as testing.common.Skipf
+// Skipf is the same as [testing.common.Skipf]
 func (ut Utils) Skipf(format string, args ...interface{}) {
 	ut.Helper()
 	ut.Logf(format, args...)
 	ut.SkipNow()
 }
 
-// Skip is the same as testing.common.Skip
+// Skip is the same as [testing.common.Skip]
 func (ut Utils) Skip(args ...interface{}) {
 	ut.Helper()
 	ut.Log(args...)
 	ut.SkipNow()
 }
 
-// Run f as a subtest
+// Run f as a sub-test
 func (ut Utils) Run(name string, f func(t G)) bool {
 	runVal := reflect.ValueOf(ut.Testable).MethodByName("Run")
 	return runVal.Call([]reflect.Value{
@@ -93,7 +93,7 @@ func (ut Utils) Run(name string, f func(t G)) bool {
 	})[0].Interface().(bool)
 }
 
-// Parallel is the same as testing.T.Parallel
+// Parallel is the same as [testing.T.Parallel]
 func (ut Utils) Parallel() Utils {
 	reflect.ValueOf(ut.Testable).MethodByName("Parallel").Call(nil)
 	return ut
@@ -165,7 +165,7 @@ func (ut Utils) WriteFile(path string, content interface{}) {
 }
 
 // Open a file. Override it if create is true. Directories will be auto-created.
-// path will be joined with filepath.Join so that it's cross-platform
+// path will be joined with [filepath.Join] so that it's cross-platform
 func (ut Utils) Open(create bool, path ...string) (f *os.File) {
 	p := filepath.Join(path...)
 
@@ -224,7 +224,7 @@ func (ut Utils) ToJSONString(obj interface{}) string {
 }
 
 // Write obj to the writer. Encode obj to []byte and cache it for writer.
-// If obj is not []byte, string, or io.Reader, it will be encoded as JSON.
+// If obj is not []byte, string, or [io.Reader], it will be encoded as JSON.
 func (ut Utils) Write(obj interface{}) (writer func(io.Writer)) {
 	lock := sync.Mutex{}
 	var cache []byte
@@ -260,7 +260,7 @@ func (ut Utils) Write(obj interface{}) (writer func(io.Writer)) {
 }
 
 // HandleHTTP handles a request. If file exists serve the file content. The file will be used to set the Content-Type header.
-// If the file doesn't exist, the value will be encoded by G.Write(value) and used as the response body.
+// If the file doesn't exist, the value will be encoded by [Utils.Write] and used as the response body.
 func (ut Utils) HandleHTTP(file string, value ...interface{}) func(http.ResponseWriter, *http.Request) {
 	var obj interface{}
 	if len(value) > 1 {
@@ -329,8 +329,8 @@ func (rt *Router) URL(path ...string) string {
 	return rt.HostURL.String() + strings.Join(path, "")
 }
 
-// Route on the pattern. Check the doc of http.ServeMux for the syntax of pattern.
-// It will use G.HandleHTTP to handle each request.
+// Route on the pattern. Check the doc of [http.ServeMux] for the syntax of pattern.
+// It will use [Utils.HandleHTTP] to handle each request.
 func (rt *Router) Route(pattern, file string, value ...interface{}) *Router {
 	h := rt.ut.HandleHTTP(file, value...)
 
@@ -346,7 +346,7 @@ type ReqMIME string
 
 // Req the url. The method is the http method, default value is "GET".
 // If an option is http.Header, it will be used as the request header.
-// If an option is Utils.ReqMIME, it will be used to set the Content-Type header.
+// If an option is [Utils.ReqMIME], it will be used to set the Content-Type header.
 // Other option type will be treat as request body, it will be encoded by Utils.Write .
 func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	ut.Helper()
