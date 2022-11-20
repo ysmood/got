@@ -1,15 +1,14 @@
 package gop_test
 
 import (
-	"bytes"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 	"testing"
-	"text/template"
 	"time"
 	"unsafe"
 
@@ -51,6 +50,7 @@ func TestTokenize(t *testing.T) {
 		map[interface{}]interface{}{
 			`"test"`: 10,
 			"a":      1,
+			&ref:     1,
 		},
 		unsafe.Pointer(&ref),
 		struct {
@@ -80,44 +80,40 @@ func TestTokenize(t *testing.T) {
 		[]byte(`{"a": 1}`),
 	}
 
-	check := func(out string, tpl ...string) {
+	check := func(out string, tpl string) {
 		g.Helper()
 
-		expected := bytes.NewBuffer(nil)
-
-		t := template.New("")
-		g.E(t.Parse(g.Read(g.Open(false, tpl...)).String()))
-		g.E(t.Execute(expected, map[string]interface{}{
+		expected := g.Render(tpl, map[string]interface{}{
 			"ch1": fmt.Sprintf("0x%x", reflect.ValueOf(ch1).Pointer()),
 			"ch2": fmt.Sprintf("0x%x", reflect.ValueOf(ch2).Pointer()),
 			"ch3": fmt.Sprintf("0x%x", reflect.ValueOf(ch3).Pointer()),
 			"fn":  fmt.Sprintf("0x%x", reflect.ValueOf(fn).Pointer()),
 			"ptr": fmt.Sprintf("%v", &ref),
-		}))
+			"ref": fmt.Sprintf("0x%x", reflect.ValueOf(&ref).Pointer()),
+		}).String()
 
-		if out != expected.String() {
+		if out != expected {
 			g.Fail()
-			g.Log(diff.Diff(out, expected.String()))
+			g.Log(diff.Diff(out, expected))
 		}
 	}
 
 	out := gop.StripANSI(gop.F(v))
 
 	{
-		code := fmt.Sprintf(g.Read(g.Open(false, "fixtures", "compile_check.go.tmpl")).String(), out)
-		f := g.Open(true, "tmp", g.RandStr(8), "main.go")
-		g.Cleanup(func() { _ = os.Remove(f.Name()) })
-		g.Write(code)(f)
-		b, err := exec.Command("go", "run", f.Name()).CombinedOutput()
+		code := fmt.Sprintf(g.Read(filepath.Join("fixtures", "compile_check.go.tmpl")).String(), out)
+		f := filepath.Join("tmp", g.RandStr(8), "main.go")
+		g.WriteFile(f, code)
+		b, err := exec.Command("go", "run", f).CombinedOutput()
 		if err != nil {
 			g.Error(string(b))
 		}
 	}
 
-	check(out, "fixtures", "expected.tmpl")
+	check(out, filepath.Join("fixtures", "expected.tmpl"))
 
 	out = gop.VisualizeANSI(gop.F(v))
-	check(out, "fixtures", "expected_with_color.tmpl")
+	check(out, filepath.Join("fixtures", "expected_with_color.tmpl"))
 }
 
 func TestRef(t *testing.T) {
@@ -208,6 +204,26 @@ func TestCircularSlice(t *testing.T) {
         gop.Circular(1).([]interface {}),
     },
 }`)
+}
+
+func TestCircularMapKey(t *testing.T) {
+	g := got.New(t)
+
+	a := map[interface{}]interface{}{}
+	b := map[interface{}]interface{}{}
+	a[&b] = b
+	b[&a] = a
+
+	ts := gop.Tokenize(b)
+
+	g.Eq(gop.Format(ts, gop.ThemeNone), g.Render(`map[interface {}]interface {}{
+    (interface {})(nil)/* {{.a}} */: map[interface {}]interface {}{
+        (interface {})(nil)/* {{.b}} */: gop.Circular().(map[interface {}]interface {}),
+    },
+}`, map[string]interface{}{
+		"a": fmt.Sprintf("0x%x", reflect.ValueOf(&a).Pointer()),
+		"b": fmt.Sprintf("0x%x", reflect.ValueOf(&b).Pointer()),
+	}).String())
 }
 
 func TestPlain(t *testing.T) {

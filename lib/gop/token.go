@@ -125,6 +125,10 @@ func newContext() context {
 }
 
 func (ctx context) add(p interface{}) context {
+	if v := reflect.ValueOf(p); v.Kind() == reflect.Ptr {
+		p = v.Pointer()
+	}
+
 	return context{
 		global: ctx.global,
 		path:   append(ctx.path, p),
@@ -278,7 +282,13 @@ func tokenizeCollection(ctx context, v reflect.Value) []*Token {
 		for _, k := range keys {
 			ctx := ctx.add(k.Interface())
 			ts = append(ts, &Token{MapKey, ""})
-			ts = append(ts, tokenize(ctx, k)...)
+
+			if k.Kind() == reflect.Interface && k.Elem().Kind() == reflect.Ptr {
+				ts = append(ts, tokenizeMapKey(ctx, k)...)
+			} else {
+				ts = append(ts, tokenize(ctx, k)...)
+			}
+
 			ts = append(ts, &Token{Colon, ":"})
 			ts = append(ts, tokenize(ctx, v.MapIndex(k))...)
 			ts = append(ts, &Token{Comma, ","})
@@ -431,6 +441,16 @@ func tokenizeBytes(data []byte) []*Token {
 	return ts
 }
 
+func tokenizeMapKey(ctx context, v reflect.Value) []*Token {
+	ts := []*Token{}
+	ts = append(ts,
+		&Token{ParenOpen, "("}, typeName(v.Type().String()), &Token{ParenClose, ")"},
+		&Token{ParenOpen, "("}, &Token{Nil, "nil"}, &Token{ParenClose, ")"},
+		&Token{Comment, wrapComment(formatUintptr(v.Elem().Pointer()))},
+	)
+	return ts
+}
+
 func tokenizePtr(ctx context, v reflect.Value) []*Token {
 	ts := []*Token{}
 
@@ -441,18 +461,18 @@ func tokenizePtr(ctx context, v reflect.Value) []*Token {
 		return ts
 	}
 
-	fn := false
+	needFn := false
 
 	switch v.Elem().Kind() {
 	case reflect.Struct, reflect.Map, reflect.Slice, reflect.Array:
 		if _, ok := v.Elem().Interface().([]byte); ok {
-			fn = true
+			needFn = true
 		}
 	default:
-		fn = true
+		needFn = true
 	}
 
-	if fn {
+	if needFn {
 		ts = append(ts, &Token{Func, SymbolPtr}, &Token{ParenOpen, "("})
 		ts = append(ts, tokenize(ctx, v.Elem())...)
 		ts = append(ts, &Token{ParenClose, ")"}, &Token{Dot, "."}, &Token{ParenOpen, "("},
