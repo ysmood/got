@@ -35,9 +35,14 @@ func TestHelper(t *testing.T) {
 	f = ut.Open(false, "tmp/test.txt")
 	ut.Eq(ut.JSON(f), 1)
 
+	ut.MkdirAll(0, "tmp/a/b/c")
+
 	s := ut.RandStr(16)
 	ut.WriteFile("tmp/test.txt", s)
-	ut.Eq(ut.ReadFile("tmp/test.txt").String(), s)
+	ut.Eq(ut.Read("tmp/test.txt").String(), s)
+	ut.Eq(ut.Read(123).String(), "123")
+	ut.Eq(ut.Read([]byte("ok")).String(), "ok")
+	ut.Eq(ut.Render("{{.}}", 10).String(), "10")
 
 	ut.Eq(ut.JSON([]byte("1")), 1)
 	ut.Eq(ut.JSON("true"), true)

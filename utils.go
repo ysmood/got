@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"math/big"
 	"mime"
@@ -19,6 +20,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 )
 
@@ -154,9 +156,15 @@ func (ut Utils) RandInt(min, max int) int {
 	return int(n.Int64()) + min
 }
 
-// ReadFile content
-func (ut Utils) ReadFile(path string) *bytes.Buffer {
-	return ut.Read(ut.Open(false, path))
+// Render template. It will use [Utils.Read] to read the value as the template string.
+func (ut Utils) Render(value interface{}, data interface{}) *bytes.Buffer {
+	ut.Helper()
+	out := bytes.NewBuffer(nil)
+	t := template.New("")
+	t, err := t.Parse(ut.Read(value).String())
+	ut.err(err)
+	ut.err(t.Execute(out, data))
+	return out
 }
 
 // WriteFile at path with content
@@ -164,26 +172,78 @@ func (ut Utils) WriteFile(path string, content interface{}) {
 	ut.Write(content)(ut.Open(true, path))
 }
 
+// PathExists checks if path exists
+func (ut Utils) PathExists(path string) bool {
+	ut.Helper()
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	ut.err(err)
+	return true
+}
+
+// MkdirAll is like [os.MkdirAll] but will remove the dir after test and fail the test if error.
+// The default perm is 0755.
+func (ut Utils) MkdirAll(perm fs.FileMode, path string) {
+	if perm == 0 {
+		perm = 0755
+	}
+
+	dir := filepath.Dir(path)
+
+	if !ut.PathExists(dir) {
+		ut.MkdirAll(perm, dir)
+	}
+
+	if ut.PathExists(path) {
+		return
+	}
+
+	ut.err(os.Mkdir(path, perm))
+	ut.Cleanup(func() { ut.err(os.RemoveAll(path)) })
+}
+
 // Open a file. Override it if create is true. Directories will be auto-created.
 // path will be joined with [filepath.Join] so that it's cross-platform
-func (ut Utils) Open(create bool, path ...string) (f *os.File) {
-	p := filepath.Join(path...)
+func (ut Utils) Open(create bool, path string) (f *os.File) {
+	ut.Helper()
 
 	var err error
 	if create {
-		dir := filepath.Dir(p)
-		_ = os.MkdirAll(dir, 0755)
-		f, err = os.Create(p)
+		ut.MkdirAll(0, filepath.Dir(path))
+		f, err = os.Create(path)
 	} else {
-		f, err = os.Open(p)
+		f, err = os.Open(path)
 	}
 	ut.err(err)
+
 	return f
 }
 
-// Read all from r
-func (ut Utils) Read(r io.Reader) *bytes.Buffer {
+// Read all from value. If the value is string and it's a file path,
+// the file content will be read, or the string will be returned.
+// If the value is [io.Reader], the reader will be read. If the value is []byte, the value will be returned.
+// Others will be converted to string and returned.
+func (ut Utils) Read(value interface{}) *bytes.Buffer {
 	ut.Helper()
+
+	var r io.Reader
+
+	switch v := value.(type) {
+	case string:
+		if !ut.PathExists(v) {
+			return bytes.NewBufferString(v)
+		}
+		r = ut.Open(false, v)
+	case io.Reader:
+		r = v
+	case []byte:
+		return bytes.NewBuffer(v)
+	default:
+		return bytes.NewBufferString(fmt.Sprintf("%v", v))
+	}
+
 	b := bytes.NewBuffer(nil)
 	_, err := io.Copy(b, r)
 	ut.err(err)
