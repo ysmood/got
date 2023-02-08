@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ysmood/gop"
 	"github.com/ysmood/got/lib/diff"
-	"github.com/ysmood/got/lib/gop"
 )
 
 // AssertionErrType enum

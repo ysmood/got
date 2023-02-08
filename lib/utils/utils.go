@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ysmood/got/lib/gop"
+	"github.com/ysmood/gop"
 )
 
 var float64Type = reflect.TypeOf(0.0)

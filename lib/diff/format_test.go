@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ysmood/gop"
 	"github.com/ysmood/got"
 	"github.com/ysmood/got/lib/diff"
-	"github.com/ysmood/got/lib/gop"
 	"github.com/ysmood/got/lib/lcs"
 )
 

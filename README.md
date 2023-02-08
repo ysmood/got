@@ -4,12 +4,11 @@ An enjoyable golang test framework.
 
 ## Features
 
-- Pretty output using [gop](lib/gop) and [diff](lib/diff)
+- Pretty output using [gop](https://github.com/ysmood/gop) and [diff](lib/diff)
 - Fluent API design that takes the full advantage of IDE
 - Handy assertion helpers
 - Handy utils for testing
 - Customizable assertion error output
-- No dependency, and 100% test coverage
 
 ## Guides
 

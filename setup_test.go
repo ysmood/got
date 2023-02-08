@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/ysmood/gop"
 	"github.com/ysmood/got"
-	"github.com/ysmood/got/lib/gop"
 )
 
 var setup = got.Setup(func(g got.G) {

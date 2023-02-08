@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ysmood/gop"
 	"github.com/ysmood/got"
-	"github.com/ysmood/got/lib/gop"
 )
 
 func TestAssertion(t *testing.T) {

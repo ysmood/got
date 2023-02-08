@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ysmood/got/lib/gop"
+	"github.com/ysmood/gop"
 )
 
 // Theme for diff

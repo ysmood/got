@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ysmood/gop"
 	"github.com/ysmood/got"
 	"github.com/ysmood/got/lib/diff"
-	"github.com/ysmood/got/lib/gop"
 )
 
 // An example to only override the default error output of got.Assertions.Eq

@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ysmood/gop"
 	"github.com/ysmood/got/lib/diff"
-	"github.com/ysmood/got/lib/gop"
 )
 
 // Testable interface. Usually, you use *testing.T as it.
