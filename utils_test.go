@@ -163,3 +163,11 @@ func TestServe(t *testing.T) {
 
 	wg.Wait()
 }
+
+func TestPathExists(t *testing.T) {
+	g := got.T(t)
+
+	g.False(g.PathExists("not-exists"))
+	g.False(g.PathExists("*!"))
+	g.True(g.PathExists("lib"))
+}

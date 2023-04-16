@@ -174,13 +174,8 @@ func (ut Utils) WriteFile(path string, content interface{}) {
 
 // PathExists checks if path exists
 func (ut Utils) PathExists(path string) bool {
-	ut.Helper()
 	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return false
-	}
-	ut.err(err)
-	return true
+	return err == nil
 }
 
 // MkdirAll is like [os.MkdirAll] but will remove the dir after test and fail the test if error.
