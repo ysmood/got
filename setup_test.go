@@ -55,7 +55,7 @@ func (m *mock) Logf(format string, args ...interface{}) {
 	m.msg += fmt.Sprintf(format, args...)
 }
 
-func (m *mock) Run(name string, fn func(*mock)) {
+func (m *mock) Run(_ string, fn func(*mock)) {
 	fn(m)
 }
 

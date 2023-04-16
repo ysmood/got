@@ -110,7 +110,7 @@ func TestContext(t *testing.T) {
 	g.Len(l, 0)
 }
 
-func TestLongRandom(t *testing.T) {
+func TestLongRandom(_ *testing.T) {
 	size := 10000
 	x := randStr(size)
 	y := randStr(size)

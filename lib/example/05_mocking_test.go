@@ -19,7 +19,7 @@ func (m *mockResponseWriter) Write(b []byte) (int, error) {
 
 func (m *mockResponseWriter) Header() http.Header { return nil }
 
-func (m *mockResponseWriter) WriteHeader(c int) {}
+func (m *mockResponseWriter) WriteHeader(_ int) {}
 
 func TestMocking(t *testing.T) {
 	g := setup(t)
