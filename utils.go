@@ -169,7 +169,9 @@ func (ut Utils) Render(value interface{}, data interface{}) *bytes.Buffer {
 
 // WriteFile at path with content
 func (ut Utils) WriteFile(path string, content interface{}) {
-	ut.Write(content)(ut.Open(true, path))
+	f := ut.Open(true, path)
+	defer func() { ut.err(f.Close()) }()
+	ut.Write(content)(f)
 }
 
 // PathExists checks if path exists
@@ -230,7 +232,9 @@ func (ut Utils) Read(value interface{}) *bytes.Buffer {
 		if !ut.PathExists(v) {
 			return bytes.NewBufferString(v)
 		}
-		r = ut.Open(false, v)
+		f := ut.Open(false, v)
+		defer func() { ut.err(f.Close()) }()
+		r = f
 	case io.Reader:
 		r = v
 	case []byte:
