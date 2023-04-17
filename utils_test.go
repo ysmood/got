@@ -171,3 +171,11 @@ func TestPathExists(t *testing.T) {
 	g.False(g.PathExists("*!"))
 	g.True(g.PathExists("lib"))
 }
+
+func TestChdir(t *testing.T) {
+	g := got.T(t)
+
+	g.Chdir("lib")
+
+	g.PathExists("diff")
+}

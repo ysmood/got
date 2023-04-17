@@ -180,6 +180,15 @@ func (ut Utils) PathExists(path string) bool {
 	return err == nil
 }
 
+// Chdir is like [os.Chdir] but will restore the dir after test.
+func (ut Utils) Chdir(dir string) {
+	ut.Helper()
+	cwd, err := os.Getwd()
+	ut.err(err)
+	ut.err(os.Chdir(dir))
+	ut.Cleanup(func() { ut.err(os.Chdir(cwd)) })
+}
+
 // MkdirAll is like [os.MkdirAll] but will remove the dir after test and fail the test if error.
 // The default perm is 0755.
 func (ut Utils) MkdirAll(perm fs.FileMode, path string) {
