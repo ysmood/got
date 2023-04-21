@@ -35,6 +35,7 @@ func TestHelper(t *testing.T) {
 	f = ut.Open(false, "tmp/test.txt")
 	ut.Eq(ut.JSON(f), 1)
 
+	ut.Setenv(ut.RandStr(8), ut.RandStr(8))
 	ut.MkdirAll(0, "tmp/a/b/c")
 
 	s := ut.RandStr(16)

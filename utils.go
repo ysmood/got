@@ -167,7 +167,7 @@ func (ut Utils) Render(value interface{}, data interface{}) *bytes.Buffer {
 	return out
 }
 
-// WriteFile at path with content
+// WriteFile at path with content, it uses [Utils.Open] to open the file.
 func (ut Utils) WriteFile(path string, content interface{}) {
 	f := ut.Open(true, path)
 	defer func() { ut.err(f.Close()) }()
@@ -186,7 +186,15 @@ func (ut Utils) Chdir(dir string) {
 	cwd, err := os.Getwd()
 	ut.err(err)
 	ut.err(os.Chdir(dir))
-	ut.Cleanup(func() { ut.err(os.Chdir(cwd)) })
+	ut.Cleanup(func() { _ = os.Chdir(cwd) })
+}
+
+// Setenv is like [os.Setenv] but will restore the env after test.
+func (ut Utils) Setenv(key, value string) {
+	ut.Helper()
+	old := os.Getenv(key)
+	ut.err(os.Setenv(key, value))
+	ut.Cleanup(func() { _ = os.Setenv(key, old) })
 }
 
 // MkdirAll is like [os.MkdirAll] but will remove the dir after test and fail the test if error.
@@ -207,11 +215,11 @@ func (ut Utils) MkdirAll(perm fs.FileMode, path string) {
 	}
 
 	ut.err(os.Mkdir(path, perm))
-	ut.Cleanup(func() { ut.err(os.RemoveAll(path)) })
+	ut.Cleanup(func() { _ = os.RemoveAll(path) })
 }
 
 // Open a file. Override it if create is true. Directories will be auto-created.
-// path will be joined with [filepath.Join] so that it's cross-platform
+// If the directory and file doesn't exist, it will be removed after the test.
 func (ut Utils) Open(create bool, path string) (f *os.File) {
 	ut.Helper()
 
@@ -219,6 +227,9 @@ func (ut Utils) Open(create bool, path string) (f *os.File) {
 	if create {
 		ut.MkdirAll(0, filepath.Dir(path))
 		f, err = os.Create(path)
+		if err == nil {
+			ut.Cleanup(func() { _ = os.Remove(path) })
+		}
 	} else {
 		f, err = os.Open(path)
 	}
@@ -371,10 +382,7 @@ func (ut Utils) ServeWith(network, address string) *Router {
 	l, err := net.Listen(network, address)
 	ut.err(err)
 
-	ut.Cleanup(func() {
-		ut.Helper()
-		ut.err(srv.Close())
-	})
+	ut.Cleanup(func() { _ = srv.Close() })
 
 	go func() { _ = srv.Serve(l) }()
 
