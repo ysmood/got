@@ -142,9 +142,7 @@ func (ut Utils) Timeout(d time.Duration) Context {
 // RandStr generates a random string with the specified length
 func (ut Utils) RandStr(l int) string {
 	ut.Helper()
-	b := make([]byte, (l+1)/2)
-	_, err := rand.Read(b)
-	ut.err(err)
+	b := ut.RandBytes((l + 1) / 2)
 	return hex.EncodeToString(b)[:l]
 }
 
@@ -154,6 +152,15 @@ func (ut Utils) RandInt(min, max int) int {
 	n, err := rand.Int(rand.Reader, big.NewInt(int64(max-min)))
 	ut.err(err)
 	return int(n.Int64()) + min
+}
+
+// RandBytes generates a random byte array with the specified length
+func (ut Utils) RandBytes(l int) []byte {
+	ut.Helper()
+	b := make([]byte, l)
+	_, err := rand.Read(b)
+	ut.err(err)
+	return b
 }
 
 // Render template. It will use [Utils.Read] to read the value as the template string.
