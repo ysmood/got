@@ -435,12 +435,15 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	ut.Helper()
 
 	header := http.Header{}
+	var host string
 	var contentType string
 	var body io.Reader
 
 	for _, item := range options {
 		switch val := item.(type) {
 		case http.Header:
+			host = val.Get("Host")
+			val.Del("Host")
 			header = val
 		case ReqMIME:
 			contentType = mime.TypeByExtension(filepath.Ext(string(val)))
@@ -458,6 +461,7 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 		req.Header = header
 	}
 
+	req.Host = host
 	req.Header.Set("Content-Type", contentType)
 
 	res, err := http.DefaultClient.Do(req)

@@ -75,6 +75,7 @@ func TestHelper(t *testing.T) {
 		s.Mux.HandleFunc("/f", func(rw http.ResponseWriter, r *http.Request) {
 			ut.Has(r.Header.Get("Content-Type"), "application/json")
 			ut.Eq(r.Header.Get("Test-Header"), "ok")
+			ut.Eq(r.Host, "test.com")
 		})
 
 		ut.Eq(ut.Req("", s.URL()).String(), "")
@@ -86,7 +87,7 @@ func TestHelper(t *testing.T) {
 		ut.Has(res.Header.Get("Content-Type"), "application/json")
 		ut.Has(ut.Req("", s.URL("/c")).String(), "ysmood/got")
 		ut.Req(http.MethodPost, s.URL("/d"), 1)
-		ut.Req(http.MethodPost, s.URL("/f"), http.Header{"Test-Header": {"ok"}}, got.ReqMIME(".json"), 1)
+		ut.Req(http.MethodPost, s.URL("/f"), http.Header{"Test-Header": {"ok"}, "Host": {"test.com"}}, got.ReqMIME(".json"), 1)
 	}
 
 	ut.DoAfter(time.Hour, func() {})
