@@ -57,7 +57,10 @@ func (as Assertions) Neq(x, y interface{}) {
 		return
 	}
 
-	if reflect.TypeOf(x).Kind() == reflect.TypeOf(y).Kind() {
+	_, xNil := utils.IsNil(x)
+	_, yNil := utils.IsNil(y)
+
+	if !xNil && !yNil && reflect.TypeOf(x).Kind() == reflect.TypeOf(y).Kind() {
 		as.err(AssertionNeqSame, x, y)
 		return
 	}
@@ -150,7 +153,7 @@ func (as Assertions) Nil(args ...interface{}) {
 		return
 	}
 	last := args[len(args)-1]
-	if _, yes := isNil(last); yes {
+	if _, yes := utils.IsNil(last); yes {
 		return
 	}
 	as.err(AssertionNil, last, args)
@@ -170,7 +173,7 @@ func (as Assertions) NotNil(args ...interface{}) {
 		return
 	}
 
-	nilable, yes := isNil(last)
+	nilable, yes := utils.IsNil(last)
 	if !nilable {
 		as.err(AssertionNotNilable, last, args)
 		return
@@ -360,28 +363,6 @@ func (as Assertions) err(t AssertionErrType, details ...interface{}) {
 	}
 
 	as.Fail()
-}
-
-// the first return value is true if x is nilable
-func isNil(x interface{}) (bool, bool) {
-	if x == nil {
-		return true, true
-	}
-
-	val := reflect.ValueOf(x)
-	k := val.Kind()
-	nilable := k == reflect.Chan ||
-		k == reflect.Func ||
-		k == reflect.Interface ||
-		k == reflect.Map ||
-		k == reflect.Ptr ||
-		k == reflect.Slice
-
-	if nilable {
-		return true, val.IsNil()
-	}
-
-	return false, false
 }
 
 func hasStr(c string, item interface{}) bool {

@@ -17,6 +17,12 @@ var float64Type = reflect.TypeOf(0.0)
 // If x or y are not numerical types, both of them will be converted to string format of its value type, the result will be
 // the strings.Compare result between them, such as x is int(1), y is "a", the result will be 1 .
 func SmartCompare(x, y interface{}) float64 {
+	_, xNil := IsNil(x)
+	_, yNil := IsNil(y)
+	if xNil && yNil {
+		return 0
+	}
+
 	if reflect.DeepEqual(x, y) {
 		return 0
 	}
@@ -66,4 +72,26 @@ func ToValues(vs []interface{}) []reflect.Value {
 		out = append(out, reflect.ValueOf(v))
 	}
 	return out
+}
+
+// IsNil returns true, true if the value is nilable and is nil.
+func IsNil(x interface{}) (bool, bool) {
+	if x == nil {
+		return true, true
+	}
+
+	val := reflect.ValueOf(x)
+	k := val.Kind()
+	nilable := k == reflect.Chan ||
+		k == reflect.Func ||
+		k == reflect.Interface ||
+		k == reflect.Map ||
+		k == reflect.Ptr ||
+		k == reflect.Slice
+
+	if nilable {
+		return true, val.IsNil()
+	}
+
+	return false, false
 }

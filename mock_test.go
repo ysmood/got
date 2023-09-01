@@ -64,22 +64,22 @@ func TestMockUtils(t *testing.T) {
 	{
 		m.On(m, "Write").When([]byte{}).Return(2, nil).Times(2)
 
-		n, err := m.Write(nil)
+		n, err := m.Write([]byte{})
 		g.Nil(err)
 		g.Eq(n, 2)
 
-		n, err = m.Write(nil)
+		n, err = m.Write([]byte{})
 		g.Nil(err)
 		g.Eq(n, 2)
 
-		n, err = m.Write(nil)
+		n, err = m.Write([]byte{})
 		g.Nil(err)
 		g.Eq(n, 0)
 	}
 
 	{
 		m.On(m, "Write").When(got.Any).Return(2, nil)
-		n, err := m.Write(nil)
+		n, err := m.Write([]byte{})
 		g.Nil(err)
 		g.Eq(n, 2)
 	}
@@ -87,11 +87,11 @@ func TestMockUtils(t *testing.T) {
 	{
 		m.On(m, "Write").When([]byte{}).Return(2, nil).Once()
 
-		n, err := m.Write(nil)
+		n, err := m.Write([]byte{})
 		g.Nil(err)
 		g.Eq(n, 2)
 
-		n, err = m.Write(nil)
+		n, err = m.Write([]byte{})
 		g.Nil(err)
 		g.Eq(n, 0)
 	}

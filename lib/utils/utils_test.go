@@ -38,6 +38,7 @@ func TestSmartCompare(t *testing.T) {
 		{circular, circular, 0.0},
 		{circular, 0, 1.0},
 		{map[int]interface{}{1: 1.0}, map[int]interface{}{1: 1}, 1.0},
+		{[]byte(nil), nil, 0.0},
 	}
 	for i, c := range testCases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
