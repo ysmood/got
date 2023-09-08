@@ -430,6 +430,7 @@ type ReqMIME string
 // Req the url. The method is the http method, default value is "GET".
 // If an option is http.Header, it will be used as the request header.
 // If an option is [Utils.ReqMIME], it will be used to set the Content-Type header.
+// If an option is [context.Context], it will be used as the request context.
 // Other option type will be treat as request body, it will be encoded by Utils.Write .
 func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	ut.Helper()
@@ -438,6 +439,7 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	var host string
 	var contentType string
 	var body io.Reader
+	ctx := context.Background()
 
 	for _, item := range options {
 		switch val := item.(type) {
@@ -447,6 +449,8 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 			header = val
 		case ReqMIME:
 			contentType = mime.TypeByExtension(filepath.Ext(string(val)))
+		case context.Context:
+			ctx = val
 		default:
 			buf := bytes.NewBuffer(nil)
 			ut.Write(val)(buf)
@@ -454,8 +458,10 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 		}
 	}
 
-	req, err := http.NewRequest(method, url, body)
-	ut.err(err)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return &ResHelper{ut, nil, err}
+	}
 
 	if header != nil {
 		req.Header = header
@@ -465,15 +471,14 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	req.Header.Set("Content-Type", contentType)
 
 	res, err := http.DefaultClient.Do(req)
-	ut.err(err)
-
-	return &ResHelper{ut, res}
+	return &ResHelper{ut, res, err}
 }
 
 // ResHelper of the request
 type ResHelper struct {
 	ut Utils
 	*http.Response
+	err error
 }
 
 // Bytes body
@@ -492,6 +497,11 @@ func (res *ResHelper) String() string {
 func (res *ResHelper) JSON() (v interface{}) {
 	res.ut.Helper()
 	return res.ut.JSON(res.Body)
+}
+
+// Err of request protocol
+func (res *ResHelper) Err() error {
+	return res.err
 }
 
 func (ut Utils) err(err error) {

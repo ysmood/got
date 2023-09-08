@@ -2,6 +2,7 @@ package got_test
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -80,6 +81,9 @@ func TestHelper(t *testing.T) {
 			ut.Eq(r.Header.Get("Test-Header"), "ok")
 			ut.Eq(r.Host, "test.com")
 		})
+		s.Mux.HandleFunc("/timeout", func(rw http.ResponseWriter, r *http.Request) {
+			<-r.Context().Done()
+		})
 
 		ut.Eq(ut.Req("", s.URL()).String(), "")
 		ut.Has(ut.Req("", s.URL("/file")).String(), "ysmood/got")
@@ -91,6 +95,8 @@ func TestHelper(t *testing.T) {
 		ut.Has(ut.Req("", s.URL("/c")).String(), "ysmood/got")
 		ut.Req(http.MethodPost, s.URL("/d"), 1)
 		ut.Req(http.MethodPost, s.URL("/f"), http.Header{"Test-Header": {"ok"}, "Host": {"test.com"}}, got.ReqMIME(".json"), 1)
+		ut.Has(ut.Req("", s.URL("/timeout"), ut.Timeout(100*time.Millisecond)).Err().Error(), "context deadline exceeded")
+		ut.Has(ut.Req("", string(rune(0x7f))).Err().Error(), `invalid control character in URL`)
 	}
 
 	ut.DoAfter(time.Hour, func() {})
