@@ -36,7 +36,10 @@ func TestHelper(t *testing.T) {
 	ut.Eq(ut.JSON(f), 1)
 
 	ut.Setenv(ut.RandStr(8), ut.RandStr(8))
-	ut.MkdirAll(0, "tmp/a/b/c")
+	p := fmt.Sprintf("tmp/%s/b/c", ut.RandStr(8))
+	ut.MkdirAll(0, p)
+	ut.MkdirAll(0, "tmp")
+	ut.PathExists(p)
 
 	s := ut.RandStr(16)
 	ut.WriteFile("tmp/test.txt", s)
