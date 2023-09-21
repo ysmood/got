@@ -131,13 +131,13 @@ got_test.data{
 	m.check("1 ⦗not ==⦘ 1.0")
 	as.Equal([]int{1}, []int{2})
 	m.check(`
-[]int/* len=1 cap=1 */{
+[]int{
     1,
 }
 
 ⦗not ==⦘
 
-[]int/* len=1 cap=1 */{
+[]int{
     2,
 }`)
 
@@ -277,14 +277,14 @@ func TestAssertionColor(t *testing.T) {
 	g := got.New(m)
 	g.Eq([]int{1, 2}, []int{1, 3})
 	m.checkWithStyle(true, `
-<36>[]int<39><37>/* len=2 cap=2 */<39>{
+<36>[]int<39>{
     <32>1<39>,
     <32>2<39>,
 }
 
 <31><4>⦗not ==⦘<24><39>
 
-<36>[]int<39><37>/* len=2 cap=2 */<39>{
+<36>[]int<39>{
     <32>1<39>,
     <32>3<39>,
 }
