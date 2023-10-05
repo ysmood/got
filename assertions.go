@@ -21,13 +21,13 @@ type Assertions struct {
 
 	must bool
 
-	desc string
+	desc []string
 }
 
 // Desc returns a clone with the format description. The description will be printed before the error message.
 func (as Assertions) Desc(format string, args ...interface{}) Assertions {
 	n := as
-	n.desc = fmt.Sprintf(format, args...)
+	n.desc = append(n.desc, fmt.Sprintf(format, args...))
 	return n
 }
 
@@ -342,8 +342,10 @@ func (as Assertions) Count(n int) func() {
 func (as Assertions) err(t AssertionErrType, details ...interface{}) {
 	as.Helper()
 
-	if as.desc != "" {
-		as.Logf("%s", as.desc)
+	if len(as.desc) > 0 {
+		for _, d := range as.desc {
+			as.Logf("%s", d)
+		}
 	}
 
 	// TODO: we should take advantage of the Helper function

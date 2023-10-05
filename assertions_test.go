@@ -104,6 +104,9 @@ func TestAssertionErr(t *testing.T) {
 	as.Desc("not %s", "equal").Eq(1, 2.0)
 	m.check("not equal\n1 ⦗not ==⦘ 2.0")
 
+	as.Desc("test").Desc("not %s", "equal").Eq(1, 2.0)
+	m.check("test\nnot equal\n1 ⦗not ==⦘ 2.0")
+
 	as.Eq(data{1, "a"}, data{1, "b"})
 	m.check(`
 got_test.data{
