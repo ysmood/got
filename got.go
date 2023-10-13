@@ -30,6 +30,8 @@ type G struct {
 	Testable
 	Assertions
 	Utils
+
+	snapshots *snapshots
 }
 
 // Setup returns a helper to init G instance
@@ -51,11 +53,17 @@ func T(t Testable) G {
 // New G instance
 func New(t Testable) G {
 	eh := NewDefaultAssertionError(gop.ThemeDefault, diff.ThemeDefault)
-	return G{
+
+	g := G{
 		t,
 		Assertions{Testable: t, ErrorHandler: eh},
 		Utils{t},
+		&snapshots{},
 	}
+
+	g.loadSnapshots()
+
+	return g
 }
 
 // DefaultFlags will set the "go test" flag if not yet presented.

@@ -8,6 +8,7 @@ An enjoyable golang test framework.
 - Fluent API design that takes the full advantage of IDE
 - Handy assertion helpers
 - Handy utils for testing
+- Value snapshot assertion
 - Customizable assertion error output
 
 ## Guides

@@ -23,9 +23,15 @@ type mock struct {
 	msg         string
 	cleanupList []func()
 	recover     bool
+	name        string
 }
 
-func (m *mock) Name() string     { return "mock" }
+func (m *mock) Name() string {
+	if m.name == "" {
+		return "mock"
+	}
+	return m.name
+}
 func (m *mock) Skipped() bool    { return m.skipped }
 func (m *mock) Failed() bool     { return m.failed }
 func (m *mock) Helper()          {}
