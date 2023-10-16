@@ -6,3 +6,9 @@
   "Name": "a",
   "Value": "ok"
 }
+{
+  "Name": "c",
+  "Value": {
+    "Val": 10
+  }
+}

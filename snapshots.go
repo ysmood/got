@@ -18,6 +18,7 @@ type snapshots struct {
 type snapshot struct {
 	Name  string
 	Value interface{}
+	used  bool
 }
 
 // snapshotsFilePath returns the path of the snapshot file for current test.
@@ -40,6 +41,16 @@ func (g G) loadSnapshots() {
 
 	dec := json.NewDecoder(g.snapshots.file)
 
+	g.Cleanup(func() {
+		g.snapshots.list.Range(func(key, value interface{}) bool {
+			s := value.(snapshot)
+			if !s.used {
+				g.Logf("snapshot `%s` is not used", s.Name)
+			}
+			return true
+		})
+	})
+
 	for {
 		var data snapshot
 		err := dec.Decode(&data)
@@ -47,7 +58,7 @@ func (g G) loadSnapshots() {
 			return
 		}
 		g.E(err)
-		g.snapshots.list.Store(data.Name, data.Value)
+		g.snapshots.list.Store(data.Name, data)
 	}
 }
 
@@ -61,7 +72,9 @@ func (g G) Snapshot(name string, x interface{}) {
 	g.Helper()
 
 	if y, ok := g.snapshots.list.Load(name); ok {
-		g.Eq(x, y)
+		s := y.(snapshot)
+		s.used = true
+		g.Eq(g.JSON(g.ToJSON(x)), s.Value)
 		return
 	}
 
@@ -81,7 +94,7 @@ func (g G) Snapshot(name string, x interface{}) {
 
 		enc := json.NewEncoder(g.snapshots.file)
 		enc.SetIndent("", "  ")
-		g.E(enc.Encode(snapshot{name, x}))
+		g.E(enc.Encode(snapshot{name, x, false}))
 	})
 }
 
