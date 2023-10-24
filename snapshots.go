@@ -1,100 +1,72 @@
 package got
 
 import (
-	"encoding/json"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
+
+	"github.com/ysmood/gop"
 )
 
-type snapshots struct {
-	list *sync.Map
-	file io.ReadWriter
-}
+const snapshotExt = ".got-snap"
 
 type snapshot struct {
-	Name  string
-	Value interface{}
+	value string
 	used  bool
 }
 
-// snapshotsFilePath returns the path of the snapshot file for current test.
-func (g G) snapshotsFilePath() string {
-	return filepath.Join(".snapshots", escapeFileName(g.Name())+".txt")
+func (g G) snapshotsDir() string {
+	return filepath.Join(".got", "snapshots", escapeFileName(g.Name()))
 }
 
 func (g G) loadSnapshots() {
-	p := g.snapshotsFilePath()
+	paths, err := filepath.Glob(filepath.Join(g.snapshotsDir(), "*"+snapshotExt))
+	g.E(err)
 
-	g.snapshots.list = &sync.Map{}
-
-	if g.PathExists(p) {
-		f, err := os.OpenFile(p, os.O_RDWR, 0755)
-		g.E(err)
-		g.snapshots.file = f
-	} else {
-		return
+	for _, path := range paths {
+		g.snapshots.Store(path, snapshot{g.Read(path).String(), false})
 	}
 
-	dec := json.NewDecoder(g.snapshots.file)
-
 	g.Cleanup(func() {
-		g.snapshots.list.Range(func(key, value interface{}) bool {
-			s := value.(snapshot)
+		g.snapshots.Range(func(path, data interface{}) bool {
+			s := data.(snapshot)
 			if !s.used {
-				g.Logf("snapshot `%s` is not used", s.Name)
+				g.E(os.Remove(path.(string)))
 			}
 			return true
 		})
 	})
-
-	for {
-		var data snapshot
-		err := dec.Decode(&data)
-		if err == io.EOF {
-			return
-		}
-		g.E(err)
-		g.snapshots.list.Store(data.Name, data)
-	}
 }
 
-// Snapshot asserts that x equals the snapshot with the specified name, name should be unique.
-// It can only compare JSON serializable types.
-// It will create a new snapshot if the name is not found.
-// The snapshot will be saved to ".snapshots/{TEST_NAME}" beside the test file,
-// TEST_NAME is the current test name.
-// To update the snapshot, just delete the corresponding file.
+// Snapshot asserts that x equals the snapshot with the specified name, name should be unique under the same test.
+// It will create a new snapshot file if the name is not found.
+// The snapshot file will be saved to ".got/snapshots/{TEST_NAME}/{name}.got-snap".
+// To update the snapshot, just change the name of the snapshot or remove the corresponding snapshot file.
+// It will auto-remove the unused snapshot files after the test.
+// The snapshot files should be version controlled.
 func (g G) Snapshot(name string, x interface{}) {
 	g.Helper()
 
-	if y, ok := g.snapshots.list.Load(name); ok {
-		s := y.(snapshot)
-		s.used = true
-		g.Eq(g.JSON(g.ToJSON(x)), s.Value)
+	path := filepath.Join(g.snapshotsDir(), escapeFileName(name)+snapshotExt)
+
+	xs := gop.Plain(x)
+
+	if data, ok := g.snapshots.Load(path); ok {
+		s := data.(snapshot)
+		if xs == s.value {
+			g.snapshots.Store(path, snapshot{xs, true})
+		} else {
+			g.Assertions.err(AssertionSnapshot, xs, s.value)
+		}
 		return
 	}
 
-	g.snapshots.list.Store(name, x)
+	g.snapshots.Store(path, snapshot{xs, true})
 
 	g.Cleanup(func() {
-		if g.snapshots.file == nil {
-			p := g.snapshotsFilePath()
-
-			err := os.MkdirAll(filepath.Dir(p), 0755)
-			g.E(err)
-
-			f, err := os.Create(p)
-			g.E(err)
-			g.snapshots.file = f
-		}
-
-		enc := json.NewEncoder(g.snapshots.file)
-		enc.SetIndent("", "  ")
-		g.E(enc.Encode(snapshot{name, x, false}))
+		g.E(os.MkdirAll(g.snapshotsDir(), 0755))
+		g.E(os.WriteFile(path, []byte(xs), 0644))
 	})
 }
 

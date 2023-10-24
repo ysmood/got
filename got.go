@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/ysmood/gop"
 	"github.com/ysmood/got/lib/diff"
@@ -31,7 +32,7 @@ type G struct {
 	Assertions
 	Utils
 
-	snapshots *snapshots
+	snapshots *sync.Map
 }
 
 // Setup returns a helper to init G instance
@@ -58,7 +59,7 @@ func New(t Testable) G {
 		t,
 		Assertions{Testable: t, ErrorHandler: eh},
 		Utils{t},
-		&snapshots{},
+		&sync.Map{},
 	}
 
 	g.loadSnapshots()

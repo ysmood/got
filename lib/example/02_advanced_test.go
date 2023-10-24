@@ -39,3 +39,9 @@ func TestTableDriven(t *testing.T) {
 		})
 	}
 }
+
+func TestSnapshot(t *testing.T) {
+	g := setup(t)
+
+	g.Snapshot("snapshot the map value", map[int]string{1: "1", 2: "2"})
+}

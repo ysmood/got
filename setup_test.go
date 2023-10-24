@@ -77,6 +77,14 @@ func (m *mock) check(expected string) {
 	m.checkWithStyle(false, expected)
 }
 
+func (m *mock) reset() {
+	m.Lock()
+	defer m.Unlock()
+
+	m.failed = false
+	m.msg = ""
+}
+
 func (m *mock) checkWithStyle(visualizeStyle bool, expected string) {
 	m.Lock()
 	defer m.Unlock()

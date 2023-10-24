@@ -63,6 +63,8 @@ const (
 	AssertionIsKind
 	// AssertionCount type
 	AssertionCount
+	// AssertionSnapshot type
+	AssertionSnapshot
 )
 
 // AssertionCtx holds the context of an assertion
@@ -226,6 +228,25 @@ func NewDefaultAssertionError(theme gop.Theme, diffTheme diff.Theme) AssertionEr
 			n := f(details[0])
 			count := f(details[1])
 			return k("should count") + n + k("times, but got") + count
+		},
+		AssertionSnapshot: func(details ...interface{}) string {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+
+			x := details[0].(string)
+			y := details[1].(string)
+
+			if diffTheme == nil {
+				return j(x, k("not =="), y)
+			}
+
+			if hasNewline(x, y) {
+				df := diff.Format(diff.Tokenize(ctx, gop.StripANSI(x), gop.StripANSI(y)), diffTheme)
+				return j(x, k("not =="), y, df)
+			}
+
+			dx, dy := diff.TokenizeLine(ctx, gop.StripANSI(x), gop.StripANSI(y))
+			return diff.Format(dx, diffTheme) + k("not ==") + diff.Format(dy, diffTheme)
 		},
 	}
 
