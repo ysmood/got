@@ -19,6 +19,7 @@ func TestSnapshots(t *testing.T) {
 	g.Snapshot("a", "ok")
 	g.Snapshot("b", 1)
 	g.Snapshot("c", C{10})
+	g.SnapshotJSON("d", C{20})
 
 	g.Run("sub", func(g got.G) {
 		g.Snapshot("d", "ok")
@@ -40,7 +41,7 @@ func TestSnapshots(t *testing.T) {
 }
 
 func TestSnapshotsCreate(t *testing.T) {
-	path := filepath.FromSlash(".got/snapshots/TestSnapshotsCreate/a.got-snap")
+	path := filepath.FromSlash(".got/snapshots/TestSnapshotsCreate/a.gop")
 	err := os.RemoveAll(path)
 	if err != nil {
 		panic(err)
@@ -56,7 +57,7 @@ func TestSnapshotsCreate(t *testing.T) {
 }
 
 func TestSnapshotsNotUsed(t *testing.T) {
-	path := filepath.FromSlash(".got/snapshots/TestSnapshotsNotUsed/a.got-snap")
+	path := filepath.FromSlash(".got/snapshots/TestSnapshotsNotUsed/a.gop")
 
 	g := got.T(t)
 	g.WriteFile(path, []byte(`1`))

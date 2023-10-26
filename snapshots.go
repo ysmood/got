@@ -1,6 +1,7 @@
 package got
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,7 +10,8 @@ import (
 	"github.com/ysmood/gop"
 )
 
-const snapshotExt = ".got-snap"
+const snapshotGopExt = ".gop"
+const snapshotJSONExt = ".json"
 
 type snapshot struct {
 	value string
@@ -21,8 +23,13 @@ func (g G) snapshotsDir() string {
 }
 
 func (g G) loadSnapshots() {
-	paths, err := filepath.Glob(filepath.Join(g.snapshotsDir(), "*"+snapshotExt))
+	paths, err := filepath.Glob(filepath.Join(g.snapshotsDir(), "*"+snapshotGopExt))
 	g.E(err)
+
+	jsonPaths, err := filepath.Glob(filepath.Join(g.snapshotsDir(), "*"+snapshotJSONExt))
+	g.E(err)
+
+	paths = append(paths, jsonPaths...)
 
 	for _, path := range paths {
 		g.snapshots.Store(path, snapshot{g.Read(path).String(), false})
@@ -39,18 +46,45 @@ func (g G) loadSnapshots() {
 	})
 }
 
-// Snapshot asserts that x equals the snapshot with the specified name, name should be unique under the same test.
+// Snapshot asserts that x equals the snapshot with the specified name, name should be unique under the same test case.
 // It will create a new snapshot file if the name is not found.
-// The snapshot file will be saved to ".got/snapshots/{TEST_NAME}/{name}.got-snap".
+// The snapshot file will be saved to ".got/snapshots/{TEST_NAME}".
 // To update the snapshot, just change the name of the snapshot or remove the corresponding snapshot file.
 // It will auto-remove the unused snapshot files after the test.
 // The snapshot files should be version controlled.
+// The format of the snapshot file is the output of [gop.Plain].
 func (g G) Snapshot(name string, x interface{}) {
 	g.Helper()
+	g.snapshot(name, x, false)
+}
 
-	path := filepath.Join(g.snapshotsDir(), escapeFileName(name)+snapshotExt)
+// SnapshotJSON is similar to [G.Snapshot], but it will convert x to JSON string before comparing.
+// The format of the snapshot file is json.
+func (g G) SnapshotJSON(name string, x interface{}) {
+	g.Helper()
+	g.snapshot(name, x, true)
+}
 
-	xs := gop.Plain(x)
+func (g G) snapshot(name string, x interface{}, jsonType bool) {
+	g.Helper()
+
+	var ext string
+	if jsonType {
+		ext = snapshotJSONExt
+	} else {
+		ext = snapshotGopExt
+	}
+
+	path := filepath.Join(g.snapshotsDir(), escapeFileName(name)+ext)
+
+	var xs string
+	if jsonType {
+		b, err := json.MarshalIndent(x, "", "  ")
+		g.E(err)
+		xs = string(b)
+	} else {
+		xs = gop.Plain(x)
+	}
 
 	if data, ok := g.snapshots.Load(path); ok {
 		s := data.(snapshot)
