@@ -36,6 +36,10 @@ func (g G) loadSnapshots() {
 	}
 
 	g.Cleanup(func() {
+		if g.Failed() {
+			return
+		}
+
 		g.snapshots.Range(func(path, data interface{}) bool {
 			s := data.(snapshot)
 			if !s.used {

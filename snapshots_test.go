@@ -68,3 +68,17 @@ func TestSnapshotsNotUsed(t *testing.T) {
 
 	g.False(g.PathExists(path))
 }
+
+func TestSnapshotsNotUsedWhenFailure(t *testing.T) {
+	path := filepath.FromSlash(".got/snapshots/TestSnapshotsNotUsedWhenFailure/a.gop")
+
+	g := got.T(t)
+	g.WriteFile(path, []byte(`1`))
+
+	m := &mock{t: t, name: t.Name()}
+	gm := got.New(m)
+	gm.Fail()
+	m.cleanup()
+
+	g.True(g.PathExists(path))
+}
