@@ -2,7 +2,6 @@ package utils_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
 
@@ -58,14 +57,6 @@ func TestCompare(t *testing.T) {
 }
 
 func TestOthers(t *testing.T) {
-	fn := reflect.MakeFunc(utils.MethodType(t, "Name"), func(args []reflect.Value) (results []reflect.Value) {
-		return []reflect.Value{reflect.ValueOf("test")}
-	}).Interface()
-
-	if fn.(func() string)() != "test" {
-		t.Error("fail")
-	}
-
 	vs := utils.ToValues([]interface{}{1})
 
 	if utils.ToInterfaces(vs)[0] != 1 {

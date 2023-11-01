@@ -1,36 +1,37 @@
-package got_test
+package mock_test
 
 import (
 	"bytes"
 	"testing"
 
 	"github.com/ysmood/got"
+	"github.com/ysmood/got/lib/mock"
 )
 
 type mockBuffer struct {
-	got.Mock
+	mock.Mock
 }
 
 func (t *mockBuffer) Write(p []byte) (n int, err error) {
-	return t.Proxy("Write").(func([]byte) (int, error))(p)
+	return mock.Proxy(t, t.Write)(p)
 }
 
 func (t *mockBuffer) Len() int {
-	return t.Proxy("Len").(func() int)()
+	return mock.Proxy(t, t.Len)()
 }
 
-func (t *mockBuffer) Nonexists() int {
-	return t.Proxy("Nonexists").(func() int)()
+func (t *mockBuffer) NonExists() int {
+	return mock.Proxy(t, t.NonExists)()
 }
 
 func TestMock(t *testing.T) {
-	g := setup(t)
+	g := got.T(t)
 
 	b := bytes.NewBuffer(nil)
 
-	m := mockBuffer{}
+	m := &mockBuffer{}
 	m.Fallback(b)
-	m.Stub("Write", func(p []byte) (int, error) {
+	mock.Stub(m, m.Write, func(p []byte) (int, error) {
 		return b.Write(append(p, []byte("  ")...))
 	})
 	n, err := m.Write([]byte("test"))
@@ -43,18 +44,22 @@ func TestMock(t *testing.T) {
 		m := mockBuffer{}
 		m.Len()
 	})
-	g.Eq(val, "you should specify the got.Mock.Origin")
+	g.Eq(val, "you should specify the mock.Mock.Fallback")
 
 	val = g.Panic(func() {
 		m := mockBuffer{}
 		m.Fallback(b)
-		m.Nonexists()
+		m.NonExists()
 	})
-	g.Eq(val, `*bytes.Buffer doesn't have method: Nonexists`)
+	g.Eq(val, `*bytes.Buffer doesn't have method: NonExists`)
+
+	g.Eq(g.Panic(func() {
+		m.Stop("")
+	}), "the input should be a function")
 }
 
 func TestMockUtils(t *testing.T) {
-	g := setup(t)
+	g := got.T(t)
 
 	b := bytes.NewBuffer(nil)
 
@@ -62,7 +67,8 @@ func TestMockUtils(t *testing.T) {
 	m.Fallback(b)
 
 	{
-		m.On(m, "Write").When([]byte{}).Return(2, nil).Times(2)
+		when := mock.On(m, m.Write).When([]byte{})
+		when.Return(2, nil).Times(2)
 
 		n, err := m.Write([]byte{})
 		g.Nil(err)
@@ -75,17 +81,19 @@ func TestMockUtils(t *testing.T) {
 		n, err = m.Write([]byte{})
 		g.Nil(err)
 		g.Eq(n, 0)
+
+		g.Eq(when.Count(), 2)
 	}
 
 	{
-		m.On(m, "Write").When(got.Any).Return(2, nil)
+		mock.On(m, m.Write).When(mock.Any).Return(2, nil)
 		n, err := m.Write([]byte{})
 		g.Nil(err)
 		g.Eq(n, 2)
 	}
 
 	{
-		m.On(m, "Write").When([]byte{}).Return(2, nil).Once()
+		mock.On(m, m.Write).When([]byte{}).Return(2, nil).Once()
 
 		n, err := m.Write([]byte{})
 		g.Nil(err)
@@ -97,10 +105,10 @@ func TestMockUtils(t *testing.T) {
 	}
 
 	{
-		m.On(m, "Write").When(true).Return(2, nil)
+		mock.On(m, m.Write).When(true).Return(2, nil)
 		v := g.Panic(func() {
 			_, _ = m.Write(nil)
 		})
-		g.Eq(v, "No got.StubOn.When matches: []interface {}{[]uint8(nil)}")
+		g.Eq(v, "No mock.StubOn.When matches: []interface {}{[]uint8(nil)}")
 	}
 }

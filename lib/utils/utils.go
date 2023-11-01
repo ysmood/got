@@ -50,12 +50,6 @@ func Compare(x, y interface{}) float64 {
 	return float64(strings.Compare(gop.Plain(x), gop.Plain(y)))
 }
 
-// MethodType of target method
-func MethodType(target interface{}, method string) reflect.Type {
-	targetVal := reflect.ValueOf(target)
-	return targetVal.MethodByName(method).Type()
-}
-
 // ToInterfaces convertor
 func ToInterfaces(vs []reflect.Value) []interface{} {
 	out := []interface{}{}
