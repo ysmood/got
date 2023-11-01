@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"math/big"
 	"mime"
 	"net"
@@ -288,7 +287,7 @@ func (ut Utils) JSON(src interface{}) (v interface{}) {
 		b = []byte(obj)
 	case io.Reader:
 		var err error
-		b, err = ioutil.ReadAll(obj)
+		b, err = io.ReadAll(obj)
 		ut.err(err)
 	}
 	ut.err(json.Unmarshal(b, &v))

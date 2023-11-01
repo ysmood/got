@@ -3,7 +3,7 @@ package got_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"sync"
@@ -161,7 +161,7 @@ func TestServe(t *testing.T) {
 		res, err := http.DefaultClient.Do(req)
 		ut.E(err)
 
-		b, err := ioutil.ReadAll(res.Body)
+		b, err := io.ReadAll(res.Body)
 		ut.E(err)
 
 		ut.Eq(string(b), key)

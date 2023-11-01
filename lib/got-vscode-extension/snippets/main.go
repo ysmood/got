@@ -4,8 +4,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -18,7 +18,7 @@ type snippet struct {
 type snippets map[string]snippet
 
 func main() {
-	b, err := ioutil.ReadFile("lib/example/03_setup_test.go")
+	b, err := os.ReadFile("lib/example/03_setup_test.go")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func Test$1(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile("lib/got-vscode-extension/snippets.json", buf.Bytes(), 0764)
+	err = os.WriteFile("lib/got-vscode-extension/snippets.json", buf.Bytes(), 0764)
 	if err != nil {
 		log.Fatal(err)
 	}
