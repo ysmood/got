@@ -47,6 +47,11 @@ func TestMocking(t *testing.T) {
 	mock.On(m, m.Write).When([]byte("3")).Return(1, nil)
 
 	example.ServeSum(m, &http.Request{URL: u})
+
+	// We can use the Calls helper to get all the input and output history of a method.
+	// Check the lib/example/.got/snapshots/TestMocking/calls.gop file for the details.
+	g.Snapshot("calls", m.Calls(m.Write))
+	g.Desc("the Write should be called twice").Len(m.Calls(m.Write), 2)
 }
 
 // mock the rand.Source

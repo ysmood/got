@@ -83,6 +83,8 @@ func TestMockUtils(t *testing.T) {
 		g.Eq(n, 0)
 
 		g.Eq(when.Count(), 2)
+		g.Len(m.Calls(m.Write), 3)
+		g.Snapshot("calls", m.Calls(m.Write))
 	}
 
 	{
