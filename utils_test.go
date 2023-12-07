@@ -89,14 +89,21 @@ func TestHelper(t *testing.T) {
 		ut.Has(ut.Req("", s.URL("/file")).String(), "ysmood/got")
 		ut.Eq(ut.Req("", s.URL("/a")).String(), "ok")
 		ut.Eq(ut.Req("", s.URL("/a")).String(), "ok")
-		res := ut.Req("", s.URL("/b"))
-		ut.Eq(res.JSON(), []interface{}{"ok", float64(1)})
-		ut.Has(res.Header.Get("Content-Type"), "application/json")
+
 		ut.Has(ut.Req("", s.URL("/c")).String(), "ysmood/got")
 		ut.Req(http.MethodPost, s.URL("/d"), 1)
 		ut.Req(http.MethodPost, s.URL("/f"), http.Header{"Test-Header": {"ok"}, "Host": {"test.com"}}, got.ReqMIME(".json"), 1)
 		ut.Has(ut.Req("", s.URL("/timeout"), ut.Timeout(100*time.Millisecond)).Err().Error(), "context deadline exceeded")
 		ut.Has(ut.Req("", string(rune(0x7f))).Err().Error(), `invalid control character in URL`)
+
+		res := ut.Req("", s.URL("/b"))
+		ut.Eq(res.JSON(), []interface{}{"ok", float64(1)})
+		ut.Has(res.Header.Get("Content-Type"), "application/json")
+
+		res = ut.Req("", s.URL("/b"))
+		var v []interface{}
+		res.Unmarshal(&v)
+		ut.Eq(v, []interface{}{"ok", 1.0})
 	}
 
 	ut.DoAfter(time.Hour, func() {})

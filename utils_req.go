@@ -92,6 +92,12 @@ func (res *ResHelper) JSON() (v interface{}) {
 	return res.ut.JSON(res.Body)
 }
 
+// Unmarshal body to v as json, it's like [json.Unmarshal].
+func (res *ResHelper) Unmarshal(v interface{}) {
+	res.ut.Helper()
+	res.ut.err(json.Unmarshal(res.Bytes().Bytes(), v))
+}
+
 // Err of request protocol
 func (res *ResHelper) Err() error {
 	return res.err
