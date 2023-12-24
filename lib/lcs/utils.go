@@ -54,11 +54,11 @@ func StandardLCS(xs, ys Sequence) Sequence {
 		return Sequence{}
 	} else if last(xs).String() == last(ys).String() {
 		return append(StandardLCS(noLast(xs), noLast(ys)), last(xs))
-	} else {
-		left, right := StandardLCS(xs, noLast(ys)), StandardLCS(noLast(xs), ys)
-		if len(left) > len(right) {
-			return left
-		}
-		return right
 	}
+
+	left, right := StandardLCS(xs, noLast(ys)), StandardLCS(noLast(xs), ys)
+	if len(left) > len(right) {
+		return left
+	}
+	return right
 }
