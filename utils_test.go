@@ -197,3 +197,14 @@ func TestChdir(t *testing.T) {
 
 	g.PathExists("diff")
 }
+
+func TestGo(t *testing.T) {
+	g := got.T(t)
+
+	c := g.Count(1)
+
+	g.Go(func() {
+		time.Sleep(time.Millisecond * 30)
+		c()
+	})
+}

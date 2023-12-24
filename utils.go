@@ -77,6 +77,18 @@ func (ut Utils) Skip(args ...interface{}) {
 	ut.SkipNow()
 }
 
+// Go runs f in a goroutine and wait for it to finish before the test ends.
+func (ut Utils) Go(f func()) {
+	wait := make(chan struct{})
+	ut.Cleanup(func() { <-wait })
+
+	go func() {
+		f()
+
+		wait <- struct{}{}
+	}()
+}
+
 // Run f as a sub-test
 func (ut Utils) Run(name string, f func(t G)) bool {
 	runVal := reflect.ValueOf(ut.Testable).MethodByName("Run")

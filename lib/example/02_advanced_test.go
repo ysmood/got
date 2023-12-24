@@ -2,7 +2,9 @@ package example_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/ysmood/got"
 	"github.com/ysmood/got/lib/example"
 )
 
@@ -44,4 +46,20 @@ func TestSnapshot(t *testing.T) {
 	g := setup(t)
 
 	g.Snapshot("snapshot the map value", map[int]string{1: "1", 2: "2"})
+}
+
+func TestWaitGroup(t *testing.T) {
+	g := got.T(t)
+
+	check := func() {
+		time.Sleep(time.Millisecond * 30)
+
+		g.Eq(1, 1)
+	}
+
+	// This check won't be executed because the test will end before the goroutine starts.
+	go check()
+
+	// This check will be executed because the test will wait for the goroutine to finish.
+	g.Go(check)
 }
