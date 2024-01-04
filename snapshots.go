@@ -1,17 +1,18 @@
 package got
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/ysmood/got/lib/utils"
 )
 
 const snapshotJSONExt = ".json"
 
 type snapshot struct {
-	value string
+	value any
 	used  bool
 }
 
@@ -24,10 +25,7 @@ func (g G) loadSnapshots() {
 	g.E(err)
 
 	for _, path := range paths {
-		b, err := json.MarshalIndent(g.JSON(g.Read(path)), "", "  ")
-		g.E(err)
-
-		g.snapshots.Store(path, snapshot{string(b), false})
+		g.snapshots.Store(path, snapshot{g.JSON(g.Read(path)), false})
 	}
 
 	g.Cleanup(func() {
@@ -57,25 +55,21 @@ func (g G) Snapshot(name string, x interface{}) {
 
 	path := filepath.Join(g.snapshotsDir(), escapeFileName(name)+snapshotJSONExt)
 
-	b, err := json.MarshalIndent(x, "", "  ")
-	g.E(err)
-	xs := string(b)
-
 	if data, ok := g.snapshots.Load(path); ok {
 		s := data.(snapshot)
-		if xs == s.value {
-			g.snapshots.Store(path, snapshot{xs, true})
+		if utils.SmartCompare(g.JSON(g.ToJSON(x).Bytes()), s.value) == 0 {
+			g.snapshots.Store(path, snapshot{x, true})
 		} else {
-			g.Assertions.err(AssertionSnapshot, xs, s.value)
+			g.Assertions.err(AssertionEq, x, s.value)
 		}
 		return
 	}
 
-	g.snapshots.Store(path, snapshot{xs, true})
+	g.snapshots.Store(path, snapshot{x, true})
 
 	g.Cleanup(func() {
 		g.E(os.MkdirAll(g.snapshotsDir(), 0755))
-		g.E(os.WriteFile(path, []byte(xs), 0644))
+		g.E(os.WriteFile(path, g.ToJSON(x).Bytes(), 0644))
 	})
 }
 
