@@ -24,7 +24,10 @@ func (g G) loadSnapshots() {
 	g.E(err)
 
 	for _, path := range paths {
-		g.snapshots.Store(path, snapshot{g.Read(path).String(), false})
+		b, err := json.MarshalIndent(g.JSON(g.Read(path)), "", "  ")
+		g.E(err)
+
+		g.snapshots.Store(path, snapshot{string(b), false})
 	}
 
 	g.Cleanup(func() {
