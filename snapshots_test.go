@@ -18,8 +18,8 @@ func TestSnapshots(t *testing.T) {
 
 	g.Snapshot("a", "ok")
 	g.Snapshot("b", 1)
+	g.Snapshot("b", 1)
 	g.Snapshot("c", C{10})
-	g.SnapshotJSON("d", C{20})
 
 	g.Run("sub", func(g got.G) {
 		g.Snapshot("d", "ok")
@@ -31,7 +31,7 @@ func TestSnapshots(t *testing.T) {
 	gm.Snapshot("a", "no")
 	m.check(`"no" ⦗not ==⦘ "ok"`)
 
-	gm.Snapshot("a", "no\nno")
+	gm.Snapshot("a", map[int]int{1: 2})
 	g.Has(m.msg, "diff chunk")
 	m.reset()
 
@@ -41,7 +41,7 @@ func TestSnapshots(t *testing.T) {
 }
 
 func TestSnapshotsCreate(t *testing.T) {
-	path := filepath.FromSlash(".got/snapshots/TestSnapshotsCreate/a.gop")
+	path := filepath.FromSlash(".got/snapshots/TestSnapshotsCreate/a.json")
 	err := os.RemoveAll(path)
 	if err != nil {
 		panic(err)
@@ -57,7 +57,7 @@ func TestSnapshotsCreate(t *testing.T) {
 }
 
 func TestSnapshotsNotUsed(t *testing.T) {
-	path := filepath.FromSlash(".got/snapshots/TestSnapshotsNotUsed/a.gop")
+	path := filepath.FromSlash(".got/snapshots/TestSnapshotsNotUsed/a.json")
 
 	g := got.T(t)
 	g.WriteFile(path, []byte(`1`))
@@ -70,7 +70,7 @@ func TestSnapshotsNotUsed(t *testing.T) {
 }
 
 func TestSnapshotsNotUsedWhenFailure(t *testing.T) {
-	path := filepath.FromSlash(".got/snapshots/TestSnapshotsNotUsedWhenFailure/a.gop")
+	path := filepath.FromSlash(".got/snapshots/TestSnapshotsNotUsedWhenFailure/a.json")
 
 	g := got.T(t)
 	g.WriteFile(path, []byte(`1`))

@@ -6,11 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/ysmood/gop"
 )
 
-const snapshotGopExt = ".gop"
 const snapshotJSONExt = ".json"
 
 type snapshot struct {
@@ -23,13 +20,8 @@ func (g G) snapshotsDir() string {
 }
 
 func (g G) loadSnapshots() {
-	paths, err := filepath.Glob(filepath.Join(g.snapshotsDir(), "*"+snapshotGopExt))
+	paths, err := filepath.Glob(filepath.Join(g.snapshotsDir(), "*"+snapshotJSONExt))
 	g.E(err)
-
-	jsonPaths, err := filepath.Glob(filepath.Join(g.snapshotsDir(), "*"+snapshotJSONExt))
-	g.E(err)
-
-	paths = append(paths, jsonPaths...)
 
 	for _, path := range paths {
 		g.snapshots.Store(path, snapshot{g.Read(path).String(), false})
@@ -56,39 +48,15 @@ func (g G) loadSnapshots() {
 // To update the snapshot, just change the name of the snapshot or remove the corresponding snapshot file.
 // It will auto-remove the unused snapshot files after the test.
 // The snapshot files should be version controlled.
-// The format of the snapshot file is the output of [gop.Plain].
+// The format of the snapshot file is json.
 func (g G) Snapshot(name string, x interface{}) {
 	g.Helper()
-	g.snapshot(name, x, false)
-}
 
-// SnapshotJSON is similar to [G.Snapshot], but it will convert x to JSON string before comparing.
-// The format of the snapshot file is json.
-func (g G) SnapshotJSON(name string, x interface{}) {
-	g.Helper()
-	g.snapshot(name, x, true)
-}
+	path := filepath.Join(g.snapshotsDir(), escapeFileName(name)+snapshotJSONExt)
 
-func (g G) snapshot(name string, x interface{}, jsonType bool) {
-	g.Helper()
-
-	var ext string
-	if jsonType {
-		ext = snapshotJSONExt
-	} else {
-		ext = snapshotGopExt
-	}
-
-	path := filepath.Join(g.snapshotsDir(), escapeFileName(name)+ext)
-
-	var xs string
-	if jsonType {
-		b, err := json.MarshalIndent(x, "", "  ")
-		g.E(err)
-		xs = string(b)
-	} else {
-		xs = gop.Plain(x)
-	}
+	b, err := json.MarshalIndent(x, "", "  ")
+	g.E(err)
+	xs := string(b)
 
 	if data, ok := g.snapshots.Load(path); ok {
 		s := data.(snapshot)
