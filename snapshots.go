@@ -57,10 +57,11 @@ func (g G) Snapshot(name string, x interface{}) {
 
 	if data, ok := g.snapshots.Load(path); ok {
 		s := data.(snapshot)
-		if utils.SmartCompare(g.JSON(g.ToJSON(x).Bytes()), s.value) == 0 {
+		xVal := g.JSON(g.ToJSON(x).Bytes())
+		if utils.SmartCompare(xVal, s.value) == 0 {
 			g.snapshots.Store(path, snapshot{x, true})
 		} else {
-			g.Assertions.err(AssertionEq, x, s.value)
+			g.Assertions.err(AssertionEq, xVal, s.value)
 		}
 		return
 	}
