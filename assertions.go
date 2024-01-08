@@ -301,7 +301,7 @@ func (as Assertions) Is(x, y interface{}) {
 
 	if ae, ok := x.(error); ok {
 		if be, ok := y.(error); ok {
-			if ae == be {
+			if utils.SmartCompare(ae, be) == 0 {
 				return
 			}
 
