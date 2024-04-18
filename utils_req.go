@@ -77,6 +77,7 @@ type ResHelper struct {
 // Bytes parses body as [*bytes.Buffer] and returns the result
 func (res *ResHelper) Bytes() *bytes.Buffer {
 	res.ut.Helper()
+	res.ut.err(res.err)
 	return res.ut.Read(res.Body)
 }
 
@@ -89,6 +90,7 @@ func (res *ResHelper) String() string {
 // JSON parses body as json and returns the result
 func (res *ResHelper) JSON() (v interface{}) {
 	res.ut.Helper()
+	res.ut.err(res.err)
 	return res.ut.JSON(res.Body)
 }
 
