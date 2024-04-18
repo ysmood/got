@@ -87,7 +87,7 @@ func TestPanicAsFailure(t *testing.T) {
 	as := got.New(t)
 
 	m := &mock{t: t}
-	it := func(t *mock) PanicAsFailure { return PanicAsFailure{} }
+	it := func(_ *mock) PanicAsFailure { return PanicAsFailure{} }
 	as.Eq(got.Each(m, it), 2)
 	as.True(m.failed)
 	as.Has(m.msg, "[panic] err")

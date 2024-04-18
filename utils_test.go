@@ -73,15 +73,15 @@ func TestHelper(t *testing.T) {
 		f, err := os.Open("go.mod")
 		ut.E(err)
 		s.Route("/c", ".html", f)
-		s.Mux.HandleFunc("/d", func(rw http.ResponseWriter, r *http.Request) {
+		s.Mux.HandleFunc("/d", func(_ http.ResponseWriter, r *http.Request) {
 			ut.Eq(ut.Read(r.Body).String(), "1\n")
 		})
-		s.Mux.HandleFunc("/f", func(rw http.ResponseWriter, r *http.Request) {
+		s.Mux.HandleFunc("/f", func(_ http.ResponseWriter, r *http.Request) {
 			ut.Has(r.Header.Get("Content-Type"), "application/json")
 			ut.Eq(r.Header.Get("Test-Header"), "ok")
 			ut.Eq(r.Host, "test.com")
 		})
-		s.Mux.HandleFunc("/timeout", func(rw http.ResponseWriter, r *http.Request) {
+		s.Mux.HandleFunc("/timeout", func(_ http.ResponseWriter, r *http.Request) {
 			<-r.Context().Done()
 		})
 

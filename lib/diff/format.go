@@ -28,7 +28,7 @@ var ThemeDefault = func(t Type) []gop.Style {
 }
 
 // ThemeNone colors for Sprint
-var ThemeNone = func(t Type) []gop.Style {
+var ThemeNone = func(_ Type) []gop.Style {
 	return []gop.Style{gop.None}
 }
 

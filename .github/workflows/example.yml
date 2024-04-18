@@ -18,10 +18,10 @@ jobs:
         with:
           go-version: 1.21
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: lint
-        run: go run github.com/ysmood/golangci-lint@latest
+        run: go run github.com/ysmood/golangci-lint@latest -v 1.57.2
 
       - name: test
         run: |
