@@ -88,7 +88,7 @@ func TestHelper(t *testing.T) {
 		ut.Eq(ut.Req("", s.URL()).String(), "")
 		ut.Has(ut.Req("", s.URL("/file")).String(), "ysmood/got")
 		ut.Eq(ut.Req("", s.URL("/a")).String(), "ok")
-		ut.Eq(ut.Req("", s.URL("/a")).String(), "ok")
+		ut.Eq(ut.Req("", s.URL("a")).String(), "ok")
 
 		ut.Has(ut.Req("", s.URL("/c")).String(), "ysmood/got")
 		ut.Req(http.MethodPost, s.URL("/d"), 1)

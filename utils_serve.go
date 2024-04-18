@@ -46,7 +46,12 @@ type Router struct {
 
 // URL will prefix the path with the server's host
 func (rt *Router) URL(path ...string) string {
-	return rt.HostURL.String() + strings.Join(path, "")
+	p := strings.Join(path, "")
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+
+	return rt.HostURL.String() + p
 }
 
 // Route on the pattern. Check the doc of [http.ServeMux] for the syntax of pattern.
