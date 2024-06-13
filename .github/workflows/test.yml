@@ -14,20 +14,20 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
-      - uses: actions/setup-go@v4
-        with:
-          go-version: 1.21
-
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
 
       - name: lint
         if: matrix.os == 'ubuntu-latest'
-        run: go run github.com/ysmood/golangci-lint@latest -v 1.57.2
+        run: go run github.com/ysmood/golangci-lint@latest -v 1.59.1
 
       - name: test
         env:
           TERM: xterm-256color
-        run: go test -coverprofile="coverage.out" ./...
+        run: go test -coverprofile="coverage.out" . ./lib/diff ./lib/lcs ./lib/mock ./lib/utils
 
       - name: coverage
         if: matrix.os == 'ubuntu-latest'

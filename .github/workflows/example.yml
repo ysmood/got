@@ -14,14 +14,14 @@ jobs:
         working-directory: lib/example
 
     steps:
-      - uses: actions/setup-go@v4
-        with:
-          go-version: 1.21
-
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+
       - name: lint
-        run: go run github.com/ysmood/golangci-lint@latest -v 1.57.2
+        run: go run github.com/ysmood/golangci-lint@latest -v 1.59.1
 
       - name: test
         run: |
