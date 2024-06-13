@@ -320,15 +320,3 @@ func TestCustomAssertionError(t *testing.T) {
 	g.Eq(1, 2)
 	m.check("custom eq")
 }
-
-type rawErr []byte
-
-func (r rawErr) Error() string {
-	return string(r)
-}
-
-func TestIsRawErr(t *testing.T) {
-	g := got.T(t)
-
-	g.Is(rawErr("ok"), rawErr("ok"))
-}

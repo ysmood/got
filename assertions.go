@@ -301,13 +301,10 @@ func (as Assertions) Is(x, y interface{}) {
 
 	if ae, ok := x.(error); ok {
 		if be, ok := y.(error); ok {
-			if utils.SmartCompare(ae, be) == 0 {
-				return
-			}
-
 			if errors.Is(ae, be) {
 				return
 			}
+
 			as.err(AssertionIsInChain, x, y)
 			return
 		}
