@@ -1,13 +1,1 @@
-linters:
-  enable:
-    - gofmt
-    - revive
-    - gocyclo
-    - misspell
-
-linters-settings:
-  gocyclo:
-    min-complexity: 15
-
-issues:
-  exclude-dirs-use-default: false
+version: v1.64

@@ -117,8 +117,10 @@ var regWord = regexp.MustCompile(`(?s)` + // enable . to match newline
 // RegRune to match a rune
 var regRune = regexp.MustCompile(`(?s).`)
 
+type contextSplitKey struct{}
+
 // SplitKey for context
-var SplitKey = struct{}{}
+var SplitKey = contextSplitKey{}
 
 // Split a line into words
 func Split(s string) []string {

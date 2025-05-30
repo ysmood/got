@@ -22,7 +22,7 @@ jobs:
 
       - name: lint
         if: matrix.os == 'ubuntu-latest'
-        run: go run github.com/ysmood/golangci-lint@latest -v 1.59.1
+        run: go run github.com/ysmood/golangci-lint@latest -v 1.64.5
 
       - name: test
         env:
