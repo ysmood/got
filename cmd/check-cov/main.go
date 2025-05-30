@@ -10,14 +10,14 @@ import (
 )
 
 var covFile = flag.String("cov-file", "coverage.out", "the path of the coverage report")
-var min = flag.Float64("min", 100, "min coverage rate or exit code with 1")
+var minCover = flag.Float64("min", 100, "min coverage rate or exit code with 1")
 
 func main() {
 	if !flag.Parsed() {
 		flag.Parse()
 	}
 
-	err := got.EnsureCoverage(*covFile, *min)
+	err := got.EnsureCoverage(*covFile, *minCover)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

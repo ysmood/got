@@ -304,9 +304,19 @@ func (ut Utils) JSON(src interface{}) (v interface{}) {
 // ToJSON convert obj to JSON bytes
 func (ut Utils) ToJSON(obj interface{}) *bytes.Buffer {
 	ut.Helper()
-	b, err := json.MarshalIndent(obj, "", "  ")
+
+	buf := bytes.NewBuffer(nil)
+
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+
+	err := enc.Encode(obj)
 	ut.err(err)
-	return bytes.NewBuffer(b)
+
+	buf.Truncate(buf.Len() - 1) // Remove the trailing newline
+
+	return buf
 }
 
 // ToJSONString convert obj to JSON string
