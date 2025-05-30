@@ -21,7 +21,7 @@ jobs:
           go-version: 1.22
 
       - name: lint
-        run: go run github.com/ysmood/golangci-lint@latest -v 1.59.1
+        run: go run github.com/ysmood/golangci-lint@latest -v 1.64.5
 
       - name: test
         run: |
