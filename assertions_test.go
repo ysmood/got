@@ -94,7 +94,7 @@ func TestAssertion(t *testing.T) {
 func TestAssertionErr(t *testing.T) {
 	m := &mock{t: t}
 	as := got.New(m)
-	as.Assertions.ErrorHandler = got.NewDefaultAssertionError(gop.ThemeNone, nil)
+	as.Assertions.ErrorHandler = got.NewDefaultAssertionError(15, gop.ThemeNone, nil)
 
 	type data struct {
 		A int

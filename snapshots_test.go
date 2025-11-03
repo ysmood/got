@@ -35,7 +35,7 @@ func TestSnapshots(t *testing.T) {
 	g.Has(m.msg, "diff chunk")
 	m.reset()
 
-	gm.ErrorHandler = got.NewDefaultAssertionError(gop.ThemeNone, nil)
+	gm.ErrorHandler = got.NewDefaultAssertionError(15, gop.ThemeNone, nil)
 	gm.Snapshot("a", "no")
 	m.checkWithStyle(true, `"no" ⦗not ==⦘ "ok"`)
 }

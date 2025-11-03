@@ -95,9 +95,9 @@ type defaultAssertionError struct {
 }
 
 // NewDefaultAssertionError handler
-func NewDefaultAssertionError(theme gop.Theme, diffTheme diff.Theme) AssertionError {
+func NewDefaultAssertionError(maxDepth int, theme gop.Theme, diffTheme diff.Theme) AssertionError {
 	f := func(v interface{}) string {
-		return gop.Format(gop.Tokenize(v), theme)
+		return gop.Format(gop.TokenizeWithOptions(v, gop.Options{MaxDepth: maxDepth}), theme)
 	}
 
 	k := func(s string) string {

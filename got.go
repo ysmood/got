@@ -53,7 +53,7 @@ func T(t Testable) G {
 
 // New G instance
 func New(t Testable) G {
-	eh := NewDefaultAssertionError(gop.ThemeDefault, diff.ThemeDefault)
+	eh := NewDefaultAssertionError(15, gop.ThemeDefault, diff.ThemeDefault)
 
 	g := G{
 		t,

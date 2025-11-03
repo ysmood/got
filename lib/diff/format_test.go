@@ -12,7 +12,7 @@ import (
 )
 
 var setup = got.Setup(func(g got.G) {
-	g.ErrorHandler = got.NewDefaultAssertionError(nil, nil)
+	g.ErrorHandler = got.NewDefaultAssertionError(15, nil, nil)
 })
 
 func split(s string) []string { return strings.Split(s, "") }

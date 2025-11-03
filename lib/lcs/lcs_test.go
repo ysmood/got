@@ -13,7 +13,7 @@ import (
 )
 
 var setup = got.Setup(func(g got.G) {
-	g.ErrorHandler = got.NewDefaultAssertionError(nil, nil)
+	g.ErrorHandler = got.NewDefaultAssertionError(15, nil, nil)
 })
 
 func TestLCS(t *testing.T) {
