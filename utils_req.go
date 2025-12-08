@@ -53,7 +53,7 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return &ResHelper{ut, nil, err}
+		return &ResHelper{ut, nil, err, nil}
 	}
 
 	if header != nil {
@@ -64,7 +64,7 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	req.Header.Set("Content-Type", contentType)
 
 	res, err := http.DefaultClient.Do(req)
-	return &ResHelper{ut, res, err}
+	return &ResHelper{ut, res, err, nil}
 }
 
 // ResHelper of the request
@@ -72,13 +72,20 @@ type ResHelper struct {
 	ut Utils
 	*http.Response
 	err error
+
+	read *bytes.Buffer
 }
 
 // Bytes parses body as [*bytes.Buffer] and returns the result
 func (res *ResHelper) Bytes() *bytes.Buffer {
 	res.ut.Helper()
 	res.ut.err(res.err)
-	return res.ut.Read(res.Body)
+
+	if res.read == nil {
+		res.read = res.ut.Read(res.Body)
+	}
+
+	return res.read
 }
 
 // String parses body as string and returns the result
@@ -91,7 +98,7 @@ func (res *ResHelper) String() string {
 func (res *ResHelper) JSON() (v interface{}) {
 	res.ut.Helper()
 	res.ut.err(res.err)
-	return res.ut.JSON(res.Body)
+	return res.ut.JSON(res.String())
 }
 
 // Unmarshal body to v as json, it's like [json.Unmarshal].

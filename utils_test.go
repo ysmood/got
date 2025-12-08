@@ -99,6 +99,7 @@ func TestHelper(t *testing.T) {
 
 		res := ut.Req("", s.URL("/b"))
 		ut.Eq(res.JSON(), []interface{}{"ok", float64(1)})
+		ut.Eq(res.String(), "[\"ok\",1]\n")
 		ut.Has(res.Header.Get("Content-Type"), "application/json")
 
 		res = ut.Req("", s.URL("/b"))
