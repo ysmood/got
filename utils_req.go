@@ -13,11 +13,22 @@ import (
 // ReqMIME option type, it should be like ".json", "test.json", "a/b/c.jpg", etc
 type ReqMIME string
 
+type ReqClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+type ClientDoFunc func(req *http.Request) (*http.Response, error)
+
+func (f ClientDoFunc) Do(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
 // Req is a helper method to send http request. It will handle errors automatically, so you don't need to check errors.
 // The method is the http method, default value is "GET".
 // If an option is [http.Header], it will be used as the request header.
 // If an option is [ReqMIME], it will be used to set the Content-Type header.
 // If an option is [context.Context], it will be used as the request context.
+// If an option is [ReqClient], it will be used as the http client to send the request.
 // Other option type will be treat as request body, it will be encoded by [Utils.Write].
 // Some request examples:
 //
@@ -32,6 +43,7 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	var host string
 	var contentType string
 	var body io.Reader
+	var client ReqClient = http.DefaultClient
 	ctx := context.Background()
 
 	for _, item := range options {
@@ -44,6 +56,8 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 			contentType = mime.TypeByExtension(filepath.Ext(string(val)))
 		case context.Context:
 			ctx = val
+		case ReqClient:
+			client = val
 		default:
 			buf := bytes.NewBuffer(nil)
 			ut.Write(val)(buf)
@@ -63,7 +77,7 @@ func (ut Utils) Req(method, url string, options ...interface{}) *ResHelper {
 	req.Host = host
 	req.Header.Set("Content-Type", contentType)
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	return &ResHelper{ut, res, err, nil}
 }
 

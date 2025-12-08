@@ -85,6 +85,9 @@ func TestHelper(t *testing.T) {
 		s.Mux.HandleFunc("/timeout", func(_ http.ResponseWriter, r *http.Request) {
 			<-r.Context().Done()
 		})
+		s.Mux.HandleFunc("/custom-client", func(_ http.ResponseWriter, r *http.Request) {
+			ut.Eq(r.Header.Get("custom-client"), "yes")
+		})
 
 		ut.Eq(ut.Req("", s.URL()).String(), "")
 		ut.Has(ut.Req("", s.URL("/file")).String(), "ysmood/got")
@@ -106,6 +109,13 @@ func TestHelper(t *testing.T) {
 		var v []interface{}
 		res.Unmarshal(&v)
 		ut.Eq(v, []interface{}{"ok", 1.0})
+
+		customClient := got.ClientDoFunc(func(req *http.Request) (*http.Response, error) {
+			req.Header.Set("custom-client", "yes")
+			return http.DefaultClient.Do(req)
+		})
+
+		ut.Req("", s.URL("/custom-client"), got.ReqClient(customClient))
 	}
 
 	ut.DoAfter(time.Hour, func() {})
