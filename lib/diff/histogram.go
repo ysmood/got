@@ -38,6 +38,38 @@ func intern(xs, ys []string) ([]int, []int) {
 	return xi, yi
 }
 
+// internLines is intern for line segments, resolved against their source texts.
+// Map keys are string headers that slice into each segment's src — no line data
+// is copied.
+func internLines(xs, ys []strSeg) ([]int, []int) {
+	ids := make(map[string]int, len(xs))
+	for _, s := range xs {
+		k := s.text()
+		if _, ok := ids[k]; !ok {
+			ids[k] = len(ids)
+		}
+	}
+
+	xi := make([]int, len(xs))
+	for i, s := range xs {
+		xi[i] = ids[s.text()]
+	}
+
+	yi := make([]int, len(ys))
+	unique := -1
+	for i, s := range ys {
+		k := s.text()
+		if id, ok := ids[k]; ok {
+			yi[i] = id
+		} else {
+			yi[i] = unique
+			unique--
+		}
+	}
+
+	return xi, yi
+}
+
 // histogramDiff returns contiguous matching regions between xs and ys in order.
 // It uses a histogram-based algorithm: recursively pick the rarest element as
 // an anchor, extend it to the longest common run, then diff the halves.

@@ -125,11 +125,11 @@ func TestNoDifference(t *testing.T) {
 func TestTwoLines(t *testing.T) {
 	g := setup(t)
 
-	format := func(ts []*diff.Token) string {
+	format := func(ts []diff.Token) string {
 		out := ""
 		for _, t := range ts {
-			txt := strings.TrimSpace(strings.ReplaceAll(t.Literal, "", " "))
-			switch t.Type {
+			txt := strings.TrimSpace(strings.ReplaceAll(diff.Text(t), "", " "))
+			switch t.Type() {
 			case diff.DelWords:
 				out += "-" + txt
 			case diff.AddWords:
@@ -194,4 +194,38 @@ func TestCustomSplit(t *testing.T) {
 	ctx := context.WithValue(g.Context(), diff.SplitKey, split)
 
 	g.Eq(diff.TokenizeLine(ctx, "abc", "abc"))
+}
+
+func TestEmptyBoth(t *testing.T) {
+	g := setup(t)
+	g.Eq(diff.Diff("", ""), "")
+	g.Len(diff.TokenizeText(g.Context(), "", ""), 0)
+}
+
+func TestEmptyOneSide(t *testing.T) {
+	g := setup(t)
+	g.Eq(gop.StripANSI(diff.Diff("", "abc")), "@@ diff chunk @@\n  1 + abc\n\n")
+	g.Eq(gop.StripANSI(diff.Diff("abc", "")), "@@ diff chunk @@\n1   - abc\n\n")
+}
+
+func TestTokenizeLineEmpty(t *testing.T) {
+	g := setup(t)
+	dx, dy := diff.TokenizeLine(g.Context(), "", "a")
+	g.Len(dx, 0)
+	g.Len(dy, 1)
+}
+
+func TestStyledType(t *testing.T) {
+	g := setup(t)
+	s := diff.Styled{Inner: diff.SegToken{T: diff.AddSymbol}}
+	g.Eq(s.Type(), diff.AddSymbol)
+}
+
+func TestCancelledContext(t *testing.T) {
+	g := setup(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	dx, dy := diff.TokenizeLine(ctx, "abc", "def")
+	g.Len(dx, 1)
+	g.Len(dy, 1)
 }

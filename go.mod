@@ -2,4 +2,4 @@ module github.com/ysmood/got
 
 go 1.21
 
-require github.com/ysmood/gop v0.3.2
+require github.com/ysmood/gop v0.4.2

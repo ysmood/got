@@ -2,6 +2,7 @@ package diff
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/ysmood/gop"
@@ -32,6 +33,22 @@ var ThemeNone = func(_ Type) []gop.Style {
 	return []gop.Style{gop.None}
 }
 
+// Styled wraps an inner token with ANSI styles applied at Build time.
+type Styled struct {
+	Inner  Token
+	Styles []gop.Style
+}
+
+// Type delegates to the wrapped token's type.
+func (s Styled) Type() Type { return s.Inner.Type() }
+
+// Build renders the inner token and writes its styled form into sb.
+func (s Styled) Build(sb *strings.Builder) {
+	var inner strings.Builder
+	s.Inner.Build(&inner)
+	gop.Render(sb, inner.String(), s.Styles)
+}
+
 // Diff x and y into a human readable string.
 func Diff(x, y string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -40,7 +57,7 @@ func Diff(x, y string) string {
 }
 
 // Tokenize x and y into diff tokens with diff words and narrow chunks.
-func Tokenize(ctx context.Context, x, y string) []*Token {
+func Tokenize(ctx context.Context, x, y string) []Token {
 	ts := TokenizeText(ctx, x, y)
 	lines := ParseTokenLines(ts)
 	lines = Narrow(1, lines)
@@ -48,15 +65,26 @@ func Tokenize(ctx context.Context, x, y string) []*Token {
 	return SpreadTokenLines(lines)
 }
 
-// Format tokens into a human readable string
-func Format(ts []*Token, theme Theme) string {
-	out := ""
+// Format tokens into a styled string using theme.
+func Format(ts []Token, theme Theme) string {
+	return Render(Stylize(ts, theme))
+}
 
+// Render tokens by invoking Build on each one into a single string.
+func Render(ts []Token) string {
+	var sb strings.Builder
 	for _, t := range ts {
-		s := t.Literal
-		out += gop.Stylize(s, theme(t.Type))
+		t.Build(&sb)
 	}
+	return sb.String()
+}
 
+// Stylize wraps each token in a Styled using theme.
+func Stylize(ts []Token, theme Theme) []Token {
+	out := make([]Token, len(ts))
+	for i, t := range ts {
+		out[i] = Styled{Inner: t, Styles: theme(t.Type())}
+	}
 	return out
 }
 
@@ -83,14 +111,20 @@ func Narrow(n int, lines []*TokenLine) []*TokenLine {
 		}
 
 		if _, has := keep[i-1]; !has {
-			ts := []*Token{{ChunkStart, "@@ diff chunk @@"}, {Newline, "\n"}}
+			ts := []Token{
+				SegToken{T: ChunkStart, s: segChunkStart},
+				SegToken{T: Newline, s: segNewline},
+			}
 			out = append(out, &TokenLine{ChunkStart, ts})
 		}
 
 		out = append(out, l)
 
 		if _, has := keep[i+1]; !has {
-			ts := []*Token{{ChunkEnd, ""}, {Newline, "\n"}}
+			ts := []Token{
+				SegToken{T: ChunkEnd, s: segEmpty},
+				SegToken{T: Newline, s: segNewline},
+			}
 			out = append(out, &TokenLine{ChunkEnd, ts})
 		}
 	}
@@ -112,7 +146,7 @@ func Words(ctx context.Context, lines []*TokenLine) {
 			d := delLines[i]
 			a := addLines[i]
 
-			dts, ats := TokenizeLine(ctx, d.Tokens[2].Literal, a.Tokens[2].Literal)
+			dts, ats := TokenizeLine(ctx, Text(d.Tokens[2]), Text(a.Tokens[2]))
 			d.Tokens = append(d.Tokens[0:2], append(dts, d.Tokens[3:]...)...)
 			a.Tokens = append(a.Tokens[0:2], append(ats, a.Tokens[3:]...)...)
 		}

@@ -27,7 +27,7 @@ jobs:
       - name: test
         env:
           TERM: xterm-256color
-        run: go test -coverprofile="coverage.out" . ./lib/diff ./lib/lcs ./lib/mock ./lib/utils
+        run: go test -coverprofile="coverage.out" . ./lib/diff ./lib/mock ./lib/utils
 
       - name: coverage
         if: matrix.os == 'ubuntu-latest'

@@ -51,10 +51,6 @@ func myersDiff(ctx context.Context, xs, ys []int) []histMatch {
 		}
 	}
 
-	if dEnd < 0 {
-		return nil
-	}
-
 	// Backtrace, collecting matches in reverse.
 	pairsX := make([]int, 0, n)
 	pairsY := make([]int, 0, n)
