@@ -11,7 +11,7 @@ type Only struct{}
 // Skip the current test
 type Skip struct{}
 
-// Each runs each exported method Fn on type Ctx as a subtest of t.
+// Each runs each exported method Fn on type Ctx as a sub test of t.
 // The iteratee can be a struct Ctx or:
 //
 //	iteratee(t Testable) (ctx Ctx)

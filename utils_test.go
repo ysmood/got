@@ -59,7 +59,7 @@ func TestHelper(t *testing.T) {
 	ut.Write([]byte("ok"))(buf)
 	ut.Eq(buf.String(), "ok")
 
-	ut.Run("subtest", func(t got.G) {
+	ut.Run("sub test", func(t got.G) {
 		t.Eq(1, 1)
 	})
 
