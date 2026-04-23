@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-
-	"github.com/ysmood/got/lib/lcs"
 )
 
 // Type of token
@@ -56,37 +54,52 @@ type Token struct {
 
 // TokenizeText text block a and b into diff tokens.
 func TokenizeText(ctx context.Context, x, y string) []*Token {
-	xls := lcs.NewLines(x) // x lines
-	yls := lcs.NewLines(y) // y lines
+	xls := splitLines(x)
+	yls := splitLines(y)
 
-	// TODO: We should use index to check equality, remove the usage of xs.Sub
-	s := xls.Sub(xls.YadLCS(ctx, yls))
+	xi, yi := intern(xls, yls)
+	matches := histogramDiff(ctx, xi, yi)
 
 	ts := []*Token{}
+	xNum, yNum, sNum := numFormat(len(xls), len(yls))
 
-	xNum, yNum, sNum := numFormat(xls, yls)
+	i, j, mi := 0, 0, 0
+	for i < len(xls) || j < len(yls) {
+		xStop, yStop := len(xls), len(yls)
+		hasMatch := false
+		if mi < len(matches) {
+			xStop = matches[mi].xStart
+			yStop = matches[mi].yStart
+			hasMatch = true
+		}
 
-	for i, j, k := 0, 0, 0; i < len(xls) || j < len(yls); {
-		if i < len(xls) && (k == len(s) || neq(xls[i], s[k])) {
+		if i < xStop {
 			ts = append(ts,
 				&Token{DelSymbol, fmt.Sprintf(xNum, i+1) + "-"},
 				&Token{Space, " "},
-				&Token{DelLine, xls[i].String()},
+				&Token{DelLine, xls[i]},
 				&Token{Newline, "\n"})
 			i++
-		} else if j < len(yls) && (k == len(s) || neq(yls[j], s[k])) {
+		} else if j < yStop {
 			ts = append(ts,
 				&Token{AddSymbol, fmt.Sprintf(yNum, j+1) + "+"},
 				&Token{Space, " "},
-				&Token{AddLine, yls[j].String()},
+				&Token{AddLine, yls[j]},
 				&Token{Newline, "\n"})
 			j++
+		} else if hasMatch {
+			m := matches[mi]
+			for k := 0; k < m.length; k++ {
+				ts = append(ts,
+					&Token{SameSymbol, fmt.Sprintf(sNum, m.xStart+k+1, m.yStart+k+1) + " "},
+					&Token{Space, " "},
+					&Token{SameLine, xls[m.xStart+k] + "\n"})
+			}
+			i = m.xStart + m.length
+			j = m.yStart + m.length
+			mi++
 		} else {
-			ts = append(ts,
-				&Token{SameSymbol, fmt.Sprintf(sNum, i+1, j+1) + " "},
-				&Token{Space, " "},
-				&Token{SameLine, s[k].String() + "\n"})
-			i, j, k = i+1, j+1, k+1
+			break
 		}
 	}
 
@@ -95,17 +108,17 @@ func TokenizeText(ctx context.Context, x, y string) []*Token {
 
 // TokenizeLine two different lines
 func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
-	split := lcs.Split
-	val := ctx.Value(lcs.SplitKey)
+	split := Split
+	val := ctx.Value(SplitKey)
 	if val != nil {
 		split = val.(func(string) []string)
 	}
 
-	xs := lcs.NewWords(split(x))
-	ys := lcs.NewWords(split(y))
+	xs := split(x)
+	ys := split(y)
 
-	// TODO: We should use index to check equality, remove the usage of xs.Sub
-	s := xs.Sub(xs.YadLCS(ctx, ys))
+	xi, yi := intern(xs, ys)
+	matches := myersDiff(ctx, xi, yi)
 
 	xTokens := []*Token{}
 	yTokens := []*Token{}
@@ -119,35 +132,48 @@ func TokenizeLine(ctx context.Context, x, y string) ([]*Token, []*Token) {
 		return ts
 	}
 
-	for i, j, k := 0, 0, 0; i < len(xs) || j < len(ys); {
-		if i < len(xs) && (k == len(s) || neq(xs[i], s[k])) {
-			xTokens = append(xTokens, &Token{DelWords, xs[i].String()})
-			i++
-		} else if j < len(ys) && (k == len(s) || neq(ys[j], s[k])) {
-			yTokens = append(yTokens, &Token{AddWords, ys[j].String()})
-			j++
-		} else {
-			xTokens = append(xTokens, &Token{SameWords, s[k].String()})
-			yTokens = append(yTokens, &Token{SameWords, s[k].String()})
-			i, j, k = i+1, j+1, k+1
+	i, j, mi := 0, 0, 0
+	for i < len(xs) || j < len(ys) {
+		xStop, yStop := len(xs), len(ys)
+		hasMatch := false
+		if mi < len(matches) {
+			xStop = matches[mi].xStart
+			yStop = matches[mi].yStart
+			hasMatch = true
 		}
 
-		xTokens = merge(xTokens)
-		yTokens = merge(yTokens)
+		if i < xStop {
+			xTokens = append(xTokens, &Token{DelWords, xs[i]})
+			xTokens = merge(xTokens)
+			i++
+		} else if j < yStop {
+			yTokens = append(yTokens, &Token{AddWords, ys[j]})
+			yTokens = merge(yTokens)
+			j++
+		} else if hasMatch {
+			m := matches[mi]
+			for k := 0; k < m.length; k++ {
+				xTokens = append(xTokens, &Token{SameWords, xs[m.xStart+k]})
+				yTokens = append(yTokens, &Token{SameWords, ys[m.yStart+k]})
+				xTokens = merge(xTokens)
+				yTokens = merge(yTokens)
+			}
+			i = m.xStart + m.length
+			j = m.yStart + m.length
+			mi++
+		} else {
+			break
+		}
 	}
 
 	return xTokens, yTokens
 }
 
-func numFormat(x, y lcs.Sequence) (string, string, string) {
-	xl := len(fmt.Sprintf("%d", len(x)))
-	yl := len(fmt.Sprintf("%d", len(y)))
+func numFormat(xLen, yLen int) (string, string, string) {
+	xl := len(fmt.Sprintf("%d", xLen))
+	yl := len(fmt.Sprintf("%d", yLen))
 
 	return fmt.Sprintf("%%0%dd "+strings.Repeat(" ", yl+1), xl),
 		fmt.Sprintf(strings.Repeat(" ", xl)+" %%0%dd ", yl),
 		fmt.Sprintf("%%0%dd %%0%dd ", xl, yl)
-}
-
-func neq(x, y lcs.Comparable) bool {
-	return x.String() != y.String()
 }

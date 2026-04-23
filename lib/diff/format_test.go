@@ -8,7 +8,6 @@ import (
 	"github.com/ysmood/gop"
 	"github.com/ysmood/got"
 	"github.com/ysmood/got/lib/diff"
-	"github.com/ysmood/got/lib/lcs"
 )
 
 var setup = got.Setup(func(g got.G) {
@@ -165,15 +164,15 @@ func TestTwoLines(t *testing.T) {
 	check(
 		" 4 9 0 4 5 0 8 8 5 3",
 		" 4 9 0 5 4 3 7 5 2",
-		"=4 9 0 4 5-0 8 8 5 3",
-		"=4 9 0+5=4+3 7=5+2",
+		"=4 9 0-4=5-0 8 8 5=3",
+		"=4 9 0 5+4=3+7 5 2",
 	)
 
 	check(
 		" 4 9 0 4 5 0 8",
 		" 4 9 0 5 4 3 7",
-		"=4 9 0 4-5 0 8",
-		"=4 9 0+5=4+3 7",
+		"=4 9 0-4=5-0 8",
+		"=4 9 0 5+4 3 7",
 	)
 }
 
@@ -192,7 +191,7 @@ func TestColor(t *testing.T) {
 func TestCustomSplit(t *testing.T) {
 	g := setup(t)
 
-	ctx := context.WithValue(g.Context(), lcs.SplitKey, split)
+	ctx := context.WithValue(g.Context(), diff.SplitKey, split)
 
 	g.Eq(diff.TokenizeLine(ctx, "abc", "abc"))
 }
