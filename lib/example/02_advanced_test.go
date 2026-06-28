@@ -25,6 +25,18 @@ func TestUtils(t *testing.T) {
 	g.Eq(val, "3")
 }
 
+func TestHelperFuncDriven(t *testing.T) {
+	g := setup(t)
+
+	check := func(a, b, expected string) {
+		g.Helper()
+		g.Eq(example.Sum(a, b), expected)
+	}
+
+	check("1", "2", "3")
+	check("2", "3", "5")
+}
+
 func TestTableDriven(t *testing.T) {
 	testCases := []struct{ desc, a, b, expected string }{{
 		"first",

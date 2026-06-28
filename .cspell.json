@@ -1,15 +1,19 @@
 {
   "words": [
     "benchmem",
+    "Chdir",
     "coverprofile",
     "diffmatchpatch",
     "Fallbackable",
+    "Goroutines",
     "gotrace",
     "gsetup",
     "Nilable",
     "Segs",
     "sergi",
     "Smood",
+    "Sprintf",
+    "Unmarshal",
     "ysmood"
   ]
 }
